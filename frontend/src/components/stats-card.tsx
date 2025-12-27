@@ -1,4 +1,5 @@
 import { LucideIcon } from "lucide-react"
+import { memo } from "react"
 
 interface StatsCardProps {
     title: string
@@ -9,7 +10,7 @@ interface StatsCardProps {
     description?: string
 }
 
-export function StatsCard({ title, value, change, icon: Icon, trend, description }: StatsCardProps) {
+export const StatsCard = memo(function StatsCard({ title, value, change, icon: Icon, trend, description }: StatsCardProps) {
     const trendColor = trend === "up" ? "text-success" : trend === "down" ? "text-danger" : "text-muted-foreground"
     const trendBg = trend === "up" ? "bg-success/10" : trend === "down" ? "bg-danger/10" : "bg-muted"
 
@@ -36,4 +37,4 @@ export function StatsCard({ title, value, change, icon: Icon, trend, description
             </div>
         </div>
     )
-}
+})

@@ -5,7 +5,7 @@ import { StatsCard } from "@/components/stats-card"
 import { BookOpen, Users, TrendingUp, Award, Clock, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo, memo, useCallback } from "react"
 import api, { handleApiError } from "@/lib/api"
 import { DashboardSkeleton } from "@/components/dashboard-skeleton"
 
@@ -27,12 +27,34 @@ interface DashboardStats {
     }>
 }
 
+// Memoized book item component
+const BookItem = memo(({ book }: { book: DashboardStats['recent_books'][0] }) => (
+    <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors">
+        <div className="flex items-center space-x-3">
+            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary-dark/20 flex items-center justify-center">
+                <BookOpen className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+                <p className="font-medium text-foreground">{book.title}</p>
+                <p className="text-sm text-muted-foreground">{book.author?.name || 'Autor desconocido'}</p>
+            </div>
+        </div>
+        <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
+            book.is_premium ? "bg-warning/10 text-warning" : "bg-success/10 text-success"
+        }`}>
+            {book.is_premium ? 'Premium' : 'Disponible'}
+        </span>
+    </div>
+))
+
+BookItem.displayName = 'BookItem'
+
 export default function DashboardPage() {
     const [stats, setStats] = useState<DashboardStats | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
-    const fetchStats = async () => {
+    const fetchStats = useCallback(async () => {
         try {
             setLoading(true)
             setError(null)
@@ -45,15 +67,55 @@ export default function DashboardPage() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [])
 
     useEffect(() => {
         fetchStats()
-    }, [])
+    }, [fetchStats])
 
     if (loading) {
         return <DashboardSkeleton />
     }
+
+    // Memoize stats cards to avoid recalculation on re-renders
+    const statsCards = useMemo(() => {
+        if (!stats) return []
+
+        return [
+            {
+                title: "Total de Libros",
+                value: stats.total_books.toLocaleString(),
+                change: 0,
+                trend: "up" as const,
+                icon: BookOpen,
+                description: "en la biblioteca"
+            },
+            {
+                title: "Usuarios Activos",
+                value: stats.total_users.toLocaleString(),
+                change: 0,
+                trend: "up" as const,
+                icon: Users,
+                description: "registrados"
+            },
+            {
+                title: "Libros Prestados",
+                value: stats.books_borrowed.toLocaleString(),
+                change: 0,
+                trend: "up" as const,
+                icon: TrendingUp,
+                description: "este mes"
+            },
+            {
+                title: "Calificación Promedio",
+                value: stats.average_rating.toString(),
+                change: 0,
+                trend: "up" as const,
+                icon: Star,
+                description: "de 5 estrellas"
+            }
+        ]
+    }, [stats])
 
     if (error || !stats) {
         return (
@@ -65,41 +127,6 @@ export default function DashboardPage() {
             </div>
         )
     }
-
-    const statsCards = [
-        {
-            title: "Total de Libros",
-            value: stats.total_books.toLocaleString(),
-            change: 0,
-            trend: "up" as const,
-            icon: BookOpen,
-            description: "en la biblioteca"
-        },
-        {
-            title: "Usuarios Activos",
-            value: stats.total_users.toLocaleString(),
-            change: 0,
-            trend: "up" as const,
-            icon: Users,
-            description: "registrados"
-        },
-        {
-            title: "Libros Prestados",
-            value: stats.books_borrowed.toLocaleString(),
-            change: 0,
-            trend: "up" as const,
-            icon: TrendingUp,
-            description: "este mes"
-        },
-        {
-            title: "Calificación Promedio",
-            value: stats.average_rating.toString(),
-            change: 0,
-            trend: "up" as const,
-            icon: Star,
-            description: "de 5 estrellas"
-        }
-    ]
 
     return (
         <div className="space-y-8">
@@ -138,23 +165,7 @@ export default function DashboardPage() {
                     <div className="space-y-4">
                         {stats.recent_books && stats.recent_books.length > 0 ? (
                             stats.recent_books.map((book) => (
-                                <div key={book.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors">
-                                    <div className="flex items-center space-x-3">
-                                        <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary-dark/20 flex items-center justify-center">
-                                            <BookOpen className="h-5 w-5 text-primary" />
-                                        </div>
-                                        <div>
-                                            <p className="font-medium text-foreground">{book.title}</p>
-                                            <p className="text-sm text-muted-foreground">{book.author?.name || 'Autor desconocido'}</p>
-                                        </div>
-                                    </div>
-                                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${book.is_premium
-                                            ? "bg-warning/10 text-warning"
-                                            : "bg-success/10 text-success"
-                                        }`}>
-                                        {book.is_premium ? 'Premium' : 'Disponible'}
-                                    </span>
-                                </div>
+                                <BookItem key={book.id} book={book} />
                             ))
                         ) : (
                             <p className="text-muted-foreground text-center py-4">No hay libros recientes</p>

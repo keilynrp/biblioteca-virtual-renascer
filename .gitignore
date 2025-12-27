@@ -110,3 +110,12 @@ frontend/dist/
 # Test files
 *.test.js.snap
 .jest-cache/
+
+# Python Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Archivos de respaldo
+*.backup
+*.bak

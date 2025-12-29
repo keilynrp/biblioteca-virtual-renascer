@@ -2,10 +2,10 @@
 
 /* TailAdmin Design System - Color Variables */
 :root {
-  /* Primary Colors - Blue Theme */
-  --primary: 219 94% 55%;
-  --primary-dark: 219 94% 45%;
-  --primary-light: 219 94% 65%;
+  /* Primary Colors - Teal Theme (#00576F) */
+  --primary: 192 100% 22%;
+  --primary-dark: 192 100% 17%;
+  --primary-light: 192 100% 30%;
   
   /* Background Colors */
   --background: 0 0% 100%;
@@ -22,7 +22,7 @@
   /* Border & Input */
   --border: 214 32% 91%;
   --input: 214 32% 91%;
-  --ring: 219 94% 55%;
+  --ring: 192 100% 22%;
   
   /* Success, Warning, Danger */
   --success: 142 76% 36%;
@@ -47,7 +47,7 @@
   --sidebar-border: 214 32% 91%;
   
   /* Chart Colors */
-  --chart-1: 219 94% 55%;
+  --chart-1: 192 100% 22%;
   --chart-2: 142 76% 36%;
   --chart-3: 38 92% 50%;
   --chart-4: 280 65% 60%;
@@ -138,4 +138,22 @@ body {
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
+}
+
+/* Book Card Shadows - OpenLibrary Style */
+.shadow-book {
+  box-shadow:
+    2px 2px 4px rgba(0, 0, 0, 0.1),
+    4px 4px 8px rgba(0, 0, 0, 0.08),
+    1px 1px 0px rgba(255, 255, 255, 0.5) inset,
+    -1px -1px 0px rgba(0, 0, 0, 0.05) inset;
+}
+
+.shadow-book-hover {
+  box-shadow:
+    4px 4px 8px rgba(0, 0, 0, 0.15),
+    8px 8px 16px rgba(0, 0, 0, 0.12),
+    12px 12px 24px rgba(0, 0, 0, 0.08),
+    1px 1px 0px rgba(255, 255, 255, 0.6) inset,
+    -1px -1px 0px rgba(0, 0, 0, 0.1) inset;
 }

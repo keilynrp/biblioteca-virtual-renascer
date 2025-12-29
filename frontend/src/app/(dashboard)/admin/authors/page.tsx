@@ -72,9 +72,15 @@ export default function AuthorsAdminPage() {
                 api.get("/content/authors/"),
                 api.get("/content/books/")
             ])
-            setAuthors(authorsResponse.data)
-            setFilteredAuthors(authorsResponse.data)
-            setTotalBooks(booksResponse.data.length)
+            // Handle paginated responses
+            const authorsData = authorsResponse.data?.results || authorsResponse.data || []
+            const booksData = booksResponse.data?.results || booksResponse.data || []
+            const authorsArray = Array.isArray(authorsData) ? authorsData : []
+            const booksArray = Array.isArray(booksData) ? booksData : []
+
+            setAuthors(authorsArray)
+            setFilteredAuthors(authorsArray)
+            setTotalBooks(booksArray.length)
         } catch (err) {
             console.error("Error fetching data:", err)
             alert("Error al cargar los datos")

@@ -27,7 +27,9 @@ export default function PlansPage() {
         async function fetchPlans() {
             try {
                 const response = await api.get('/subscriptions/plans/')
-                setPlans(response.data)
+                // Handle paginated responses
+                const plansData = response.data?.results || response.data || []
+                setPlans(Array.isArray(plansData) ? plansData : [])
             } catch (error) {
                 console.error("Failed to fetch plans", error)
             } finally {

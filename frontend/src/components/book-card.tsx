@@ -1,11 +1,10 @@
-
 "use client"
 
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import Image from "next/image"
-import { Crown, BookOpen } from "lucide-react"
+import { Crown, BookOpen, Star } from "lucide-react"
 
 interface Book {
     id: number
@@ -24,55 +23,80 @@ interface BookCardProps {
 
 export function BookCard({ book }: BookCardProps) {
     return (
-        <Card className="group flex flex-col h-full overflow-hidden border-border hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 hover:-translate-y-1">
-            <div className="relative w-full h-48 bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
-                {book.cover_image ? (
-                    <Image
-                        src={book.cover_image}
-                        alt={book.title}
-                        fill
-                        style={{ objectFit: "cover" }}
-                        className="group-hover:scale-110 transition-transform duration-300"
-                    />
-                ) : (
-                    <div className="flex items-center justify-center h-full">
-                        <BookOpen className="h-16 w-16 text-muted-foreground/30" />
-                    </div>
-                )}
-                {book.is_premium && (
-                    <div className="absolute top-3 right-3 bg-gradient-to-r from-warning to-warning/80 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-lg flex items-center space-x-1">
-                        <Crown className="h-3 w-3" />
-                        <span>Premium</span>
-                    </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            </div>
-            <CardHeader className="p-5">
-                <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-primary uppercase tracking-wider">
-                        {book.category?.name || "Sin categoría"}
+        <div className="group flex flex-col h-full">
+            {/* Book Cover - OpenLibrary Style */}
+            <Link href={`/library/${book.slug}`} className="relative block mb-3">
+                <div className="relative w-full aspect-[2/3] bg-gray-100 rounded-sm overflow-hidden shadow-book hover:shadow-book-hover transition-all duration-300 group-hover:-translate-y-1">
+                    {book.cover_image ? (
+                        <>
+                            <Image
+                                src={book.cover_image}
+                                alt={book.title}
+                                fill
+                                sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 16vw"
+                                style={{ objectFit: "cover" }}
+                                className="transition-transform duration-300 group-hover:scale-105"
+                            />
+                            {/* Subtle overlay for better readability */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        </>
+                    ) : (
+                        <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-200 to-gray-300">
+                            <BookOpen className="h-20 w-20 text-gray-400" />
+                        </div>
+                    )}
+
+                    {/* Premium Badge - Top Right */}
+                    {book.is_premium && (
+                        <div className="absolute top-2 right-2 bg-amber-500 text-white text-[10px] px-2 py-1 rounded-sm font-bold shadow-md flex items-center gap-1 z-10">
+                            <Crown className="h-3 w-3" />
+                            <span>PREMIUM</span>
+                        </div>
+                    )}
+
+                    {/* Book spine effect */}
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-r from-black/10 to-transparent" />
+                </div>
+
+                {/* Shelf shadow effect */}
+                <div className="absolute -bottom-1 left-0 right-0 h-1 bg-gradient-to-b from-black/5 to-transparent rounded-full" />
+            </Link>
+
+            {/* Book Info */}
+            <div className="flex-grow flex flex-col">
+                {/* Title */}
+                <Link href={`/library/${book.slug}`}>
+                    <h3 className="text-sm font-semibold text-foreground line-clamp-2 leading-tight mb-1 group-hover:text-primary transition-colors">
+                        {book.title}
+                    </h3>
+                </Link>
+
+                {/* Author */}
+                <p className="text-xs text-muted-foreground mb-2">
+                    by <span className="hover:underline cursor-pointer">{book.author?.name}</span>
+                </p>
+
+                {/* Category Badge */}
+                <div className="mb-3">
+                    <span className="inline-block text-[10px] font-medium text-primary/80 bg-primary/5 px-2 py-0.5 rounded uppercase tracking-wide">
+                        {book.category?.name || "General"}
                     </span>
                 </div>
-                <CardTitle className="leading-tight text-lg font-bold line-clamp-2 group-hover:text-primary transition-colors">
-                    {book.title}
-                </CardTitle>
-                <div className="text-sm text-muted-foreground mt-2">
-                    por <span className="font-medium text-foreground">{book.author?.name}</span>
+
+                {/* Action Button - Compact */}
+                <div className="mt-auto">
+                    <Button
+                        asChild
+                        size="sm"
+                        variant="outline"
+                        className="w-full text-xs h-8 border-primary/20 hover:bg-primary hover:text-white hover:border-primary transition-all"
+                    >
+                        <Link href={`/library/${book.slug}`}>
+                            View Details
+                        </Link>
+                    </Button>
                 </div>
-            </CardHeader>
-            <CardContent className="p-5 pt-0 flex-grow">
-                <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
-                    {book.description}
-                </p>
-            </CardContent>
-            <CardFooter className="p-5 pt-0">
-                <Button asChild className="w-full bg-gradient-to-r from-primary to-primary-dark hover:shadow-lg hover:shadow-primary/30 transition-all">
-                    <Link href={`/library/${book.slug}`}>
-                        <BookOpen className="mr-2 h-4 w-4" />
-                        Leer Más
-                    </Link>
-                </Button>
-            </CardFooter>
-        </Card>
+            </div>
+        </div>
     )
 }

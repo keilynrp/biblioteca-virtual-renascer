@@ -70,9 +70,15 @@ export default function CategoriesAdminPage() {
                 api.get("/content/categories/"),
                 api.get("/content/books/")
             ])
-            setCategories(categoriesResponse.data)
-            setFilteredCategories(categoriesResponse.data)
-            setTotalBooks(booksResponse.data.length)
+            // Handle paginated responses
+            const categoriesData = categoriesResponse.data?.results || categoriesResponse.data || []
+            const booksData = booksResponse.data?.results || booksResponse.data || []
+            const categoriesArray = Array.isArray(categoriesData) ? categoriesData : []
+            const booksArray = Array.isArray(booksData) ? booksData : []
+
+            setCategories(categoriesArray)
+            setFilteredCategories(categoriesArray)
+            setTotalBooks(booksArray.length)
         } catch (err) {
             console.error("Error fetching data:", err)
             alert("Error al cargar los datos")

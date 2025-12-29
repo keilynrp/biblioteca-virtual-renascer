@@ -113,10 +113,19 @@ export default function AdminBooksPage() {
                 api.get("/content/categories/"),
                 api.get("/content/authors/"),
             ])
-            setBooks(booksRes.data)
-            setFilteredBooks(booksRes.data)
-            setCategories(categoriesRes.data)
-            setAuthors(authorsRes.data)
+            // Handle paginated responses
+            const booksData = booksRes.data?.results || booksRes.data || []
+            const categoriesData = categoriesRes.data?.results || categoriesRes.data || []
+            const authorsData = authorsRes.data?.results || authorsRes.data || []
+
+            const booksArray = Array.isArray(booksData) ? booksData : []
+            const categoriesArray = Array.isArray(categoriesData) ? categoriesData : []
+            const authorsArray = Array.isArray(authorsData) ? authorsData : []
+
+            setBooks(booksArray)
+            setFilteredBooks(booksArray)
+            setCategories(categoriesArray)
+            setAuthors(authorsArray)
         } catch (err) {
             console.error("Error fetching data:", err)
         } finally {

@@ -139,7 +139,7 @@ export function SearchBar({
     setQuery('')
     setShowDropdown(false)
     setSelectedIndex(-1)
-    router.push(`/books/${suggestion.slug}`)
+    router.push(`/library/${suggestion.slug}`)
   }
 
   const handleClear = () => {

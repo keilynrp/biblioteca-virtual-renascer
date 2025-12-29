@@ -64,11 +64,14 @@ export default function LibraryPage() {
         const fetchFilters = async () => {
             try {
                 const [categoriesResponse, authorsResponse] = await Promise.all([
-                    api.get('/content/categories/'),
-                    api.get('/content/authors/')
+                    api.get('/content/categories/', { params: { page_size: 1000 } }),
+                    api.get('/content/authors/', { params: { page_size: 1000 } })
                 ])
-                setCategories(categoriesResponse.data)
-                setAuthors(authorsResponse.data)
+                // Handle paginated responses
+                const categoriesData = categoriesResponse.data?.results || categoriesResponse.data || []
+                const authorsData = authorsResponse.data?.results || authorsResponse.data || []
+                setCategories(Array.isArray(categoriesData) ? categoriesData : [])
+                setAuthors(Array.isArray(authorsData) ? authorsData : [])
             } catch (error) {
                 console.error("Failed to fetch filters", error)
                 handleApiError(error, 'Error al cargar filtros')
@@ -82,14 +85,18 @@ export default function LibraryPage() {
         const fetchBooks = async () => {
             setLoading(true)
             try {
-                const params: any = {}
+                const params: any = {
+                    page_size: 1000  // Request all books
+                }
                 if (searchTerm) params.search = searchTerm
                 if (selectedCategory !== "all") params.category = selectedCategory
                 if (selectedAuthor !== "all") params.author = selectedAuthor
                 if (premiumFilter !== "all") params.is_premium = premiumFilter === "premium"
 
                 const response = await api.get('/content/books/', { params })
-                setBooks(response.data)
+                // Handle paginated responses
+                const booksData = response.data?.results || response.data || []
+                setBooks(Array.isArray(booksData) ? booksData : [])
                 setCurrentPage(1)
             } catch (error) {
                 console.error("Failed to fetch books", error)
@@ -118,7 +125,7 @@ export default function LibraryPage() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="p-6 space-y-6">
             <PageHeader
                 title="Biblioteca"
                 description="Explora nuestra vasta colección de conocimiento"
@@ -221,14 +228,14 @@ export default function LibraryPage() {
             </div>
 
             {loading ? (
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
                     {Array.from({ length: 12 }).map((_, i) => (
                         <BookCardSkeleton key={i} />
                     ))}
                 </div>
             ) : currentBooks.length > 0 ? (
                 <>
-                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
                         {currentBooks.map((book) => (
                             <BookCard key={book.id} book={book} />
                         ))}

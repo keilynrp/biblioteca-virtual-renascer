@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import Image from "next/image"
-import { Crown, BookOpen, Star } from "lucide-react"
+import { Crown, BookOpen, Star, Heart } from "lucide-react"
 
 interface Book {
     id: number
@@ -15,6 +15,9 @@ interface Book {
     category: { name: string }
     cover_image: string | null
     is_premium: boolean
+    average_rating?: number
+    review_count?: number
+    user_has_favorited?: boolean
 }
 
 interface BookCardProps {
@@ -75,6 +78,34 @@ export function BookCard({ book }: BookCardProps) {
                 <p className="text-xs text-muted-foreground mb-2">
                     by <span className="hover:underline cursor-pointer">{book.author?.name}</span>
                 </p>
+
+                {/* Rating & Favorite Row */}
+                <div className="flex items-center justify-between mb-2">
+                    {/* Average Rating */}
+                    {book.average_rating !== undefined && book.average_rating > 0 ? (
+                        <div className="flex items-center gap-1">
+                            <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                            <span className="text-xs font-semibold text-foreground">
+                                {book.average_rating.toFixed(1)}
+                            </span>
+                            {book.review_count !== undefined && book.review_count > 0 && (
+                                <span className="text-[10px] text-muted-foreground">
+                                    ({book.review_count})
+                                </span>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-1">
+                            <Star className="h-3.5 w-3.5 text-gray-300" />
+                            <span className="text-xs text-muted-foreground">Sin reseñas</span>
+                        </div>
+                    )}
+
+                    {/* Favorite Indicator */}
+                    {book.user_has_favorited && (
+                        <Heart className="h-3.5 w-3.5 fill-red-500 text-red-500" />
+                    )}
+                </div>
 
                 {/* Category Badge */}
                 <div className="mb-3">

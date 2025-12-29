@@ -32,7 +32,9 @@ import {
     Users,
     FolderOpen,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Heart,
+    BookMarked
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { SearchBar } from "@/components/search-bar"
@@ -89,6 +91,8 @@ export default function DashboardLayout({
     const navItems = [
         { href: "/home", label: "Dashboard", icon: LayoutDashboard },
         { href: "/library", label: "Biblioteca", icon: Library },
+        { href: "/favorites", label: "Mis Favoritos", icon: Heart },
+        { href: "/reading-history", label: "Historial de Lectura", icon: BookMarked },
         { href: "/admin/books", label: "Administrar Libros", icon: FileEdit },
         { href: "/admin/authors", label: "Administrar Autores", icon: Users },
         { href: "/admin/categories", label: "Administrar Categorías", icon: FolderOpen },

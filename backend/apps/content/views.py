@@ -2,11 +2,17 @@
 from rest_framework import generics, permissions, filters, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Avg
-from .models import Book, Category, Author
-from .serializers import BookListSerializer, BookDetailSerializer, CategorySerializer, AuthorSerializer
+from django.shortcuts import get_object_or_404
+from .models import Book, Category, Author, Review, ReviewHelpful, Favorite, ReadingHistory
+from .serializers import (
+    BookListSerializer, BookDetailSerializer, CategorySerializer, AuthorSerializer,
+    ReviewSerializer, FavoriteSerializer, ReadingHistorySerializer
+)
 from .documents import BookDocument
+from .permissions import IsOwnerOrReadOnly
 import logging
 
 logger = logging.getLogger(__name__)
@@ -308,3 +314,160 @@ def rebuild_search_index(request):
             {'error': 'Error al reconstruir índice', 'detail': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+# ============================================================================
+# REVIEW VIEWS
+# ============================================================================
+
+class ReviewListCreateView(generics.ListCreateAPIView):
+    """List and create reviews for a specific book"""
+    serializer_class = ReviewSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        slug = self.kwargs.get('slug')
+        book = get_object_or_404(Book, slug=slug)
+        return Review.objects.filter(book=book).select_related('user')
+
+    def perform_create(self, serializer):
+        slug = self.kwargs.get('slug')
+        book = get_object_or_404(Book, slug=slug)
+        serializer.save(user=self.request.user, book=book)
+
+
+class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Get, update or delete a specific review"""
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_permissions(self):
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            return [permissions.IsAuthenticated(), IsOwnerOrReadOnly()]
+        return [permissions.AllowAny()]
+
+
+class UserReviewListView(generics.ListAPIView):
+    """List all reviews by the authenticated user"""
+    serializer_class = ReviewSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Review.objects.filter(user=self.request.user).select_related('book', 'user')
+
+
+class MarkReviewHelpfulView(APIView):
+    """Mark/unmark a review as helpful (toggle)"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        review = get_object_or_404(Review, pk=pk)
+
+        # Toggle helpful vote
+        vote, created = ReviewHelpful.objects.get_or_create(
+            review=review,
+            user=request.user
+        )
+
+        if not created:
+            # Already voted, remove vote
+            vote.delete()
+            review.helpful_count = max(0, review.helpful_count - 1)
+            review.save()
+            return Response({
+                'status': 'removed',
+                'helpful_count': review.helpful_count
+            })
+        else:
+            # New vote
+            review.helpful_count += 1
+            review.save()
+            return Response({
+                'status': 'added',
+                'helpful_count': review.helpful_count
+            })
+
+
+# ============================================================================
+# FAVORITE VIEWS
+# ============================================================================
+
+class FavoriteListView(generics.ListAPIView):
+    """List all favorites for the authenticated user"""
+    serializer_class = FavoriteSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Favorite.objects.filter(user=self.request.user).select_related(
+            'book', 'book__author', 'book__category'
+        )
+
+
+class ToggleFavoriteView(APIView):
+    """Add or remove a book from favorites (toggle)"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, book_id):
+        book = get_object_or_404(Book, id=book_id)
+        favorite, created = Favorite.objects.get_or_create(
+            user=request.user,
+            book=book
+        )
+
+        if not created:
+            # Already favorited, remove it
+            favorite.delete()
+            return Response({
+                'status': 'removed',
+                'is_favorited': False
+            })
+        else:
+            # New favorite
+            return Response({
+                'status': 'added',
+                'is_favorited': True,
+                'favorite': FavoriteSerializer(favorite).data
+            }, status=status.HTTP_201_CREATED)
+
+
+# ============================================================================
+# READING HISTORY VIEWS
+# ============================================================================
+
+class ReadingHistoryListView(generics.ListAPIView):
+    """List reading history for the authenticated user"""
+    serializer_class = ReadingHistorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        status_filter = self.request.query_params.get('status', None)
+        queryset = ReadingHistory.objects.filter(user=self.request.user).select_related(
+            'book', 'book__author', 'book__category'
+        )
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+        return queryset
+
+
+class UpdateReadingHistoryView(APIView):
+    """Update reading status for a book"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, book_id):
+        book = get_object_or_404(Book, id=book_id)
+        serializer = ReadingHistorySerializer(data=request.data, context={'request': request})
+
+        if serializer.is_valid():
+            history, created = ReadingHistory.objects.update_or_create(
+                user=request.user,
+                book=book,
+                defaults=serializer.validated_data
+            )
+
+            return Response(
+                ReadingHistorySerializer(history, context={'request': request}).data,
+                status=status.HTTP_201_CREATED if created else status.HTTP_200_OK
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

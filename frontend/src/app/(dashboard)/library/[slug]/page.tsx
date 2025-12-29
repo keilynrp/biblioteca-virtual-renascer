@@ -21,6 +21,10 @@ import {
     Star,
     User
 } from "lucide-react"
+import { ReviewForm } from "@/components/review-form"
+import { ReviewList } from "@/components/review-list"
+import { FavoriteButton } from "@/components/favorite-button"
+import { ReadingStatusSelector } from "@/components/reading-status-selector"
 
 interface BookDetail {
     id: number
@@ -42,6 +46,13 @@ interface BookDetail {
     is_premium: boolean
     isbn: string
     publication_date: string
+    average_rating?: number
+    review_count?: number
+    user_has_favorited?: boolean
+    user_review?: any
+    user_reading_status?: {
+        status: "reading" | "completed" | "want_to_read" | "abandoned"
+    }
 }
 
 export default function BookDetailPage() {
@@ -141,7 +152,7 @@ export default function BookDetailPage() {
                         </Card>
 
                         {/* Action Buttons */}
-                        <div className="mt-4 space-y-2">
+                        <div className="mt-4 space-y-3">
                             {book.file && (
                                 <>
                                     <Button className="w-full" size="lg" asChild>
@@ -158,15 +169,31 @@ export default function BookDetailPage() {
                                     </Button>
                                 </>
                             )}
-                            <div className="flex gap-2">
-                                <Button variant="outline" className="flex-1">
-                                    <Heart className="mr-2 h-4 w-4" />
-                                    Guardar
-                                </Button>
-                                <Button variant="outline" className="flex-1">
-                                    <Share2 className="mr-2 h-4 w-4" />
-                                    Compartir
-                                </Button>
+
+                            {/* Favorite Button */}
+                            <FavoriteButton
+                                bookId={book.id}
+                                initialFavorited={book.user_has_favorited}
+                                variant="outline"
+                                size="lg"
+                                className="w-full"
+                            />
+
+                            {/* Share Button */}
+                            <Button variant="outline" className="w-full" size="lg">
+                                <Share2 className="mr-2 h-4 w-4" />
+                                Compartir
+                            </Button>
+
+                            {/* Reading Status Selector */}
+                            <div className="pt-2">
+                                <label className="text-sm font-medium mb-2 block">
+                                    Estado de Lectura
+                                </label>
+                                <ReadingStatusSelector
+                                    bookId={book.id}
+                                    initialStatus={book.user_reading_status?.status}
+                                />
                             </div>
                         </div>
                     </div>
@@ -242,13 +269,36 @@ export default function BookDetailPage() {
                                     <CardHeader className="pb-3">
                                         <CardDescription>Valoración</CardDescription>
                                     </CardHeader>
-                                    <CardContent className="flex items-center gap-1">
-                                        {[...Array(5)].map((_, i) => (
-                                            <Star
-                                                key={i}
-                                                className="h-5 w-5 fill-amber-400 text-amber-400"
-                                            />
-                                        ))}
+                                    <CardContent className="flex items-center gap-2">
+                                        {book.average_rating !== undefined && book.average_rating > 0 ? (
+                                            <>
+                                                <div className="flex items-center gap-1">
+                                                    {[...Array(5)].map((_, i) => (
+                                                        <Star
+                                                            key={i}
+                                                            className={`h-5 w-5 ${
+                                                                i < Math.round(book.average_rating!)
+                                                                    ? "fill-amber-400 text-amber-400"
+                                                                    : "text-gray-300"
+                                                            }`}
+                                                        />
+                                                    ))}
+                                                </div>
+                                                <span className="font-semibold text-lg">
+                                                    {book.average_rating.toFixed(1)}
+                                                </span>
+                                                {book.review_count !== undefined && book.review_count > 0 && (
+                                                    <span className="text-sm text-muted-foreground">
+                                                        ({book.review_count} reseñas)
+                                                    </span>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <div className="flex items-center gap-2">
+                                                <Star className="h-5 w-5 text-gray-300" />
+                                                <span className="text-sm text-muted-foreground">Sin reseñas aún</span>
+                                            </div>
+                                        )}
                                     </CardContent>
                                 </Card>
                             </div>
@@ -276,6 +326,99 @@ export default function BookDetailPage() {
                                 </>
                             )}
                         </div>
+                    </div>
+                </div>
+
+                {/* Reviews Section */}
+                <div className="mt-12">
+                    <Separator className="mb-8" />
+
+                    <h2 className="text-3xl font-bold mb-6">Reseñas y Valoraciones</h2>
+
+                    {/* Review Statistics */}
+                    {book.average_rating !== undefined && book.average_rating > 0 && (
+                        <Card className="mb-8">
+                            <CardContent className="pt-6">
+                                <div className="flex items-center gap-8">
+                                    <div className="text-center">
+                                        <div className="text-5xl font-bold mb-2">
+                                            {book.average_rating.toFixed(1)}
+                                        </div>
+                                        <div className="flex items-center gap-1 mb-1">
+                                            {[...Array(5)].map((_, i) => (
+                                                <Star
+                                                    key={i}
+                                                    className={`h-5 w-5 ${
+                                                        i < Math.round(book.average_rating!)
+                                                            ? "fill-amber-400 text-amber-400"
+                                                            : "text-gray-300"
+                                                    }`}
+                                                />
+                                            ))}
+                                        </div>
+                                        <div className="text-sm text-muted-foreground">
+                                            {book.review_count} {book.review_count === 1 ? 'reseña' : 'reseñas'}
+                                        </div>
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-muted-foreground">
+                                            Valoración promedio basada en {book.review_count} {book.review_count === 1 ? 'opinión' : 'opiniones'} de lectores.
+                                        </p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Review Form - Only show if user hasn't reviewed yet */}
+                    {!book.user_review && (
+                        <div className="mb-8">
+                            <ReviewForm
+                                bookSlug={book.slug}
+                                onSuccess={() => {
+                                    // Refetch book data to update reviews
+                                    window.location.reload()
+                                }}
+                            />
+                        </div>
+                    )}
+
+                    {/* User's own review if exists */}
+                    {book.user_review && (
+                        <div className="mb-8">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-xl font-semibold">Tu reseña</h3>
+                                <Badge variant="secondary">Tu opinión</Badge>
+                            </div>
+                            <Card className="border-primary/50">
+                                <CardContent className="pt-6">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        {[...Array(5)].map((_, i) => (
+                                            <Star
+                                                key={i}
+                                                className={`h-5 w-5 ${
+                                                    i < book.user_review.rating
+                                                        ? "fill-amber-400 text-amber-400"
+                                                        : "text-gray-300"
+                                                }`}
+                                            />
+                                        ))}
+                                    </div>
+                                    <h4 className="font-semibold text-lg mb-2">{book.user_review.title}</h4>
+                                    <p className="text-muted-foreground whitespace-pre-wrap">
+                                        {book.user_review.comment}
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    )}
+
+                    {/* All Reviews List */}
+                    <div>
+                        <h3 className="text-xl font-semibold mb-4">
+                            Todas las reseñas {book.review_count ? `(${book.review_count})` : ''}
+                        </h3>
+                        <ReviewList bookSlug={book.slug} />
                     </div>
                 </div>
             </div>

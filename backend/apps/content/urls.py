@@ -8,7 +8,13 @@ from .views import (
     search_books,
     autocomplete_books,
     search_facets,
-    rebuild_search_index
+    rebuild_search_index,
+    # Review views
+    ReviewListCreateView, ReviewDetailView, UserReviewListView, MarkReviewHelpfulView,
+    # Favorite views
+    FavoriteListView, ToggleFavoriteView,
+    # Reading history views
+    ReadingHistoryListView, UpdateReadingHistoryView
 )
 
 urlpatterns = [
@@ -32,4 +38,18 @@ urlpatterns = [
     # Authors
     path('authors/', AuthorListView.as_view(), name='author_list'),
     path('authors/<int:id>/', AuthorDetailView.as_view(), name='author_detail'),
+
+    # Reviews
+    path('books/<slug:slug>/reviews/', ReviewListCreateView.as_view(), name='book_reviews'),
+    path('reviews/<int:pk>/', ReviewDetailView.as_view(), name='review_detail'),
+    path('reviews/<int:pk>/helpful/', MarkReviewHelpfulView.as_view(), name='review_helpful'),
+    path('user/reviews/', UserReviewListView.as_view(), name='user_reviews'),
+
+    # Favorites
+    path('user/favorites/', FavoriteListView.as_view(), name='user_favorites'),
+    path('user/favorites/<int:book_id>/', ToggleFavoriteView.as_view(), name='toggle_favorite'),
+
+    # Reading History
+    path('user/reading-history/', ReadingHistoryListView.as_view(), name='reading_history'),
+    path('user/reading-history/<int:book_id>/', UpdateReadingHistoryView.as_view(), name='update_reading_history'),
 ]

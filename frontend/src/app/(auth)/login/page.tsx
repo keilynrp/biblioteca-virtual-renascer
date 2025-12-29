@@ -63,8 +63,8 @@ export default function LoginPage() {
             // Step 5: Show success message
             showSuccess('Inicio de sesión exitoso')
 
-            // Step 6: Redirect to dashboard
-            router.push("/")
+            // Step 6: Redirect to home dashboard
+            router.push("/home")
 
         } catch (err) {
             handleApiError(err, 'Credenciales inválidas. Por favor, intenta nuevamente.')

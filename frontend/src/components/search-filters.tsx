@@ -50,9 +50,13 @@ export function SearchFilters({
       try {
         setIsLoading(true)
         const response = await api.get('/content/search/facets/')
+        console.log('Facets response:', response.data)
+        console.log('Categories count:', response.data?.categories?.length)
+        console.log('Authors count:', response.data?.authors?.length)
         setFacets(response.data)
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching facets:', error)
+        console.error('Error details:', error.response?.data)
       } finally {
         setIsLoading(false)
       }
@@ -308,7 +312,7 @@ export function SearchFilters({
               <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-full text-xs">
                 <span>{selectedPremium ? 'Premium' : 'Gratis'}</span>
                 <button
-                  onClick={() => handlePremiumChange(selectedPremium)}
+                  onClick={() => handlePremiumChange(selectedPremium!)}
                   className="hover:bg-primary/20 rounded-full p-0.5"
                 >
                   <X className="h-3 w-3" />

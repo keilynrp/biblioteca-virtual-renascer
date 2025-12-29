@@ -8,6 +8,7 @@ import Link from "next/link"
 import { useEffect, useState, useMemo, memo, useCallback } from "react"
 import api, { handleApiError } from "@/lib/api"
 import { DashboardSkeleton } from "@/components/dashboard-skeleton"
+import Image from "next/image"
 
 interface DashboardStats {
     total_books: number
@@ -18,8 +19,10 @@ interface DashboardStats {
         id: number
         title: string
         author: { name: string }
+        category?: { name: string }
         slug: string
         is_premium: boolean
+        cover_image?: string
     }>
     top_categories: Array<{
         name: string
@@ -29,22 +32,50 @@ interface DashboardStats {
 
 // Memoized book item component
 const BookItem = memo(({ book }: { book: DashboardStats['recent_books'][0] }) => (
-    <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors">
-        <div className="flex items-center space-x-3">
-            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary-dark/20 flex items-center justify-center">
-                <BookOpen className="h-5 w-5 text-primary" />
+    <Link href={`/library/${book.slug}`} className="group">
+        <div className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted transition-all duration-200">
+            {/* Book Cover */}
+            <div className="relative h-16 w-12 flex-shrink-0 rounded overflow-hidden bg-gradient-to-br from-primary/10 to-primary-dark/10 shadow-sm group-hover:shadow-md transition-shadow">
+                {book.cover_image ? (
+                    <Image
+                        src={book.cover_image}
+                        alt={book.title}
+                        fill
+                        sizes="48px"
+                        className="object-cover"
+                    />
+                ) : (
+                    <div className="h-full w-full flex items-center justify-center">
+                        <BookOpen className="h-6 w-6 text-primary/50" />
+                    </div>
+                )}
             </div>
-            <div>
-                <p className="font-medium text-foreground">{book.title}</p>
-                <p className="text-sm text-muted-foreground">{book.author?.name || 'Autor desconocido'}</p>
+
+            {/* Book Info */}
+            <div className="flex-1 min-w-0">
+                <p className="font-medium text-foreground group-hover:text-primary transition-colors truncate">
+                    {book.title}
+                </p>
+                <p className="text-sm text-muted-foreground truncate">
+                    {book.author?.name || 'Autor desconocido'}
+                </p>
+                {book.category && (
+                    <p className="text-xs text-muted-foreground/70 mt-0.5 truncate">
+                        {book.category.name}
+                    </p>
+                )}
+            </div>
+
+            {/* Premium Badge */}
+            <div className="flex-shrink-0">
+                <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                    book.is_premium ? "bg-warning/10 text-warning" : "bg-success/10 text-success"
+                }`}>
+                    {book.is_premium ? 'Premium' : 'Gratis'}
+                </span>
             </div>
         </div>
-        <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
-            book.is_premium ? "bg-warning/10 text-warning" : "bg-success/10 text-success"
-        }`}>
-            {book.is_premium ? 'Premium' : 'Disponible'}
-        </span>
-    </div>
+    </Link>
 ))
 
 BookItem.displayName = 'BookItem'
@@ -129,7 +160,7 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="space-y-8">
+        <div className="p-6 space-y-8">
             <PageHeader
                 title="Dashboard"
                 description="Bienvenido a tu biblioteca virtual"
@@ -203,15 +234,47 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            {/* Activity Chart Placeholder */}
+            {/* Popular Categories */}
             <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
-                <h2 className="text-xl font-bold text-foreground mb-6">Actividad Mensual</h2>
-                <div className="h-64 flex items-center justify-center bg-muted/50 rounded-lg border-2 border-dashed border-border">
-                    <div className="text-center">
-                        <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                        <p className="text-muted-foreground">Gráfico de actividad próximamente</p>
-                        <p className="text-sm text-muted-foreground mt-1">Integración con biblioteca de gráficos en desarrollo</p>
-                    </div>
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-bold text-foreground">Categorías Populares</h2>
+                    <Link href="/library">
+                        <Button variant="ghost" size="sm" className="text-primary hover:text-primary-dark">
+                            Explorar todas
+                        </Button>
+                    </Link>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {stats.top_categories && stats.top_categories.length > 0 ? (
+                        stats.top_categories.map((category, index) => (
+                            <Link
+                                key={index}
+                                href={`/library?category=${encodeURIComponent(category.name)}`}
+                                className="group"
+                            >
+                                <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 to-primary-dark/5 hover:from-primary/10 hover:to-primary-dark/10 rounded-lg p-4 border border-border hover:border-primary/50 transition-all duration-200 cursor-pointer">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                                                {category.name}
+                                            </h3>
+                                            <p className="text-sm text-muted-foreground mt-1">
+                                                {category.book_count} {category.book_count === 1 ? 'libro' : 'libros'}
+                                            </p>
+                                        </div>
+                                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                                            <BookOpen className="h-6 w-6 text-primary" />
+                                        </div>
+                                    </div>
+                                    <div className="absolute -right-2 -bottom-2 h-20 w-20 rounded-full bg-primary/5 group-hover:bg-primary/10 transition-colors" />
+                                </div>
+                            </Link>
+                        ))
+                    ) : (
+                        <div className="col-span-full text-center py-8">
+                            <p className="text-muted-foreground">No hay categorías disponibles</p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

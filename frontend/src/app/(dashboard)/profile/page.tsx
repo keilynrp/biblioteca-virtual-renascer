@@ -71,7 +71,9 @@ export default function ProfilePage() {
                     api.get('/institutions/'),
                     api.get('/auth/user/')
                 ])
-                setInstitutions(instResponse.data)
+                // Handle paginated response
+                const institutionsData = instResponse.data?.results || instResponse.data || []
+                setInstitutions(Array.isArray(institutionsData) ? institutionsData : [])
 
                 const userData = userResponse.data
                 form.reset({
@@ -83,6 +85,13 @@ export default function ProfilePage() {
                 })
             } catch (error) {
                 console.error("Failed to load profile data", error)
+                // Set empty array as fallback
+                setInstitutions([])
+                toast({
+                    variant: "error",
+                    title: "Error",
+                    description: "Failed to load profile data. Please refresh the page."
+                })
             }
         }
         loadData()
@@ -106,8 +115,8 @@ export default function ProfilePage() {
             })
 
             // Update local store
-            const { access, refresh } = useAuthStore.getState()
-            login(response.data, access!, refresh!)
+            const { accessToken, refreshToken } = useAuthStore.getState()
+            login(response.data, accessToken!, refreshToken!)
 
             toast({
                 title: "Success",
@@ -213,11 +222,17 @@ export default function ProfilePage() {
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent>
-                                                    {institutions.map((inst) => (
-                                                        <SelectItem key={inst.id} value={String(inst.id)}>
-                                                            {inst.name}
+                                                    {Array.isArray(institutions) && institutions.length > 0 ? (
+                                                        institutions.map((inst) => (
+                                                            <SelectItem key={inst.id} value={String(inst.id)}>
+                                                                {inst.name}
+                                                            </SelectItem>
+                                                        ))
+                                                    ) : (
+                                                        <SelectItem value="none" disabled>
+                                                            No institutions available
                                                         </SelectItem>
-                                                    ))}
+                                                    )}
                                                 </SelectContent>
                                             </Select>
                                             <FormMessage />

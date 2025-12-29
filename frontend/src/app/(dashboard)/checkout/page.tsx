@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js"
@@ -145,7 +145,7 @@ function CheckoutForm({ planId }: { planId: string }) {
     )
 }
 
-export default function CheckoutPage() {
+function CheckoutPageContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const planId = searchParams.get('planId')
@@ -180,5 +180,13 @@ export default function CheckoutPage() {
                 </CardContent>
             </Card>
         </div>
+    )
+}
+
+export default function CheckoutPage() {
+    return (
+        <Suspense fallback={<div className="flex justify-center items-center min-h-[80vh]">Loading...</div>}>
+            <CheckoutPageContent />
+        </Suspense>
     )
 }

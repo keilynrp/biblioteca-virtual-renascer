@@ -126,6 +126,26 @@ docker-compose exec backend python manage.py createsuperuser
 # Django Admin: http://localhost:8000/admin
 ```
 
+#### 🔒 Con SSL/HTTPS (Opcional)
+
+Para desarrollo local con HTTPS:
+
+```bash
+# Generar certificados SSL autofirmados
+cd ssl
+bash generate-certs.sh  # o generate-certs.bat en Windows
+
+# Configurar y arrancar con SSL
+./setup-ssl.sh  # o setup-ssl.bat en Windows
+
+# La aplicación estará disponible en:
+# Frontend: https://localhost
+# Backend API: https://localhost/api
+# Django Admin: https://localhost/admin
+```
+
+**Nota:** Debes confiar en el certificado autofirmado en tu sistema. Ver [docs/SSL_SETUP.md](docs/SSL_SETUP.md) para instrucciones detalladas.
+
 ### Opción 2: Instalación Local
 
 #### Backend

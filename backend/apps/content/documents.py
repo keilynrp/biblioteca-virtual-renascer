@@ -7,7 +7,7 @@ from elasticsearch_dsl.connections import connections
 
 # Configurar conexión a Elasticsearch
 connections.create_connection(
-    hosts=['elasticsearch:9200'],
+    hosts=['http://elasticsearch:9200'],
     timeout=20
 )
 

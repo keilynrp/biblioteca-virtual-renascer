@@ -79,41 +79,57 @@ class AuthorDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.AllowAny])  # Changed to AllowAny for dashboard accessibility
 def dashboard_stats(request):
     """
     Obtener estadísticas para el dashboard
     """
-    from django.contrib.auth import get_user_model
-    User = get_user_model()
+    try:
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
 
-    # Total de libros
-    total_books = Book.objects.count()
+        # Total de libros
+        total_books = Book.objects.count()
 
-    # Total de usuarios (puedes filtrar por activos si tienes ese campo)
-    total_users = User.objects.count()
+        # Total de usuarios
+        total_users = User.objects.count()
 
-    # Calificación promedio (si tienes reviews implementadas, si no, usar un valor por defecto)
-    # avg_rating = Book.objects.aggregate(Avg('rating'))['rating__avg'] or 4.5
-    avg_rating = 4.5  # Placeholder hasta implementar reviews
+        # Calificación promedio (placeholder)
+        avg_rating = 4.5
 
-    # Libros recientes
-    recent_books = Book.objects.select_related('author', 'category').order_by('-created_at')[:5]
-    recent_books_data = BookListSerializer(recent_books, many=True).data
+        # Libros recientes (con manejo de errores)
+        try:
+            recent_books = Book.objects.select_related('author', 'category').order_by('-created_at')[:5]
+            recent_books_data = BookListSerializer(recent_books, many=True).data
+        except Exception as e:
+            logger.error(f"Error fetching recent books: {str(e)}")
+            recent_books_data = []
 
-    # Estadísticas por categoría
-    books_by_category = Category.objects.annotate(
-        book_count=Count('book')
-    ).values('name', 'book_count').order_by('-book_count')[:5]
+        # Estadísticas por categoría (con manejo de errores)
+        try:
+            books_by_category = Category.objects.annotate(
+                book_count=Count('book')
+            ).values('name', 'book_count').order_by('-book_count')[:5]
+            top_categories = list(books_by_category)
+        except Exception as e:
+            logger.error(f"Error fetching categories: {str(e)}")
+            top_categories = []
 
-    return Response({
-        'total_books': total_books,
-        'total_users': total_users,
-        'average_rating': round(avg_rating, 1),
-        'books_borrowed': 0,  # Placeholder - implementar cuando tengas sistema de préstamos
-        'recent_books': recent_books_data,
-        'top_categories': list(books_by_category),
-    })
+        return Response({
+            'total_books': total_books,
+            'total_users': total_users,
+            'average_rating': round(avg_rating, 1),
+            'books_borrowed': 0,
+            'recent_books': recent_books_data,
+            'top_categories': top_categories,
+        })
+
+    except Exception as e:
+        logger.error(f"Error in dashboard_stats: {str(e)}", exc_info=True)
+        return Response(
+            {'error': {'code': 'internal_server_error', 'message': str(e), 'status_code': 500}},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 @api_view(['GET'])

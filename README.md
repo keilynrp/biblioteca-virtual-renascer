@@ -14,18 +14,27 @@ Una plataforma moderna de biblioteca virtual con gestión de suscripciones, pago
 - 🔐 **Autenticación JWT** - Sistema seguro de login/registro con refresh tokens
 - 💳 **Pagos con Stripe** - Integración completa para suscripciones y pagos
 - 📖 **Catálogo de Libros** - Gestión completa de libros, autores y categorías
-- 🔍 **Búsqueda y Filtros** - Sistema avanzado de búsqueda con paginación
+- 🔍 **Búsqueda Avanzada** - Sistema de búsqueda con Elasticsearch y filtros
 - 👤 **Gestión de Usuarios** - Perfiles, avatares y preferencias
 - 📊 **Dashboard Interactivo** - Estadísticas en tiempo real
 - 🎨 **UI Moderna** - Diseño responsive con TailwindCSS y shadcn/ui
 
-### 🚀 Mejoras Implementadas (Sprint #4)
+### 🎯 Funcionalidades de Engagement
+- ⭐ **Sistema de Reseñas** - Los usuarios pueden calificar y comentar libros
+- ❤️ **Favoritos** - Marca libros como favoritos para acceso rápido
+- 📚 **Historial de Lectura** - Rastrea el progreso de lectura (leyendo, completado, en pausa, abandonado)
+- 👍 **Reseñas Útiles** - Sistema de votos para reseñas (helpful/not helpful)
+- 🔒 **Permisos Granulares** - Los usuarios solo pueden editar su propio contenido
+
+### 🚀 Mejoras Técnicas Recientes
 - ✅ Toast notifications con 6 variantes
 - ✅ Skeleton loaders para mejor UX
 - ✅ Manejo estandarizado de errores
 - ✅ Paginación y filtros avanzados
 - ✅ Tests unitarios con Jest + RTL
 - ✅ Sistema de feedback visual consistente
+- ✅ Actualización a Python 3.13 y Node.js 22
+- ✅ Componentes UI reutilizables (Tabs, Favorite Button, Review Form)
 
 ## 🏗️ Arquitectura
 
@@ -35,6 +44,9 @@ backend/
 ├── apps/
 │   ├── authentication/    # Sistema de auth con JWT
 │   ├── content/          # Libros, categorías, autores
+│   │   ├── models/       # Review, Favorite, ReadingHistory
+│   │   ├── permissions.py # IsOwnerOrReadOnly
+│   │   └── management/   # Comandos (import_openlibrary)
 │   ├── core/             # Utilidades y excepciones
 │   ├── payments/         # Integración con Stripe
 │   └── users/            # Gestión de usuarios
@@ -54,10 +66,19 @@ frontend/
 │   ├── app/              # App Router de Next.js
 │   │   ├── (auth)/       # Páginas de autenticación
 │   │   └── (dashboard)/  # Páginas del dashboard
+│   │       ├── favorites/        # Libros favoritos
+│   │       ├── reading-history/  # Historial de lectura
+│   │       ├── library/          # Biblioteca
+│   │       └── profile/          # Perfil de usuario
 │   ├── components/       # Componentes reutilizables
-│   │   └── ui/          # Componentes base (shadcn/ui)
+│   │   ├── ui/          # Componentes base (shadcn/ui + Tabs)
+│   │   ├── favorite-button.tsx    # Botón de favoritos
+│   │   ├── review-form.tsx        # Formulario de reseñas
+│   │   ├── review-list.tsx        # Lista de reseñas
+│   │   └── reading-status-selector.tsx
 │   ├── lib/             # Utilidades y configuración
 │   ├── store/           # Estado global (Zustand)
+│   │   └── bookStore.ts # Store con funciones de engagement
 │   └── __tests__/       # Tests unitarios
 └── package.json
 ```
@@ -66,7 +87,9 @@ frontend/
 
 ### Backend
 - **Framework**: Django 5.0.1 + Django REST Framework 3.14.0
+- **Python**: 3.13 (actualizado desde 3.12)
 - **Base de Datos**: PostgreSQL 16
+- **Búsqueda**: Elasticsearch 8.x
 - **Cache**: Redis 7
 - **Autenticación**: JWT (djangorestframework-simplejwt)
 - **Pagos**: Stripe Python SDK
@@ -75,6 +98,7 @@ frontend/
 
 ### Frontend
 - **Framework**: Next.js 16.1.0 (App Router)
+- **Node.js**: 22 (actualizado desde 20)
 - **UI Library**: React 19.2.3
 - **Estilos**: TailwindCSS 4 + shadcn/ui
 - **Gestión de Estado**: Zustand 5.0.9
@@ -82,6 +106,8 @@ frontend/
 - **HTTP Client**: Axios 1.13.2
 - **Testing**: Jest 30.2.0 + React Testing Library 16.3.1
 - **Iconos**: Lucide React 0.562.0
+- **Utilidades**: date-fns 4.1.0 (manejo de fechas)
+- **Componentes UI**: @radix-ui/react-tabs (componente Tabs)
 
 ### DevOps
 - **Containerización**: Docker + Docker Compose
@@ -91,9 +117,10 @@ frontend/
 ## 🚀 Instalación y Configuración
 
 ### Prerrequisitos
-- Python 3.11+
-- Node.js 20+
+- Python 3.13 (recomendado 3.12+)
+- Node.js 22 (recomendado 20+)
 - PostgreSQL 16+
+- Elasticsearch 8.x
 - Redis 7+
 - Docker y Docker Compose (opcional)
 
@@ -243,12 +270,13 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 
 ### Backend
 ```bash
-python manage.py runserver          # Iniciar servidor de desarrollo
-python manage.py migrate             # Ejecutar migraciones
-python manage.py makemigrations      # Crear migraciones
-python manage.py createsuperuser     # Crear superusuario
-python manage.py test                # Ejecutar tests
-python manage.py collectstatic       # Recolectar archivos estáticos
+python manage.py runserver              # Iniciar servidor de desarrollo
+python manage.py migrate                # Ejecutar migraciones
+python manage.py makemigrations         # Crear migraciones
+python manage.py createsuperuser        # Crear superusuario
+python manage.py test                   # Ejecutar tests
+python manage.py collectstatic          # Recolectar archivos estáticos
+python manage.py import_openlibrary     # Importar libros desde OpenLibrary
 ```
 
 ### Frontend
@@ -296,23 +324,48 @@ npm run test:ci
 - ✅ **Sprint 1**: Autenticación Básica
 - ✅ **Sprint 2**: Perfiles de Usuario
 - ✅ **Sprint 3**: Sistema de Suscripciones
-- ✅ **Sprint 4**: Testing Frontend y Mejoras UX (95% completado)
+- ✅ **Sprint 4**: Testing Frontend y Mejoras UX
+- ✅ **Sprint 5**: Sistema de Búsqueda Avanzada (Elasticsearch)
+- ✅ **Engagement Features**: Reseñas, Favoritos e Historial de Lectura
 
 ### Próximos Sprints
-- ⏳ **Sprint 5**: Sistema de Búsqueda Avanzada (Elasticsearch)
 - ⏳ **Sprint 6**: Lector de Documentos - Fase 1
 - ⏳ **Sprint 7**: Lector de Documentos - Fase 2
 - ⏳ **Sprint 8**: Sistema de Recomendaciones
 
 Ver [PLANNING_SPRINTS_DETALLADO.md](PLANNING_SPRINTS_DETALLADO.md) para más detalles.
 
+### 🆕 Últimas Actualizaciones (Diciembre 2024)
+
+#### Funcionalidades de Usuario
+- Sistema completo de reseñas con calificaciones por estrellas
+- Botón de favoritos con animaciones y feedback visual
+- Historial de lectura con estados (leyendo, completado, en pausa, abandonado)
+- Votación en reseñas (helpful/not helpful)
+- Páginas dedicadas para favoritos y historial de lectura
+
+#### Mejoras Técnicas
+- Actualización a Python 3.13 y Node.js 22
+- Migración completa de datos con nuevos modelos
+- Componente Tabs reutilizable (@radix-ui/react-tabs)
+- Sistema de permisos granulares (IsOwnerOrReadOnly)
+- Integración de date-fns para manejo de fechas
+- Store de Zustand extendido con funciones de engagement
+
+#### Importación de Datos
+- Comando de management para importar libros desde OpenLibrary API
+- Scripts de automatización para setup y verificación
+- Datos de prueba disponibles para desarrollo
+
 ## 📈 Progreso
 
 ```
-Backend:   ████████████░░░░░░░░  60% completado
-Frontend:  ██████████░░░░░░░░░░  50% completado
-Tests:     ████░░░░░░░░░░░░░░░░  20% completado
-Docs:      ████████░░░░░░░░░░░░  40% completado
+Backend:   ██████████████░░░░░░  70% completado
+Frontend:  ████████████░░░░░░░░  60% completado
+Tests:     ██████░░░░░░░░░░░░░░  30% completado
+Docs:      ██████████░░░░░░░░░░  50% completado
+Search:    ████████████████░░░░  80% completado (Elasticsearch)
+Engagement: ████████████████████  100% completado (Reviews, Favorites, History)
 ```
 
 ## 🤝 Contribución

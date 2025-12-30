@@ -50,26 +50,36 @@ export default function DashboardLayout({
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
     const [isDarkMode, setIsDarkMode] = useState(false)
+    const [isMounted, setIsMounted] = useState(false)
 
     // Redirect if not authenticated
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
 
+    // Handle mount state to prevent hydration mismatch
     useEffect(() => {
+        setIsMounted(true)
+    }, [])
+
+    useEffect(() => {
+        if (!isMounted) return
+
         // Check both zustand store and localStorage for authentication
         const hasToken = typeof window !== 'undefined' && localStorage.getItem('accessToken')
 
         if (!isAuthenticated && !hasToken) {
             router.push('/login')
         }
-    }, [isAuthenticated, router])
+    }, [isAuthenticated, router, isMounted])
 
     // Load sidebar collapsed state from localStorage
     useEffect(() => {
+        if (!isMounted) return
+
         const savedState = localStorage.getItem('sidebarCollapsed')
         if (savedState !== null) {
             setIsSidebarCollapsed(savedState === 'true')
         }
-    }, [])
+    }, [isMounted])
 
     // Save sidebar state to localStorage
     const toggleSidebarCollapse = () => {

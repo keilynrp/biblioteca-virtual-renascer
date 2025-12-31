@@ -390,6 +390,15 @@ Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más det
 
 ## 📚 Documentación Adicional
 
+### 📋 Documentación Estratégica (Nuevo)
+
+- **[📖 Índice de Documentación](docs/README.md)** - Punto de entrada a toda la documentación
+- **[🎯 Backlog Estratégico](BACKLOG_ESTRATEGICO.md)** - Planificación completa de features por fases
+- **[🏗️ Roadmap de Infraestructura](ROADMAP_INFRAESTRUCTURA.md)** - Guía de escalabilidad y arquitectura
+- **[⚡ Guía de Decisiones Rápidas](docs/QUICK_DECISION_GUIDE.md)** - "¿Debo usar X?" respondido
+
+### 📄 Documentación Técnica
+
 - [Arquitectura Técnica](arquitectura_tecnica.md)
 - [Roadmap del Proyecto](roadmap_biblioteca_virtual.md)
 - [Planning de Sprints](PLANNING_SPRINTS_DETALLADO.md)

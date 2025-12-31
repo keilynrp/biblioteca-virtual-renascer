@@ -19,9 +19,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1G
-        reservations:
           memory: 512M
+        reservations:
+          memory: 256M
     restart: unless-stopped
 
   frontend:
@@ -39,14 +39,15 @@ services:
       - WATCHPACK_POLLING=true
       - NEXT_PUBLIC_API_URL=http://localhost:8000/api
       - NEXT_TELEMETRY_DISABLED=1
+      - NODE_OPTIONS=--max-old-space-size=768
     depends_on:
       - backend
     deploy:
       resources:
         limits:
-          memory: 2G
-        reservations:
           memory: 1G
+        reservations:
+          memory: 512M
     restart: unless-stopped
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -64,9 +65,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
-        reservations:
           memory: 256M
+        reservations:
+          memory: 128M
+    command: postgres -c shared_buffers=64MB -c effective_cache_size=128MB -c max_connections=50
     restart: unless-stopped
 
   redis:
@@ -76,9 +78,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
-        reservations:
           memory: 128M
+        reservations:
+          memory: 64M
+    command: redis-server --maxmemory 96mb --maxmemory-policy allkeys-lru
     restart: unless-stopped
 
   elasticsearch:
@@ -86,8 +89,13 @@ services:
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms256m -Xmx512m"
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
       - bootstrap.memory_lock=false
+      - cluster.routing.allocation.disk.threshold_enabled=true
+      - cluster.routing.allocation.disk.watermark.low=85%
+      - cluster.routing.allocation.disk.watermark.high=90%
+      - indices.memory.index_buffer_size=10%
+      - http.max_content_length=50mb
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
     ports:
@@ -96,9 +104,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 768M
-        reservations:
           memory: 512M
+        reservations:
+          memory: 256M
     restart: unless-stopped
 
 volumes:

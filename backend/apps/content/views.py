@@ -6,10 +6,11 @@ from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Avg
 from django.shortcuts import get_object_or_404
-from .models import Book, Category, Author, Review, ReviewHelpful, Favorite, ReadingHistory
+from .models import Book, Category, Author, Review, ReviewHelpful, Favorite, ReadingHistory, Reading
 from .serializers import (
     BookListSerializer, BookDetailSerializer, CategorySerializer, AuthorSerializer,
-    ReviewSerializer, FavoriteSerializer, ReadingHistorySerializer
+    ReviewSerializer, FavoriteSerializer, ReadingHistorySerializer, ReadingSerializer,
+    ReadingProgressUpdateSerializer
 )
 from .documents import BookDocument
 from .permissions import IsOwnerOrReadOnly
@@ -106,9 +107,9 @@ def dashboard_stats(request):
         # Libros recientes (con manejo de errores)
         try:
             recent_books = Book.objects.select_related('author', 'category').order_by('-created_at')[:5]
-            recent_books_data = BookListSerializer(recent_books, many=True).data
+            recent_books_data = BookListSerializer(recent_books, many=True, context={'request': request}).data
         except Exception as e:
-            logger.error(f"Error fetching recent books: {str(e)}")
+            logger.error(f"Error fetching recent books: {str(e)}", exc_info=True)
             recent_books_data = []
 
         # Estadísticas por categoría (con manejo de errores)
@@ -316,6 +317,266 @@ def rebuild_search_index(request):
         )
 
 
+@api_view(['POST'])
+@permission_classes([permissions.IsAdminUser])
+def import_books_from_openlibrary(request):
+    """
+    Importa libros desde OpenLibrary API.
+    Solo para administradores.
+
+    Body params:
+        - subjects: Lista de temas (opcional)
+        - query: Búsqueda por query (opcional)
+        - limit: Número máximo de libros (default: 30, max: 500)
+        - auto_index: Auto-indexar en Elasticsearch (default: true)
+    """
+    try:
+        import requests
+        import time
+        from datetime import datetime
+        from django.utils.text import slugify
+        from django.core.files.base import ContentFile
+
+        # Obtener parámetros
+        subjects = request.data.get('subjects', [])
+        query = request.data.get('query', None)
+        limit = min(int(request.data.get('limit', 30)), 500)  # Max 500 para evitar sobrecarga
+        auto_index = request.data.get('auto_index', True)
+
+        if not subjects and not query:
+            return Response(
+                {'error': 'Debes proporcionar subjects o query'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        imported_books = []
+        skipped_books = []
+        errors = []
+
+        # Función auxiliar para importar un libro
+        def import_book(work_data, category):
+            title = work_data.get('title', '').strip()
+            if not title:
+                return {'status': 'error', 'reason': 'No title'}
+
+            slug = slugify(title)
+            if Book.objects.filter(slug=slug).exists():
+                return {'status': 'skipped', 'reason': 'Already exists', 'title': title}
+
+            # Obtener autor
+            authors_data = work_data.get('authors', [])
+            author_name = authors_data[0].get('name', 'Autor Desconocido') if authors_data else 'Autor Desconocido'
+            author, _ = Author.objects.get_or_create(
+                name=author_name,
+                defaults={'bio': f'Información sobre {author_name}'}
+            )
+
+            # Descripción
+            description = 'Sin descripción disponible.'
+            if 'description' in work_data:
+                desc = work_data['description']
+                description = desc.get('value', desc) if isinstance(desc, dict) else str(desc)
+            elif 'subject' in work_data:
+                subjects_str = ', '.join(work_data['subject'][:5])
+                description = f'Libro sobre: {subjects_str}'
+
+            # Fecha de publicación
+            publication_date = None
+            first_publish_year = work_data.get('first_publish_year')
+            if first_publish_year:
+                try:
+                    publication_date = datetime(year=int(first_publish_year), month=1, day=1).date()
+                except (ValueError, TypeError):
+                    pass
+
+            # ISBN
+            isbn = ''
+            if 'isbn' in work_data and work_data['isbn']:
+                isbn = work_data['isbn'][0] if isinstance(work_data['isbn'], list) else str(work_data['isbn'])
+
+            # Crear libro
+            book = Book.objects.create(
+                title=title,
+                slug=slug,
+                author=author,
+                category=category,
+                description=description,
+                publication_date=publication_date,
+                isbn=isbn[:13],
+                is_premium=False
+            )
+
+            # Descargar portada
+            cover_id = work_data.get('cover_id')
+            if cover_id:
+                try:
+                    cover_url = f'https://covers.openlibrary.org/b/id/{cover_id}-M.jpg'
+                    response = requests.get(cover_url, timeout=5)
+                    if response.status_code == 200:
+                        filename = f'{book.slug}.jpg'
+                        book.cover_image.save(filename, ContentFile(response.content), save=True)
+                except Exception:
+                    pass
+
+            return {'status': 'imported', 'book': book, 'title': title}
+
+        # Importar por query
+        if query:
+            url = 'https://openlibrary.org/search.json'
+            params = {
+                'q': query,
+                'limit': limit * 2,
+                'fields': 'key,title,author_name,first_publish_year,isbn,subject,cover_i'
+            }
+
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+
+            category, _ = Category.objects.get_or_create(
+                name=query.title(),
+                defaults={'description': f'Libros sobre {query}'}
+            )
+
+            for doc in data.get('docs', [])[:limit]:
+                work = {
+                    'title': doc.get('title', ''),
+                    'authors': [{'name': name} for name in doc.get('author_name', [])[:1]],
+                    'first_publish_year': doc.get('first_publish_year'),
+                    'cover_id': doc.get('cover_i'),
+                    'subject': doc.get('subject', [])[:3]
+                }
+
+                result = import_book(work, category)
+                if result['status'] == 'imported':
+                    imported_books.append(result)
+                elif result['status'] == 'skipped':
+                    skipped_books.append(result)
+                else:
+                    errors.append(result)
+
+                time.sleep(0.2)  # Rate limiting
+
+        # Importar por subjects
+        else:
+            books_per_subject = limit // len(subjects)
+
+            for subject in subjects:
+                subject = subject.strip()
+                url = f'https://openlibrary.org/subjects/{subject}.json'
+                params = {'limit': books_per_subject * 2}
+
+                try:
+                    response = requests.get(url, params=params, timeout=10)
+                    response.raise_for_status()
+                    data = response.json()
+
+                    category, _ = Category.objects.get_or_create(
+                        name=subject.title(),
+                        defaults={'description': f'Libros sobre {subject}'}
+                    )
+
+                    for work in data.get('works', [])[:books_per_subject]:
+                        result = import_book(work, category)
+                        if result['status'] == 'imported':
+                            imported_books.append(result)
+                        elif result['status'] == 'skipped':
+                            skipped_books.append(result)
+                        else:
+                            errors.append(result)
+
+                        time.sleep(0.2)  # Rate limiting
+
+                except Exception as e:
+                    logger.error(f"Error importing subject {subject}: {str(e)}")
+                    errors.append({'status': 'error', 'reason': str(e), 'subject': subject})
+
+        # Auto-indexar si está habilitado
+        indexed_count = 0
+        if auto_index and imported_books:
+            try:
+                for book_data in imported_books:
+                    book = book_data['book']
+                    doc = BookDocument.from_django_model(book)
+                    doc.save()
+                    indexed_count += 1
+            except Exception as e:
+                logger.error(f"Error indexing books: {str(e)}")
+
+        return Response({
+            'success': True,
+            'imported': len(imported_books),
+            'skipped': len(skipped_books),
+            'errors': len(errors),
+            'indexed': indexed_count,
+            'total_books_in_db': Book.objects.count(),
+            'imported_titles': [b['title'] for b in imported_books[:10]],  # Primeros 10
+            'error_details': errors[:5] if errors else []  # Primeros 5 errores
+        })
+
+    except Exception as e:
+        logger.error(f"Error in import_books_from_openlibrary: {str(e)}", exc_info=True)
+        return Response(
+            {'error': 'Error al importar libros', 'detail': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAdminUser])
+def get_import_stats(request):
+    """
+    Obtiene estadísticas para la interfaz de importación.
+    Solo para administradores.
+    """
+    try:
+        from django.db.models import Count
+        from django.contrib.auth import get_user_model
+
+        User = get_user_model()
+
+        # Estadísticas generales
+        total_books = Book.objects.count()
+        total_authors = Author.objects.count()
+        total_categories = Category.objects.count()
+
+        # Libros por categoría
+        categories_stats = Category.objects.annotate(
+            book_count=Count('books')
+        ).values('id', 'name', 'book_count').order_by('-book_count')[:10]
+
+        # Libros con/sin portada
+        books_with_cover = Book.objects.exclude(cover_image='').count()
+        books_without_cover = Book.objects.filter(cover_image='').count()
+
+        # Libros premium vs gratuitos
+        premium_books = Book.objects.filter(is_premium=True).count()
+        free_books = Book.objects.filter(is_premium=False).count()
+
+        # Últimos libros importados
+        recent_books = Book.objects.select_related('author', 'category').order_by('-created_at')[:5]
+        recent_books_data = BookListSerializer(recent_books, many=True, context={'request': request}).data
+
+        return Response({
+            'total_books': total_books,
+            'total_authors': total_authors,
+            'total_categories': total_categories,
+            'categories_stats': list(categories_stats),
+            'books_with_cover': books_with_cover,
+            'books_without_cover': books_without_cover,
+            'premium_books': premium_books,
+            'free_books': free_books,
+            'recent_books': recent_books_data
+        })
+
+    except Exception as e:
+        logger.error(f"Error in get_import_stats: {str(e)}", exc_info=True)
+        return Response(
+            {'error': 'Error al obtener estadísticas', 'detail': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
 # ============================================================================
 # REVIEW VIEWS
 # ============================================================================
@@ -333,6 +594,12 @@ class ReviewListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         slug = self.kwargs.get('slug')
         book = get_object_or_404(Book, slug=slug)
+
+        # Check if user already reviewed this book
+        if Review.objects.filter(user=self.request.user, book=book).exists():
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({"detail": "Ya has dejado una reseña para este libro."})
+
         serializer.save(user=self.request.user, book=book)
 
 
@@ -471,3 +738,139 @@ class UpdateReadingHistoryView(APIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ============================================================================
+# READING (PDF VIEWER) VIEWS
+# ============================================================================
+
+class ReadingListView(generics.ListAPIView):
+    """List all reading sessions for the authenticated user (Continue Reading)"""
+    serializer_class = ReadingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Return readings ordered by most recent
+        return Reading.objects.filter(user=self.request.user).select_related(
+            'book', 'book__author', 'book__category'
+        ).order_by('-last_read_at')[:10]  # Last 10 books read
+
+
+class StartReadingView(APIView):
+    """Start or resume reading a book"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, book_id):
+        book = get_object_or_404(Book, id=book_id)
+
+        # Check if user has access (premium books require subscription)
+        if book.is_premium:
+            # TODO: Check if user has active subscription
+            # For now, we'll allow it
+            pass
+
+        # Get or create reading session
+        reading, created = Reading.objects.get_or_create(
+            user=request.user,
+            book=book,
+            defaults={
+                'current_page': 1,
+                'zoom_level': 1.0,
+            }
+        )
+
+        serializer = ReadingSerializer(reading, context={'request': request})
+
+        return Response({
+            'status': 'started' if created else 'resumed',
+            'reading': serializer.data
+        }, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+
+
+class ReadingDetailView(generics.RetrieveAPIView):
+    """Get reading progress for a specific book"""
+    serializer_class = ReadingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        book_id = self.kwargs.get('book_id')
+        return get_object_or_404(
+            Reading,
+            user=self.request.user,
+            book_id=book_id
+        )
+
+
+class UpdateReadingProgressView(APIView):
+    """Update reading progress (for auto-save)"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, book_id):
+        reading = get_object_or_404(
+            Reading,
+            user=request.user,
+            book_id=book_id
+        )
+
+        serializer = ReadingProgressUpdateSerializer(
+            reading,
+            data=request.data,
+            partial=True
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+
+            # Return full reading data
+            full_serializer = ReadingSerializer(reading, context={'request': request})
+            return Response(full_serializer.data)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ServeBookFileView(APIView):
+    """Serve book PDF file with authentication and permission check"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, book_id):
+        from django.http import FileResponse, Http404
+        import os
+
+        book = get_object_or_404(Book, id=book_id)
+
+        # Check if user has access
+        if book.is_premium:
+            # TODO: Verify user has active subscription
+            pass
+
+        # Check if file exists
+        if not book.file:
+            raise Http404("Book file not found")
+
+        # Get file path
+        file_path = book.file.path
+
+        if not os.path.exists(file_path):
+            raise Http404("Book file not found on server")
+
+        # Log the access
+        logger.info(f"User {request.user.username} accessed book {book.title}")
+
+        # Update or create reading session
+        Reading.objects.get_or_create(
+            user=request.user,
+            book=book,
+            defaults={'current_page': 1}
+        )
+
+        # Serve the file
+        response = FileResponse(
+            open(file_path, 'rb'),
+            content_type='application/pdf'
+        )
+
+        # Set headers for PDF viewing in browser
+        response['Content-Disposition'] = f'inline; filename="{book.title}.pdf"'
+        response['X-Content-Type-Options'] = 'nosniff'
+
+        return response

@@ -158,3 +158,66 @@ class ReadingHistory(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.book.title} ({self.status})"
+
+
+class Reading(models.Model):
+    """Track detailed reading progress (page-by-page) for PDF viewer"""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='readings')
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='reading_sessions')
+    current_page = models.IntegerField(default=1)
+    total_pages = models.IntegerField(null=True, blank=True)
+    progress_percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0.00,
+        help_text="Progress percentage based on current_page / total_pages"
+    )
+    zoom_level = models.DecimalField(
+        max_digits=3,
+        decimal_places=2,
+        default=1.00,
+        help_text="User's preferred zoom level (1.00 = 100%)"
+    )
+    started_at = models.DateTimeField(auto_now_add=True)
+    last_read_at = models.DateTimeField(auto_now=True)
+    total_reading_time = models.IntegerField(
+        default=0,
+        help_text="Total reading time in seconds"
+    )
+
+    class Meta:
+        db_table = 'readings'
+        ordering = ['-last_read_at']
+        unique_together = [['user', 'book']]
+        verbose_name = 'Reading Session'
+        verbose_name_plural = 'Reading Sessions'
+        indexes = [
+            models.Index(fields=['user', '-last_read_at']),
+            models.Index(fields=['book', '-last_read_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.book.title} (Page {self.current_page}/{self.total_pages or '?'})"
+
+    def save(self, *args, **kwargs):
+        """Auto-calculate progress percentage when saving"""
+        if self.total_pages and self.total_pages > 0:
+            self.progress_percentage = round(
+                (self.current_page / self.total_pages) * 100,
+                2
+            )
+        super().save(*args, **kwargs)
+
+    @property
+    def is_finished(self):
+        """Check if user finished reading the book"""
+        if not self.total_pages:
+            return False
+        return self.current_page >= self.total_pages
+
+    @property
+    def pages_remaining(self):
+        """Calculate pages remaining"""
+        if not self.total_pages:
+            return None
+        return max(0, self.total_pages - self.current_page)

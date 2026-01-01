@@ -3,6 +3,9 @@ FROM node:22-alpine
 # Run as root to avoid permission issues on Windows
 USER root
 
+# Install curl for healthchecks
+RUN apk add --no-cache curl
+
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager

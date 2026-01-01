@@ -78,8 +78,8 @@ interface BookFormData {
     isbn: string
     publication_date: string
     is_premium: boolean
-    cover_image?: File | null
-    file?: File | null
+    cover_image: File | null
+    file: File | null
 }
 
 export default function AdminBooksPage() {
@@ -99,6 +99,8 @@ export default function AdminBooksPage() {
         isbn: "",
         publication_date: "",
         is_premium: false,
+        cover_image: null,
+        file: null,
     })
     const [submitting, setSubmitting] = useState(false)
 
@@ -161,9 +163,11 @@ export default function AdminBooksPage() {
                 description: book.description,
                 author: String(book.author.id),
                 category: String(book.category.id),
-                isbn: book.isbn,
-                publication_date: book.publication_date,
+                isbn: book.isbn || "",
+                publication_date: book.publication_date || "",
                 is_premium: book.is_premium,
+                cover_image: null,
+                file: null,
             })
         } else {
             setEditingBook(null)
@@ -175,6 +179,8 @@ export default function AdminBooksPage() {
                 isbn: "",
                 publication_date: "",
                 is_premium: false,
+                cover_image: null,
+                file: null,
             })
         }
         setIsDialogOpen(true)
@@ -191,6 +197,8 @@ export default function AdminBooksPage() {
             isbn: "",
             publication_date: "",
             is_premium: false,
+            cover_image: null,
+            file: null,
         })
     }
 

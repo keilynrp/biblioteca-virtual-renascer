@@ -1,57 +1,97 @@
 @import "tailwindcss";
 
-/* TailAdmin Design System - Color Variables */
+/* Enhanced Design System - Color Variables with Theme Support */
 :root {
-  /* Primary Colors - Teal Theme (#00576F) */
+  /* Primary Colors - Teal Theme (#00576F) - Enhanced with more shades */
   --primary: 192 100% 22%;
   --primary-dark: 192 100% 17%;
+  --primary-darker: 192 100% 12%;
   --primary-light: 192 100% 30%;
-  
-  /* Background Colors */
+  --primary-lighter: 192 100% 40%;
+  --primary-soft: 192 60% 85%;
+
+  /* Background Colors - Enhanced hierarchy */
   --background: 0 0% 100%;
+  --background-secondary: 210 40% 98%;
   --foreground: 222 47% 11%;
-  
-  /* Card & Surface */
+  --foreground-muted: 222 47% 25%;
+
+  /* Card & Surface - Better depth */
   --card: 0 0% 100%;
   --card-foreground: 222 47% 11%;
-  
-  /* Muted Colors */
+  --card-hover: 210 40% 98%;
+
+  /* Muted Colors - Improved contrast */
   --muted: 210 40% 96%;
+  --muted-dark: 210 30% 92%;
   --muted-foreground: 215 16% 47%;
-  
-  /* Border & Input */
+  --muted-foreground-light: 215 16% 60%;
+
+  /* Border & Input - Subtle improvements */
   --border: 214 32% 91%;
+  --border-strong: 214 32% 80%;
   --input: 214 32% 91%;
+  --input-hover: 214 32% 85%;
   --ring: 192 100% 22%;
-  
-  /* Success, Warning, Danger */
+
+  /* Success, Warning, Danger - Enhanced palette */
   --success: 142 76% 36%;
+  --success-light: 142 76% 45%;
+  --success-dark: 142 76% 28%;
   --warning: 38 92% 50%;
+  --warning-light: 38 92% 60%;
+  --warning-dark: 38 92% 40%;
   --danger: 0 84% 60%;
-  
+  --danger-light: 0 84% 70%;
+  --danger-dark: 0 84% 50%;
+
+  /* Info Color - New */
+  --info: 210 100% 50%;
+  --info-light: 210 100% 60%;
+  --info-dark: 210 100% 40%;
+
   /* Semantic Colors */
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 98%;
-  
-  /* Accent */
+
+  /* Accent - Enhanced with variants */
   --accent: 210 40% 96%;
   --accent-foreground: 222 47% 11%;
-  
+  --accent-hover: 210 40% 92%;
+
   /* Popover */
   --popover: 0 0% 100%;
   --popover-foreground: 222 47% 11%;
-  
-  /* Sidebar */
+
+  /* Sidebar - Enhanced */
   --sidebar-background: 0 0% 100%;
   --sidebar-foreground: 222 47% 11%;
   --sidebar-border: 214 32% 91%;
-  
-  /* Chart Colors */
+  --sidebar-hover: 210 40% 96%;
+  --sidebar-active: 192 100% 95%;
+
+  /* Chart Colors - Extended palette */
   --chart-1: 192 100% 22%;
   --chart-2: 142 76% 36%;
   --chart-3: 38 92% 50%;
   --chart-4: 280 65% 60%;
   --chart-5: 340 75% 55%;
+  --chart-6: 210 100% 50%;
+
+  /* Gradient Stops - For advanced effects */
+  --gradient-start: 192 100% 22%;
+  --gradient-middle: 192 100% 17%;
+  --gradient-end: 192 100% 12%;
+
+  /* Shadow Colors - For consistent depth */
+  --shadow-sm: 0 0% 0% / 0.05;
+  --shadow-md: 0 0% 0% / 0.1;
+  --shadow-lg: 0 0% 0% / 0.15;
+  --shadow-xl: 0 0% 0% / 0.25;
+
+  /* Glass Effect - For glassmorphism */
+  --glass-background: 0 0% 100% / 0.7;
+  --glass-border: 0 0% 100% / 0.18;
 }
 
 @theme inline {
@@ -75,29 +115,132 @@
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-/* Dark Mode */
+/* Dark Mode - Enhanced with better contrasts and depth */
 .dark {
+  /* Backgrounds - Deeper hierarchy */
   --background: 222 47% 11%;
+  --background-secondary: 222 47% 14%;
   --foreground: 210 40% 98%;
+  --foreground-muted: 210 40% 85%;
 
+  /* Card & Surface - Better elevation */
   --card: 222 47% 14%;
   --card-foreground: 210 40% 98%;
+  --card-hover: 222 47% 18%;
 
+  /* Muted - Improved visibility */
   --muted: 217 33% 17%;
-  --muted-foreground: 215 20% 65%;
+  --muted-dark: 217 33% 13%;
+  --muted-foreground: 215 20% 70%;
+  --muted-foreground-light: 215 20% 80%;
 
-  --border: 217 33% 17%;
-  --input: 217 33% 17%;
+  /* Borders - Subtle but visible */
+  --border: 217 33% 20%;
+  --border-strong: 217 33% 30%;
+  --input: 217 33% 20%;
+  --input-hover: 217 33% 25%;
 
-  --accent: 217 33% 17%;
+  /* Primary - Brighter for dark mode */
+  --primary-light: 192 100% 35%;
+  --primary-lighter: 192 100% 45%;
+  --primary-soft: 192 60% 25%;
+
+  /* Accent - Enhanced */
+  --accent: 217 33% 20%;
   --accent-foreground: 210 40% 98%;
+  --accent-hover: 217 33% 25%;
 
+  /* Popover */
   --popover: 222 47% 14%;
   --popover-foreground: 210 40% 98%;
 
+  /* Sidebar - Enhanced */
   --sidebar-background: 222 47% 14%;
   --sidebar-foreground: 210 40% 98%;
-  --sidebar-border: 217 33% 17%;
+  --sidebar-border: 217 33% 20%;
+  --sidebar-hover: 217 33% 20%;
+  --sidebar-active: 192 100% 20%;
+
+  /* Success, Warning, Danger - Adjusted for dark mode */
+  --success: 142 76% 42%;
+  --success-light: 142 76% 52%;
+  --success-dark: 142 76% 32%;
+  --warning: 38 92% 55%;
+  --warning-light: 38 92% 65%;
+  --warning-dark: 38 92% 45%;
+  --danger: 0 84% 65%;
+  --danger-light: 0 84% 75%;
+  --danger-dark: 0 84% 55%;
+
+  /* Info - Adjusted */
+  --info: 210 100% 55%;
+  --info-light: 210 100% 65%;
+  --info-dark: 210 100% 45%;
+
+  /* Gradient Stops - Darker for dark mode */
+  --gradient-start: 192 100% 25%;
+  --gradient-middle: 192 100% 20%;
+  --gradient-end: 192 100% 15%;
+
+  /* Shadow Colors - Stronger for dark mode */
+  --shadow-sm: 0 0% 0% / 0.2;
+  --shadow-md: 0 0% 0% / 0.3;
+  --shadow-lg: 0 0% 0% / 0.4;
+  --shadow-xl: 0 0% 0% / 0.5;
+
+  /* Glass Effect - For glassmorphism in dark mode */
+  --glass-background: 222 47% 14% / 0.7;
+  --glass-border: 255 255% 255% / 0.1;
+}
+
+/* Alternative Theme: Ocean Blue */
+.theme-ocean {
+  --primary: 210 100% 35%;
+  --primary-dark: 210 100% 28%;
+  --primary-darker: 210 100% 20%;
+  --primary-light: 210 100% 45%;
+  --primary-lighter: 210 100% 55%;
+  --primary-soft: 210 60% 85%;
+}
+
+/* Alternative Theme: Forest Green */
+.theme-forest {
+  --primary: 142 76% 36%;
+  --primary-dark: 142 76% 28%;
+  --primary-darker: 142 76% 20%;
+  --primary-light: 142 76% 45%;
+  --primary-lighter: 142 76% 55%;
+  --primary-soft: 142 60% 85%;
+}
+
+/* Alternative Theme: Royal Purple */
+.theme-purple {
+  --primary: 280 65% 50%;
+  --primary-dark: 280 65% 40%;
+  --primary-darker: 280 65% 30%;
+  --primary-light: 280 65% 60%;
+  --primary-lighter: 280 65% 70%;
+  --primary-soft: 280 60% 85%;
+}
+
+/* Alternative Theme: Sunset Orange */
+.theme-sunset {
+  --primary: 25 95% 53%;
+  --primary-dark: 25 95% 45%;
+  --primary-darker: 25 95% 35%;
+  --primary-light: 25 95% 63%;
+  --primary-lighter: 25 95% 73%;
+  --primary-soft: 25 60% 85%;
+}
+
+/* Alternative Theme: Rose Red */
+.theme-rose {
+  --primary: 340 75% 55%;
+  --primary-dark: 340 75% 45%;
+  --primary-darker: 340 75% 35%;
+  --primary-light: 340 75% 65%;
+  --primary-lighter: 340 75% 75%;
+  --primary-soft: 340 60% 85%;
 }
 
 /* Base Styles */
@@ -156,4 +299,327 @@ body {
     12px 12px 24px rgba(0, 0, 0, 0.08),
     1px 1px 0px rgba(255, 255, 255, 0.6) inset,
     -1px -1px 0px rgba(0, 0, 0, 0.1) inset;
+}
+
+/* Dashboard Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.5s ease-out;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.5s ease-out;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  background-size: 1000px 100%;
+}
+
+/* ============================================
+   ENHANCED GRADIENT UTILITIES
+   ============================================ */
+
+/* Primary Gradients */
+.gradient-primary {
+  background: linear-gradient(135deg,
+    hsl(var(--primary)) 0%,
+    hsl(var(--primary-dark)) 100%
+  );
+}
+
+.gradient-primary-radial {
+  background: radial-gradient(circle at top right,
+    hsl(var(--primary-light)) 0%,
+    hsl(var(--primary)) 50%,
+    hsl(var(--primary-dark)) 100%
+  );
+}
+
+.gradient-primary-mesh {
+  background:
+    radial-gradient(at 27% 37%, hsl(var(--primary-light)) 0px, transparent 50%),
+    radial-gradient(at 97% 21%, hsl(var(--primary)) 0px, transparent 50%),
+    radial-gradient(at 52% 99%, hsl(var(--primary-dark)) 0px, transparent 50%),
+    radial-gradient(at 10% 29%, hsl(var(--primary-darker)) 0px, transparent 50%),
+    hsl(var(--background));
+}
+
+.gradient-success {
+  background: linear-gradient(135deg,
+    hsl(var(--success-light)) 0%,
+    hsl(var(--success-dark)) 100%
+  );
+}
+
+.gradient-warning {
+  background: linear-gradient(135deg,
+    hsl(var(--warning-light)) 0%,
+    hsl(var(--warning-dark)) 100%
+  );
+}
+
+.gradient-danger {
+  background: linear-gradient(135deg,
+    hsl(var(--danger-light)) 0%,
+    hsl(var(--danger-dark)) 100%
+  );
+}
+
+.gradient-info {
+  background: linear-gradient(135deg,
+    hsl(var(--info-light)) 0%,
+    hsl(var(--info-dark)) 100%
+  );
+}
+
+/* Animated Gradients */
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.gradient-animated {
+  background: linear-gradient(
+    -45deg,
+    hsl(var(--primary)),
+    hsl(var(--primary-light)),
+    hsl(var(--primary-dark)),
+    hsl(var(--primary))
+  );
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+/* Glass Morphism Effects */
+.glass {
+  background: hsl(var(--glass-background));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid hsl(var(--glass-border));
+}
+
+.glass-strong {
+  background: hsl(var(--glass-background));
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid hsl(var(--glass-border));
+}
+
+/* Glow Effects */
+.glow-primary {
+  box-shadow: 0 0 20px hsl(var(--primary) / 0.3),
+              0 0 40px hsl(var(--primary) / 0.2),
+              0 0 60px hsl(var(--primary) / 0.1);
+}
+
+.glow-success {
+  box-shadow: 0 0 20px hsl(var(--success) / 0.3),
+              0 0 40px hsl(var(--success) / 0.2);
+}
+
+.glow-warning {
+  box-shadow: 0 0 20px hsl(var(--warning) / 0.3),
+              0 0 40px hsl(var(--warning) / 0.2);
+}
+
+.glow-danger {
+  box-shadow: 0 0 20px hsl(var(--danger) / 0.3),
+              0 0 40px hsl(var(--danger) / 0.2);
+}
+
+/* Hover Glow Effect */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.2);
+  }
+  50% {
+    box-shadow: 0 0 40px hsl(var(--primary) / 0.4),
+                0 0 60px hsl(var(--primary) / 0.2);
+  }
+}
+
+.hover-glow:hover {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Mesh Gradient Backgrounds */
+.mesh-gradient-1 {
+  background-color: hsl(var(--background));
+  background-image:
+    radial-gradient(at 40% 20%, hsl(var(--primary) / 0.15) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, hsl(var(--primary-light) / 0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, hsl(var(--primary-dark) / 0.12) 0px, transparent 50%);
+}
+
+.mesh-gradient-2 {
+  background-color: hsl(var(--background));
+  background-image:
+    radial-gradient(at 27% 37%, hsl(var(--chart-1) / 0.08) 0px, transparent 50%),
+    radial-gradient(at 97% 21%, hsl(var(--chart-2) / 0.08) 0px, transparent 50%),
+    radial-gradient(at 52% 99%, hsl(var(--chart-3) / 0.08) 0px, transparent 50%),
+    radial-gradient(at 10% 29%, hsl(var(--chart-4) / 0.08) 0px, transparent 50%),
+    radial-gradient(at 84% 72%, hsl(var(--chart-5) / 0.08) 0px, transparent 50%);
+}
+
+/* Holographic Effect */
+@keyframes holographic {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.holographic {
+  background: linear-gradient(
+    124deg,
+    hsl(var(--primary)),
+    hsl(var(--chart-4)),
+    hsl(var(--chart-2)),
+    hsl(var(--chart-3)),
+    hsl(var(--chart-5))
+  );
+  background-size: 1800% 1800%;
+  animation: holographic 10s ease infinite;
+}
+
+/* Text Gradients */
+.text-gradient-primary {
+  background: linear-gradient(135deg,
+    hsl(var(--primary-light)),
+    hsl(var(--primary-dark))
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-rainbow {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--chart-1)),
+    hsl(var(--chart-2)),
+    hsl(var(--chart-3)),
+    hsl(var(--chart-4)),
+    hsl(var(--chart-5))
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Border Gradients */
+.border-gradient-primary {
+  border: 2px solid transparent;
+  background: linear-gradient(hsl(var(--background)), hsl(var(--background))) padding-box,
+              linear-gradient(135deg, hsl(var(--primary-light)), hsl(var(--primary-dark))) border-box;
+}
+
+/* Elevated Shadow Utilities */
+.shadow-elevated-sm {
+  box-shadow:
+    0 2px 4px hsl(var(--shadow-sm)),
+    0 1px 2px hsl(var(--shadow-sm));
+}
+
+.shadow-elevated-md {
+  box-shadow:
+    0 4px 6px hsl(var(--shadow-md)),
+    0 2px 4px hsl(var(--shadow-sm));
+}
+
+.shadow-elevated-lg {
+  box-shadow:
+    0 10px 15px hsl(var(--shadow-lg)),
+    0 4px 6px hsl(var(--shadow-md));
+}
+
+.shadow-elevated-xl {
+  box-shadow:
+    0 20px 25px hsl(var(--shadow-xl)),
+    0 10px 15px hsl(var(--shadow-lg));
+}
+
+/* Colored Shadows */
+.shadow-primary {
+  box-shadow: 0 10px 30px hsl(var(--primary) / 0.3);
+}
+
+.shadow-success {
+  box-shadow: 0 10px 30px hsl(var(--success) / 0.3);
+}
+
+.shadow-warning {
+  box-shadow: 0 10px 30px hsl(var(--warning) / 0.3);
+}
+
+.shadow-danger {
+  box-shadow: 0 10px 30px hsl(var(--danger) / 0.3);
+}
+
+/* Frosted Glass Cards */
+.card-frosted {
+  background: hsl(var(--card) / 0.8);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid hsl(var(--border) / 0.5);
+  box-shadow: 0 8px 32px hsl(var(--shadow-lg));
+}
+
+.dark .card-frosted {
+  background: hsl(var(--card) / 0.6);
+  border: 1px solid hsl(var(--border) / 0.3);
 }

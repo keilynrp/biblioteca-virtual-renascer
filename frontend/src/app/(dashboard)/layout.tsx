@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useAuthStore } from "@/store/authStore"
+import { useAuthStore, useAuthStoreHydrated } from "@/store/authStore"
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
@@ -34,10 +34,12 @@ import {
     ChevronLeft,
     ChevronRight,
     Heart,
-    BookMarked
+    BookMarked,
+    Shield
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { SearchBar } from "@/components/search-bar"
+import { ThemeSwitcher } from "@/components/theme-switcher"
 
 export default function DashboardLayout({
     children,
@@ -46,40 +48,30 @@ export default function DashboardLayout({
 }) {
     const pathname = usePathname()
     const router = useRouter()
-    const { user, logout } = useAuthStore()
+    // Usar el hook hidratado para prevenir errores de hidratación
+    const { user, logout, isAuthenticated, _hasHydrated } = useAuthStoreHydrated()
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
     const [isDarkMode, setIsDarkMode] = useState(false)
-    const [isMounted, setIsMounted] = useState(false)
 
-    // Redirect if not authenticated
-    const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
-
-    // Handle mount state to prevent hydration mismatch
+    // Redirect if not authenticated (solo después de hidratar)
     useEffect(() => {
-        setIsMounted(true)
-    }, [])
+        if (!_hasHydrated) return
 
-    useEffect(() => {
-        if (!isMounted) return
-
-        // Check both zustand store and localStorage for authentication
-        const hasToken = typeof window !== 'undefined' && localStorage.getItem('accessToken')
-
-        if (!isAuthenticated && !hasToken) {
+        if (!isAuthenticated) {
             router.push('/login')
         }
-    }, [isAuthenticated, router, isMounted])
+    }, [isAuthenticated, router, _hasHydrated])
 
-    // Load sidebar collapsed state from localStorage
+    // Load sidebar collapsed state from localStorage (solo después de hidratar)
     useEffect(() => {
-        if (!isMounted) return
+        if (!_hasHydrated) return
 
         const savedState = localStorage.getItem('sidebarCollapsed')
         if (savedState !== null) {
             setIsSidebarCollapsed(savedState === 'true')
         }
-    }, [isMounted])
+    }, [_hasHydrated])
 
     // Save sidebar state to localStorage
     const toggleSidebarCollapse = () => {
@@ -103,6 +95,7 @@ export default function DashboardLayout({
         { href: "/library", label: "Biblioteca", icon: Library },
         { href: "/favorites", label: "Mis Favoritos", icon: Heart },
         { href: "/reading-history", label: "Historial de Lectura", icon: BookMarked },
+        { href: "/admin", label: "Panel Admin", icon: Shield, adminOnly: true },
         { href: "/admin/books", label: "Administrar Libros", icon: FileEdit },
         { href: "/admin/authors", label: "Administrar Autores", icon: Users },
         { href: "/admin/categories", label: "Administrar Categorías", icon: FolderOpen },
@@ -111,30 +104,40 @@ export default function DashboardLayout({
     ]
 
     return (
-        <div className="flex h-screen overflow-hidden bg-muted/30" suppressHydrationWarning>
+        <div className="flex h-screen overflow-hidden bg-muted/30">
             {/* Sidebar */}
             <aside className={`
-                fixed inset-y-0 left-0 z-50 transform bg-card shadow-xl transition-all duration-300 ease-in-out
+                fixed inset-y-0 left-0 z-50 transform bg-card shadow-2xl transition-all duration-300 ease-in-out
                 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
                 md:static md:translate-x-0
                 ${isSidebarCollapsed ? "md:w-20" : "md:w-72"}
                 w-72
-                border-r border-border
-            `} suppressHydrationWarning>
+                border-r border-border/50
+                backdrop-blur-xl bg-card/95
+            `}>
+                {/* Decorative gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-primary-dark/5 pointer-events-none" />
+
                 {/* Sidebar Header */}
-                <div className="flex h-16 items-center justify-between px-6 border-b border-border bg-gradient-to-r from-primary/10 to-primary/5">
-                    <div className={`flex items-center space-x-3 transition-opacity duration-200 ${isSidebarCollapsed ? "md:opacity-0 md:hidden" : "opacity-100"}`}>
-                        <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
+                <div className="relative flex h-16 items-center justify-between px-6 border-b border-border/50 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
+                    <div className={`flex items-center space-x-3 transition-all duration-300 ${isSidebarCollapsed ? "md:opacity-0 md:scale-90 md:hidden" : "opacity-100 scale-100"}`}>
+                        <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-primary via-primary-dark to-primary shadow-lg shadow-primary/30 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <BookOpen className="h-6 w-6 text-white" />
+                            <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
-                        <span className="text-lg font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
-                            Biblioteca Virtual
-                        </span>
+                        <div className="flex flex-col">
+                            <span className="text-lg font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
+                                BVS
+                            </span>
+                            <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+                                Biblioteca
+                            </span>
+                        </div>
                     </div>
 
                     {/* Collapsed state logo */}
-                    <div className={`flex items-center justify-center w-full transition-opacity duration-200 ${isSidebarCollapsed ? "md:opacity-100" : "md:opacity-0 md:hidden"}`}>
-                        <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
+                    <div className={`flex items-center justify-center w-full transition-all duration-300 ${isSidebarCollapsed ? "md:opacity-100 md:scale-100" : "md:opacity-0 md:scale-90 md:hidden"}`}>
+                        <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-primary via-primary-dark to-primary shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-110 transition-transform">
                             <BookOpen className="h-6 w-6 text-white" />
                         </div>
                     </div>
@@ -142,18 +145,21 @@ export default function DashboardLayout({
                     {/* Mobile close button */}
                     <button
                         onClick={() => setIsSidebarOpen(false)}
-                        className="md:hidden hover:bg-muted rounded-lg p-1 transition-colors"
+                        className="md:hidden hover:bg-muted/50 rounded-lg p-2 transition-all hover:scale-110"
                     >
                         <X className="h-5 w-5" />
                     </button>
                 </div>
 
                 {/* Navigation */}
-                <nav className="p-4 space-y-1">
-                    <p className={`px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 transition-opacity duration-200 ${isSidebarCollapsed ? "md:opacity-0 md:hidden" : "opacity-100"}`}>
-                        Menú Principal
-                    </p>
-                    {navItems.map((item) => {
+                <nav className="relative p-4 space-y-1 overflow-y-auto flex-1">
+                    <div className={`px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4 transition-all duration-300 ${isSidebarCollapsed ? "md:opacity-0 md:hidden" : "opacity-100"}`}>
+                        <span className="inline-flex items-center gap-2">
+                            <span className="h-px w-3 bg-primary/30 block" />
+                            Menú Principal
+                        </span>
+                    </div>
+                    {navItems.map((item, index) => {
                         const Icon = item.icon
                         const isActive = pathname === item.href
                         return (
@@ -162,24 +168,66 @@ export default function DashboardLayout({
                                 href={item.href}
                                 onClick={() => setIsSidebarOpen(false)}
                                 className={`
-                                    flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 group relative
+                                    flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 group relative
+                                    overflow-hidden
                                     ${isActive
-                                        ? "bg-gradient-to-r from-primary to-primary-dark text-white shadow-lg shadow-primary/30"
-                                        : "text-foreground hover:bg-muted hover:text-primary"
+                                        ? "bg-gradient-to-r from-primary to-primary-dark text-white shadow-lg shadow-primary/30 scale-[1.02]"
+                                        : "text-foreground hover:bg-gradient-to-r hover:from-muted/80 hover:to-muted/40 hover:text-primary hover:scale-[1.02]"
                                     }
-                                    ${isSidebarCollapsed ? "md:justify-center md:px-2" : ""}
+                                    ${isSidebarCollapsed ? "md:justify-center md:px-3" : ""}
                                 `}
+                                style={{
+                                    animation: `fadeInUp 0.3s ease-out ${index * 0.05}s both`
+                                }}
                                 title={isSidebarCollapsed ? item.label : undefined}
                             >
-                                <Icon className={`h-5 w-5 flex-shrink-0 ${isActive ? "" : "group-hover:scale-110 transition-transform"}`} />
-                                <span className={`font-medium whitespace-nowrap transition-opacity duration-200 ${isSidebarCollapsed ? "md:opacity-0 md:absolute md:invisible" : "opacity-100"}`}>
+                                {/* Active indicator */}
+                                {isActive && (
+                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-full" />
+                                )}
+
+                                {/* Icon container */}
+                                <div className={`
+                                    relative flex items-center justify-center
+                                    ${isActive ? "" : "group-hover:scale-110 group-hover:rotate-3"}
+                                    transition-all duration-300
+                                `}>
+                                    <Icon className="h-5 w-5 flex-shrink-0 relative z-10" />
+
+                                    {/* Icon glow effect */}
+                                    {isActive && (
+                                        <div className="absolute inset-0 blur-md bg-white/30 rounded-full" />
+                                    )}
+                                </div>
+
+                                {/* Label */}
+                                <span className={`
+                                    font-medium whitespace-nowrap transition-all duration-300
+                                    ${isSidebarCollapsed ? "md:opacity-0 md:absolute md:invisible" : "opacity-100"}
+                                    ${isActive ? "font-semibold" : ""}
+                                `}>
                                     {item.label}
                                 </span>
 
+                                {/* Hover shine effect */}
+                                {!isActive && (
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
+                                )}
+
                                 {/* Tooltip for collapsed state */}
                                 {isSidebarCollapsed && (
-                                    <span className="hidden md:block absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-sm rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                                    <span className="
+                                        hidden md:block absolute left-full ml-3 px-3 py-2
+                                        bg-popover text-popover-foreground text-sm rounded-lg
+                                        shadow-xl border border-border/50
+                                        opacity-0 group-hover:opacity-100
+                                        scale-95 group-hover:scale-100
+                                        transition-all duration-200
+                                        whitespace-nowrap pointer-events-none z-50
+                                        backdrop-blur-sm bg-popover/95
+                                    ">
                                         {item.label}
+                                        <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-popover/95" />
                                     </span>
                                 )}
                             </Link>
@@ -235,95 +283,163 @@ export default function DashboardLayout({
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="flex items-center justify-between h-16 px-6 bg-card shadow-sm border-b border-border">
-                    {/* Mobile Menu Button */}
-                    <button
-                        onClick={() => setIsSidebarOpen(true)}
-                        className="md:hidden hover:bg-muted rounded-lg p-2 transition-colors"
-                    >
-                        <Menu className="h-6 w-6" />
-                    </button>
+                <header className="relative flex items-center justify-between h-16 px-6 bg-card/80 backdrop-blur-xl shadow-lg border-b border-border/50">
+                    {/* Decorative gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary-dark/5 pointer-events-none" />
 
-                    {/* Search Bar */}
-                    <div className="hidden md:flex flex-1 max-w-md ml-4">
-                        <SearchBar />
-                    </div>
-
-                    {/* Header Actions */}
-                    <div className="ml-auto flex items-center space-x-3">
-                        {/* Dark Mode Toggle */}
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={toggleDarkMode}
-                            className="rounded-lg hover:bg-muted"
+                    <div className="relative flex items-center gap-4 w-full">
+                        {/* Mobile Menu Button */}
+                        <button
+                            onClick={() => setIsSidebarOpen(true)}
+                            className="md:hidden hover:bg-muted/80 rounded-xl p-2.5 transition-all hover:scale-105 active:scale-95"
                         >
-                            {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-                        </Button>
+                            <Menu className="h-6 w-6" />
+                        </button>
 
-                        {/* Notifications */}
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="relative rounded-lg hover:bg-muted">
-                                    <Bell className="h-5 w-5" />
-                                    <span className="absolute top-1 right-1 h-2 w-2 bg-danger rounded-full"></span>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-80">
-                                <DropdownMenuLabel>Notificaciones</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <div className="p-4 text-sm text-muted-foreground text-center">
-                                    No tienes notificaciones nuevas
+                        {/* Search Bar */}
+                        <div className="hidden md:flex flex-1 max-w-2xl">
+                            <SearchBar />
+                        </div>
+
+                        {/* Header Actions */}
+                        <div className="ml-auto flex items-center gap-2">
+                            {/* Theme Switcher */}
+                            <ThemeSwitcher />
+
+                            {/* Dark Mode Toggle */}
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={toggleDarkMode}
+                                className="
+                                    relative rounded-xl hover:bg-muted/80
+                                    transition-all duration-300
+                                    hover:scale-110 active:scale-95
+                                    group overflow-hidden
+                                "
+                            >
+                                <div className="relative z-10">
+                                    {isDarkMode ? (
+                                        <Sun className="h-5 w-5 text-amber-500 group-hover:rotate-90 transition-transform duration-300" />
+                                    ) : (
+                                        <Moon className="h-5 w-5 text-primary group-hover:-rotate-12 transition-transform duration-300" />
+                                    )}
                                 </div>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-amber-600/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </Button>
+
+                            {/* Notifications */}
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="
+                                            relative rounded-xl hover:bg-muted/80
+                                            transition-all duration-300
+                                            hover:scale-110 active:scale-95
+                                            group
+                                        "
+                                    >
+                                        <Bell className="h-5 w-5 group-hover:animate-pulse" />
+                                        <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full animate-pulse ring-2 ring-card" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    align="end"
+                                    className="w-80 border-border/50 shadow-xl backdrop-blur-xl bg-card/95"
+                                >
+                                    <DropdownMenuLabel className="flex items-center gap-2 text-base">
+                                        <Bell className="h-4 w-4" />
+                                        Notificaciones
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuSeparator className="bg-border/50" />
+                                    <div className="p-8 text-sm text-muted-foreground text-center">
+                                        <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                                            <Bell className="h-6 w-6 text-muted-foreground" />
+                                        </div>
+                                        <p className="font-medium">No tienes notificaciones nuevas</p>
+                                        <p className="text-xs mt-1">Te notificaremos cuando haya algo nuevo</p>
+                                    </div>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
 
                         {/* User Menu */}
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="flex items-center space-x-2 rounded-lg hover:bg-muted px-3">
-                                    <Avatar className="h-8 w-8 ring-2 ring-primary/20">
+                                <Button
+                                    variant="ghost"
+                                    className="
+                                        flex items-center gap-3 rounded-xl hover:bg-muted/80 px-3 py-2
+                                        transition-all duration-300
+                                        hover:scale-105 active:scale-95
+                                        group border border-transparent hover:border-border/50
+                                    "
+                                >
+                                    <Avatar className="h-9 w-9 ring-2 ring-primary/30 group-hover:ring-primary/50 transition-all">
                                         <AvatarImage src={user?.avatar} alt={user?.username} />
-                                        <AvatarFallback className="bg-gradient-to-br from-primary to-primary-dark text-white">
+                                        <AvatarFallback className="bg-gradient-to-br from-primary via-primary-dark to-primary text-white font-bold text-sm">
                                             {user?.username?.charAt(0).toUpperCase()}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="hidden md:block text-left">
-                                        <p className="text-sm font-medium">{user?.username}</p>
-                                        <p className="text-xs text-muted-foreground">Usuario</p>
+                                        <p className="text-sm font-semibold leading-none mb-1">{user?.username}</p>
+                                        <p className="text-[10px] text-muted-foreground leading-none uppercase tracking-wide">Usuario</p>
                                     </div>
-                                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                    <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-all group-hover:translate-y-0.5" />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-56" align="end" forceMount>
-                                <DropdownMenuLabel className="font-normal">
-                                    <div className="flex flex-col space-y-1">
-                                        <p className="text-sm font-medium leading-none">{user?.username}</p>
-                                        <p className="text-xs leading-none text-muted-foreground">
-                                            {user?.email}
-                                        </p>
+                            <DropdownMenuContent
+                                className="w-64 border-border/50 shadow-xl backdrop-blur-xl bg-card/95"
+                                align="end"
+                                forceMount
+                            >
+                                <DropdownMenuLabel className="font-normal p-4">
+                                    <div className="flex items-center gap-3">
+                                        <Avatar className="h-12 w-12 ring-2 ring-primary/30">
+                                            <AvatarImage src={user?.avatar} alt={user?.username} />
+                                            <AvatarFallback className="bg-gradient-to-br from-primary via-primary-dark to-primary text-white font-bold">
+                                                {user?.username?.charAt(0).toUpperCase()}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex flex-col">
+                                            <p className="text-sm font-semibold leading-none mb-1.5">{user?.username}</p>
+                                            <p className="text-xs leading-none text-muted-foreground truncate max-w-[150px]">
+                                                {user?.email || 'usuario@biblioteca.com'}
+                                            </p>
+                                        </div>
                                     </div>
                                 </DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem asChild>
-                                    <Link href="/profile" className="cursor-pointer">
-                                        <User className="mr-2 h-4 w-4" />
-                                        <span>Mi Perfil</span>
+                                <DropdownMenuSeparator className="bg-border/50" />
+                                <DropdownMenuItem asChild className="cursor-pointer hover:bg-muted/80 transition-colors">
+                                    <Link href="/profile" className="flex items-center px-3 py-2.5">
+                                        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center mr-3">
+                                            <User className="h-4 w-4 text-primary" />
+                                        </div>
+                                        <span className="font-medium">Mi Perfil</span>
                                     </Link>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/settings" className="cursor-pointer">
-                                        <Settings className="mr-2 h-4 w-4" />
-                                        <span>Configuración</span>
+                                <DropdownMenuItem asChild className="cursor-pointer hover:bg-muted/80 transition-colors">
+                                    <Link href="/settings" className="flex items-center px-3 py-2.5">
+                                        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center mr-3">
+                                            <Settings className="h-4 w-4 text-primary" />
+                                        </div>
+                                        <span className="font-medium">Configuración</span>
                                     </Link>
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={handleLogout} className="text-danger cursor-pointer">
-                                    <LogOut className="mr-2 h-4 w-4" />
-                                    <span>Cerrar Sesión</span>
+                                <DropdownMenuSeparator className="bg-border/50" />
+                                <DropdownMenuItem
+                                    onClick={handleLogout}
+                                    className="cursor-pointer hover:bg-red-50 dark:hover:bg-red-950/20 text-red-600 dark:text-red-400 transition-colors"
+                                >
+                                    <div className="h-8 w-8 rounded-lg bg-red-100 dark:bg-red-950/30 flex items-center justify-center mr-3">
+                                        <LogOut className="h-4 w-4" />
+                                    </div>
+                                    <span className="font-medium">Cerrar Sesión</span>
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
+                    </div>
                     </div>
                 </header>
 

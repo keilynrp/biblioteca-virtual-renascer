@@ -9,12 +9,17 @@ from .views import (
     autocomplete_books,
     search_facets,
     rebuild_search_index,
+    import_books_from_openlibrary,
+    get_import_stats,
     # Review views
     ReviewListCreateView, ReviewDetailView, UserReviewListView, MarkReviewHelpfulView,
     # Favorite views
     FavoriteListView, ToggleFavoriteView,
     # Reading history views
-    ReadingHistoryListView, UpdateReadingHistoryView
+    ReadingHistoryListView, UpdateReadingHistoryView,
+    # Reading (PDF viewer) views
+    ReadingListView, StartReadingView, ReadingDetailView,
+    UpdateReadingProgressView, ServeBookFileView
 )
 
 urlpatterns = [
@@ -26,6 +31,10 @@ urlpatterns = [
     path('search/autocomplete/', autocomplete_books, name='autocomplete_books'),
     path('search/facets/', search_facets, name='search_facets'),
     path('search/rebuild-index/', rebuild_search_index, name='rebuild_search_index'),
+
+    # Admin - Import endpoints
+    path('admin/import-books/', import_books_from_openlibrary, name='import_books'),
+    path('admin/import-stats/', get_import_stats, name='import_stats'),
 
     # Books
     path('books/', BookListView.as_view(), name='book_list'),
@@ -52,4 +61,11 @@ urlpatterns = [
     # Reading History
     path('user/reading-history/', ReadingHistoryListView.as_view(), name='reading_history'),
     path('user/reading-history/<int:book_id>/', UpdateReadingHistoryView.as_view(), name='update_reading_history'),
+
+    # Reading (PDF Viewer)
+    path('user/readings/', ReadingListView.as_view(), name='reading_list'),  # Continue reading
+    path('user/readings/start/<int:book_id>/', StartReadingView.as_view(), name='start_reading'),
+    path('user/readings/<int:book_id>/', ReadingDetailView.as_view(), name='reading_detail'),
+    path('user/readings/<int:book_id>/progress/', UpdateReadingProgressView.as_view(), name='update_reading_progress'),
+    path('books/<int:book_id>/file/', ServeBookFileView.as_view(), name='serve_book_file'),
 ]

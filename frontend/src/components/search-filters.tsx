@@ -287,33 +287,33 @@ export function SearchFilters({
           <p className="text-sm font-medium">Filtros activos:</p>
           <div className="flex flex-wrap gap-2">
             {selectedCategory && (
-              <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-full text-xs">
+              <div className="flex items-center gap-1 px-2 py-1 bg-primary/20 text-primary rounded-full text-xs">
                 <span>{selectedCategory}</span>
                 <button
                   onClick={() => handleCategoryChange(selectedCategory)}
-                  className="hover:bg-primary/20 rounded-full p-0.5"
+                  className="hover:bg-primary/30 rounded-full p-0.5"
                 >
                   <X className="h-3 w-3" />
                 </button>
               </div>
             )}
             {selectedAuthor && (
-              <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-full text-xs">
+              <div className="flex items-center gap-1 px-2 py-1 bg-primary/20 text-primary rounded-full text-xs">
                 <span>{selectedAuthor}</span>
                 <button
                   onClick={() => handleAuthorChange(selectedAuthor)}
-                  className="hover:bg-primary/20 rounded-full p-0.5"
+                  className="hover:bg-primary/30 rounded-full p-0.5"
                 >
                   <X className="h-3 w-3" />
                 </button>
               </div>
             )}
             {selectedPremium !== null && (
-              <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-full text-xs">
+              <div className="flex items-center gap-1 px-2 py-1 bg-primary/20 text-primary rounded-full text-xs">
                 <span>{selectedPremium ? 'Premium' : 'Gratis'}</span>
                 <button
                   onClick={() => handlePremiumChange(selectedPremium!)}
-                  className="hover:bg-primary/20 rounded-full p-0.5"
+                  className="hover:bg-primary/30 rounded-full p-0.5"
                 >
                   <X className="h-3 w-3" />
                 </button>

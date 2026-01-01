@@ -78,8 +78,8 @@ export function PlanCard({ plan, onSubscribe, isLoading, isCurrent }: PlanCardPr
                 <div className="grid gap-3">
                     {plan.features.map((feature, index) => (
                         <div key={index} className="flex items-start space-x-3">
-                            <div className="mt-0.5 h-5 w-5 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0">
-                                <Check className="h-3 w-3 text-success" />
+                            <div className="mt-0.5 h-5 w-5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                                <Check className="h-3 w-3 text-emerald-700 dark:text-emerald-400" />
                             </div>
                             <span className="text-sm text-foreground leading-relaxed">
                                 {feature}

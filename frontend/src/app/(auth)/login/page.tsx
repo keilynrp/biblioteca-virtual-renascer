@@ -51,13 +51,15 @@ export default function LoginPage() {
             const loginResponse = await api.post("/auth/login/", values)
             const { access, refresh } = loginResponse.data
 
-            // Step 2: Set token temporarily to fetch user data
-            localStorage.setItem('accessToken', access)
+            // Step 2: Store tokens in Zustand FIRST (esto actualiza localStorage automáticamente)
+            // Creamos un usuario temporal para poder hacer la llamada autenticada
+            const tempUser = { username: values.username, email: '', user_type: '' }
+            login(tempUser, access, refresh)
 
-            // Step 3: Fetch user profile
+            // Step 3: Fetch user profile (ahora el interceptor usará el token de Zustand)
             const userResponse = await api.get("/auth/user/")
 
-            // Step 4: Store everything in auth store
+            // Step 4: Update with complete user data
             login(userResponse.data, access, refresh)
 
             // Step 5: Show success message

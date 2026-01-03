@@ -31,7 +31,8 @@ class BookAdmin(admin.ModelAdmin):
             'fields': ('title', 'slug', 'author', 'category', 'description')
         }),
         ('Publication Details', {
-            'fields': ('publication_date', 'isbn')
+            'fields': ('publication_date', 'isbn'),
+            'description': 'La fecha de publicación es opcional. Déjala vacía si no está disponible.'
         }),
         ('Media', {
             'fields': ('cover_image', 'file')

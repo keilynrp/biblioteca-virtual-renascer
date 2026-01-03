@@ -69,6 +69,29 @@ from datetime import timedelta
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': False,
+    'UPDATE_LAST_LOGIN': True,
+
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
+    'JWK_URL': None,
+    'LEEWAY': 0,
+
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
+
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
+
+    'JTI_CLAIM': 'jti',
 }
 
 MIDDLEWARE = [
@@ -168,6 +191,24 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # Media files (uploads)
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# File Upload Settings
+# Maximum upload file size (in bytes)
+# 50MB for PDFs, 5MB for images
+FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB in bytes
+DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB in bytes
+
+# Allowed file extensions for uploads
+ALLOWED_UPLOAD_EXTENSIONS = {
+    'pdf': ['.pdf'],
+    'image': ['.jpg', '.jpeg', '.png', '.webp', '.gif'],
+}
+
+# Maximum file sizes by type (in bytes)
+MAX_UPLOAD_SIZE = {
+    'pdf': 52428800,  # 50MB
+    'image': 5242880,  # 5MB
+}
 
 # CORS Configuration
 if DEBUG:

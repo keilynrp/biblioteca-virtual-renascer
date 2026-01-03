@@ -25,6 +25,23 @@ import { ReviewForm } from "@/components/review-form"
 import { ReviewList } from "@/components/review-list"
 import { FavoriteButton } from "@/components/favorite-button"
 import { ReadingStatusSelector } from "@/components/reading-status-selector"
+import dynamic from "next/dynamic"
+
+// Dynamically import FlipbookPreview to avoid SSR issues with PDF.js DOMMatrix
+const FlipbookPreview = dynamic(
+    () => import("@/components/flipbook-preview").then((mod) => mod.FlipbookPreview),
+    {
+        ssr: false,
+        loading: () => (
+            <div className="flex items-center justify-center min-h-[600px] border-2 rounded-lg bg-muted/20">
+                <div className="text-center">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+                    <p className="text-muted-foreground">Cargando vista previa...</p>
+                </div>
+            </div>
+        )
+    }
+)
 
 interface BookDetail {
     id: number
@@ -156,15 +173,15 @@ export default function BookDetailPage() {
                             {book.file && (
                                 <>
                                     <Button className="w-full" size="lg" asChild>
-                                        <a href={book.file} target="_blank" rel="noopener noreferrer">
+                                        <Link href={`/reader/${book.id}`}>
                                             <Eye className="mr-2 h-5 w-5" />
-                                            Leer en Línea
-                                        </a>
+                                            Leer Libro Completo
+                                        </Link>
                                     </Button>
                                     <Button variant="outline" className="w-full" size="lg" asChild>
                                         <a href={book.file} download>
                                             <Download className="mr-2 h-5 w-5" />
-                                            Descargar
+                                            Descargar PDF
                                         </a>
                                     </Button>
                                 </>
@@ -328,6 +345,35 @@ export default function BookDetailPage() {
                         </div>
                     </div>
                 </div>
+
+                {/* Flipbook Preview Section */}
+                {book.file && (
+                    <div className="mt-12">
+                        <Separator className="mb-8" />
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-3xl font-bold mb-2">Vista Previa del Libro</h2>
+                                    <p className="text-muted-foreground">
+                                        Explora las primeras páginas antes de leer el libro completo
+                                    </p>
+                                </div>
+                                <Button asChild size="lg" variant="outline" className="hidden md:flex">
+                                    <Link href={`/reader/${book.id}`}>
+                                        <BookOpen className="mr-2 h-5 w-5" />
+                                        Ir al Lector Completo
+                                    </Link>
+                                </Button>
+                            </div>
+                            <FlipbookPreview
+                                pdfUrl={book.file}
+                                bookId={book.id}
+                                bookTitle={book.title}
+                                previewPages={10}
+                            />
+                        </div>
+                    </div>
+                )}
 
                 {/* Reviews Section */}
                 <div className="mt-12">

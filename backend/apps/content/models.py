@@ -2,6 +2,7 @@
 from django.db import models
 from django.utils.text import slugify
 from django.conf import settings
+from .validators import validate_pdf_file, validate_image_file, sanitize_filename
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -19,13 +20,37 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+def author_photo_upload_path(instance, filename):
+    """Generate upload path for author photos with sanitized filename"""
+    sanitized = sanitize_filename(filename)
+    return f'authors/{sanitized}'
+
+
 class Author(models.Model):
     name = models.CharField(max_length=200)
     bio = models.TextField(blank=True)
-    photo = models.ImageField(upload_to='authors/', null=True, blank=True)
+    photo = models.ImageField(
+        upload_to=author_photo_upload_path,
+        null=True,
+        blank=True,
+        validators=[validate_image_file],
+        help_text='Formatos permitidos: JPG, PNG, WebP, GIF. Tamaño máximo: 5MB'
+    )
 
     def __str__(self):
         return self.name
+
+def book_cover_upload_path(instance, filename):
+    """Generate upload path for book covers with sanitized filename"""
+    sanitized = sanitize_filename(filename)
+    return f'books/covers/{sanitized}'
+
+
+def book_file_upload_path(instance, filename):
+    """Generate upload path for book PDF files with sanitized filename"""
+    sanitized = sanitize_filename(filename)
+    return f'books/files/{sanitized}'
+
 
 class Book(models.Model):
     title = models.CharField(max_length=255)
@@ -35,8 +60,20 @@ class Book(models.Model):
     description = models.TextField()
     publication_date = models.DateField(null=True, blank=True)
     isbn = models.CharField(max_length=13, blank=True)
-    cover_image = models.ImageField(upload_to='books/covers/', null=True, blank=True)
-    file = models.FileField(upload_to='books/files/', null=True, blank=True)
+    cover_image = models.ImageField(
+        upload_to=book_cover_upload_path,
+        null=True,
+        blank=True,
+        validators=[validate_image_file],
+        help_text='Formatos permitidos: JPG, PNG, WebP, GIF. Tamaño máximo: 5MB'
+    )
+    file = models.FileField(
+        upload_to=book_file_upload_path,
+        null=True,
+        blank=True,
+        validators=[validate_pdf_file],
+        help_text='Formato: PDF. Tamaño máximo: 50MB'
+    )
     is_premium = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

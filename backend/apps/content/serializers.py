@@ -1,6 +1,8 @@
 
 from rest_framework import serializers
+from django.core.exceptions import ValidationError as DjangoValidationError
 from .models import Book, Author, Category, Review, ReviewHelpful, Favorite, ReadingHistory, Reading
+from .validators import validate_pdf_file, validate_image_file
 
 class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
@@ -34,6 +36,7 @@ class BookDetailSerializer(serializers.ModelSerializer):
     category_detail = CategorySerializer(source='category', read_only=True)
     author = serializers.PrimaryKeyRelatedField(queryset=Author.objects.all(), write_only=True)
     category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), write_only=True)
+    publication_date = serializers.DateField(required=False, allow_null=True)
     cover_image = serializers.SerializerMethodField()
     file = serializers.SerializerMethodField()
     average_rating = serializers.FloatField(read_only=True)
@@ -52,6 +55,9 @@ class BookDetailSerializer(serializers.ModelSerializer):
             'user_has_favorited', 'user_review', 'user_reading_status'
         )
         read_only_fields = ('slug',)
+        extra_kwargs = {
+            'publication_date': {'required': False, 'allow_null': True}
+        }
 
     def get_cover_image(self, obj):
         if obj.cover_image:
@@ -90,6 +96,36 @@ class BookDetailSerializer(serializers.ModelSerializer):
             if history:
                 return ReadingHistorySerializer(history, context=self.context).data
         return None
+
+    def validate_publication_date(self, value):
+        """Validate publication date - allow None or empty string"""
+        if value == '' or value is None:
+            return None
+        return value
+
+    def validate_file(self, value):
+        """
+        Validate PDF file upload.
+        The model validators will run, but we add additional REST API validation here.
+        """
+        if value:
+            try:
+                validate_pdf_file(value)
+            except DjangoValidationError as e:
+                raise serializers.ValidationError(str(e))
+        return value
+
+    def validate_cover_image(self, value):
+        """
+        Validate cover image upload.
+        The model validators will run, but we add additional REST API validation here.
+        """
+        if value:
+            try:
+                validate_image_file(value)
+            except DjangoValidationError as e:
+                raise serializers.ValidationError(str(e))
+        return value
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

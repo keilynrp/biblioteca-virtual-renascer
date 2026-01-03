@@ -15,6 +15,7 @@ interface Book {
     author: { name: string }
     category: { name: string }
     cover_image: string | null
+    file?: string | null
     is_premium: boolean
     average_rating?: number
     review_count?: number
@@ -86,6 +87,14 @@ export function BookCard({ book, index = 0 }: BookCardProps) {
                     {book.user_has_favorited && (
                         <div className="absolute top-3 left-3 bg-red-500/90 backdrop-blur-sm text-white p-2 rounded-full shadow-lg z-10 transform group-hover:scale-110 transition-transform duration-300">
                             <Heart className="h-3.5 w-3.5 fill-white" />
+                        </div>
+                    )}
+
+                    {/* Read Badge - Bottom Center (only if has PDF) */}
+                    {book.file && (
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs px-4 py-2 rounded-full font-bold shadow-xl shadow-emerald-500/40 flex items-center gap-2 z-10 transform opacity-0 group-hover:opacity-100 group-hover:translate-y-0 translate-y-2 transition-all duration-300">
+                            <BookOpen className="h-4 w-4" />
+                            <span>LEER AHORA</span>
                         </div>
                     )}
 

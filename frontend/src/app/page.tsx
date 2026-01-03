@@ -95,7 +95,7 @@ export default function LandingPage() {
                                     <Button variant="ghost">Iniciar Sesión</Button>
                                 </Link>
                                 <Link href="/register">
-                                    <Button className="bg-[#00576F] hover:bg-[#004558]">
+                                    <Button className="bg-[#00576F] hover:bg-[#004558] text-white">
                                         Registrarse
                                     </Button>
                                 </Link>
@@ -131,7 +131,7 @@ export default function LandingPage() {
                                     </Button>
                                 </Link>
                                 <Link href="/library">
-                                    <Button size="lg" variant="outline" className="px-8 py-6 text-lg rounded-full border-2">
+                                    <Button size="lg" variant="outline" className="px-8 py-6 text-lg rounded-full border-2 text-gray-900 hover:text-gray-900">
                                         Explorar Biblioteca
                                         <Search className="ml-2 h-5 w-5" />
                                     </Button>
@@ -288,7 +288,7 @@ export default function LandingPage() {
                             </Button>
                         </Link>
                         <Link href="/plans">
-                            <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white/10 px-8 py-6 text-lg rounded-full">
+                            <Button size="lg" variant="outline" className="!bg-transparent border-2 border-white !text-white hover:!bg-white/10 hover:!text-white px-8 py-6 text-lg rounded-full">
                                 Ver Planes
                             </Button>
                         </Link>

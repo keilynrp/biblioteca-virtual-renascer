@@ -60,7 +60,7 @@ export default function ReaderPage() {
 
       // Start or resume reading session
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/content/user/readings/start/${bookId}/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/content/user/readings/start/${bookId}/`,
         {
           method: 'POST',
           headers: {
@@ -81,7 +81,7 @@ export default function ReaderPage() {
       setReading(data.reading);
 
       // Get PDF URL
-      const pdfUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/content/books/${bookId}/file/`;
+      const pdfUrl = `${process.env.NEXT_PUBLIC_API_URL}/content/books/${bookId}/file/`;
       setPdfUrl(pdfUrl);
 
       setLoading(false);
@@ -102,7 +102,7 @@ export default function ReaderPage() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/content/user/readings/${bookId}/progress/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/content/user/readings/${bookId}/progress/`,
         {
           method: 'PATCH',
           headers: {

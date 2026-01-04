@@ -1,0 +1,176 @@
+═══════════════════════════════════════════════════════════════
+  ERRORES DEL VISOR DE LECTURA PDF
+═══════════════════════════════════════════════════════════════
+
+Errores conocidos:
+  1. "Error al iniciar la sesión de lectura" (genérico)
+  2. "Error 404: Not Found"
+  3. "Error 401: Unauthorized"
+  4. "Error 500: Internal Server Error"
+
+┌─────────────────────────────────────────────────────────────┐
+│  SOLUCIÓN RÁPIDA (30 segundos)                              │
+└─────────────────────────────────────────────────────────────┘
+
+PASO 1: Aplicar fix de migraciones y URLs
+  bash fix-reading-simple.sh
+
+PASO 2: Reiniciar frontend (para aplicar cambios de código)
+  docker compose restart frontend
+
+PASO 3: Probar endpoints
+  bash test-reading-endpoints.sh
+
+¡Listo! El visor PDF debería funcionar.
+
+═══════════════════════════════════════════════════════════════
+
+📖 DOCUMENTACIÓN DISPONIBLE
+
+1. SOLUCION_COMPLETA_ERROR_LECTURA.md ⭐ NUEVO
+   → Lee esto primero
+   → Cubre TODOS los errores conocidos
+   → Soluciones para cada tipo de error
+   → Flujo de resolución de problemas
+
+2. FIX_URL_404_READING.md ⭐ NUEVO
+   → Solución para error 404: Not Found
+   → Explica las URLs correctas
+   → Cambios aplicados en el código
+
+3. INICIO_RAPIDO_FIX_LECTURA.md
+   → Explica qué script usar según tu caso
+   → Comparación de todos los scripts
+   → Solución paso a paso
+
+4. GUIA_RAPIDA_FIX_LECTURA.md
+   → Guía visual rápida
+   → Instrucciones para Windows/Linux/Mac
+   → Lista de errores comunes
+
+5. SOLUCION_ERROR_LECTURA.md
+   → Documentación para error genérico
+   → Causas y soluciones manuales
+   → Arquitectura del sistema
+
+6. README_FIX_READING.md
+   → Manual técnico detallado
+   → Comandos útiles
+   → Diagnóstico avanzado
+
+═══════════════════════════════════════════════════════════════
+
+🛠️ SCRIPTS DISPONIBLES
+
+┌─────────────────────────────────────────────────────────────┐
+│ RECOMENDADO - Para la mayoría de usuarios                  │
+└─────────────────────────────────────────────────────────────┘
+
+  fix-reading-simple.sh
+  → Solución rápida y confiable (30-60 segundos)
+  → Sin errores de importación
+  → Aplica migraciones y reinicia servicios
+
+  Ejecutar:
+    bash fix-reading-simple.sh
+
+┌─────────────────────────────────────────────────────────────┐
+│ ALTERNATIVAS                                                │
+└─────────────────────────────────────────────────────────────┘
+
+  EJECUTAR_FIX.sh
+  → Fix con diagnóstico completo (60-90 segundos)
+  → Más información sobre el estado del sistema
+
+  fix-reading-session-error.sh
+  → Fix completo con pruebas de endpoint (90-120 segundos)
+  → Incluye creación de usuario y token de prueba
+
+  debug-reading-error.sh
+  → Solo diagnóstico, no modifica nada (30 segundos)
+  → Para ver qué está mal sin hacer cambios
+
+  quick-fix-reading.sh
+  → Fix ultra rápido (20-30 segundos)
+  → Solo lo esencial, sin verificaciones extras
+
+  test-reading-endpoints.sh ⭐ NUEVO
+  → Prueba los 3 endpoints principales
+  → Verifica que el fix de URLs funcionó
+  → Muestra resumen de tests (passed/failed)
+
+┌─────────────────────────────────────────────────────────────┐
+│ WINDOWS - PowerShell/CMD                                    │
+└─────────────────────────────────────────────────────────────┘
+
+  FIX_READING_SESSION_ERROR.bat
+  → Versión Windows del fix automático
+
+═══════════════════════════════════════════════════════════════
+
+✅ DESPUÉS DEL FIX
+
+1. Abre http://localhost:3000
+2. Inicia sesión
+3. Ve a la biblioteca
+4. Selecciona un libro
+5. Haz clic en "Leer"
+
+¡El visor PDF debería funcionar! 🎉
+
+═══════════════════════════════════════════════════════════════
+
+❌ SI EL ERROR PERSISTE
+
+1. Ver logs:
+   docker compose logs backend --tail=50
+
+2. Ejecutar diagnóstico:
+   bash debug-reading-error.sh
+
+3. Revisar estado:
+   docker compose ps
+
+4. Reconstruir (último recurso):
+   docker compose down
+   docker compose up -d --build
+
+═══════════════════════════════════════════════════════════════
+
+📊 ¿QUÉ SCRIPT USAR?
+
+┌──────────────────────┬──────────┬────────────┬──────────────┐
+│ Script               │ Tiempo   │ Diagnóstico│ Recomendado  │
+├──────────────────────┼──────────┼────────────┼──────────────┤
+│ fix-reading-simple   │ 30-60s   │ ⭐⭐⭐      │ ✅ SÍ        │
+│ EJECUTAR_FIX         │ 60-90s   │ ⭐⭐⭐⭐     │ Si falla el 1│
+│ fix-reading-session  │ 90-120s  │ ⭐⭐⭐⭐⭐    │ Avanzado     │
+│ debug-reading        │ 30s      │ ⭐⭐⭐⭐⭐    │ Solo debug   │
+│ quick-fix            │ 20-30s   │ ⭐         │ Última opción│
+└──────────────────────┴──────────┴────────────┴──────────────┘
+
+═══════════════════════════════════════════════════════════════
+
+💡 RECOMENDACIÓN
+
+1. Empieza con: fix-reading-simple.sh
+2. Si falla: EJECUTAR_FIX.sh
+3. Para debug: debug-reading-error.sh
+4. Último recurso: fix-reading-session-error.sh
+
+═══════════════════════════════════════════════════════════════
+
+📞 NECESITAS MÁS AYUDA?
+
+Lee: INICIO_RAPIDO_FIX_LECTURA.md
+
+Contiene:
+  ✓ Explicación detallada de cada script
+  ✓ Cuándo usar cada uno
+  ✓ Solución de problemas comunes
+  ✓ Comandos útiles
+  ✓ Diagnóstico avanzado
+
+═══════════════════════════════════════════════════════════════
+
+Última actualización: 2025-01-02

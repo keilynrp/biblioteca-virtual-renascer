@@ -1,0 +1,66 @@
+╔══════════════════════════════════════════════════════════════╗
+║  INSTRUCCIONES PARA DIAGNOSTICAR EL PROBLEMA                 ║
+╚══════════════════════════════════════════════════════════════╝
+
+PASO 1: Abre PowerShell o CMD como Administrador
+
+PASO 2: Ve al directorio del proyecto:
+   cd d:\bvs_framework
+
+PASO 3: Ejecuta UNO de estos comandos:
+
+   OPCIÓN A (Recomendada):
+   .\CAPTURAR_DIAGNOSTICO.bat > diagnostico.txt 2>&1
+
+   Luego abre: d:\bvs_framework\diagnostico.txt
+   Y COPIA TODO el contenido aquí para que lo analice
+
+   OPCIÓN B (Más rápida):
+   .\CAPTURAR_DIAGNOSTICO.bat
+
+   Y COPIA la salida completa que aparece en pantalla
+
+═══════════════════════════════════════════════════════════════
+
+MIENTRAS TANTO, también puedes probar estas soluciones rápidas:
+
+┌─────────────────────────────────────────────────────────────┐
+│ SOLUCIÓN 1: Reiniciar servicios específicos                 │
+└─────────────────────────────────────────────────────────────┘
+docker-compose restart backend frontend
+
+
+┌─────────────────────────────────────────────────────────────┐
+│ SOLUCIÓN 2: Ver estado detallado                            │
+└─────────────────────────────────────────────────────────────┘
+docker-compose ps
+
+
+┌─────────────────────────────────────────────────────────────┐
+│ SOLUCIÓN 3: Verificar si los servicios están escuchando     │
+└─────────────────────────────────────────────────────────────┘
+docker exec bvs_framework-backend-1 netstat -tln | findstr 8000
+docker exec bvs_framework-frontend-1 netstat -tln | findstr 3000
+
+
+┌─────────────────────────────────────────────────────────────┐
+│ SOLUCIÓN 4: Forzar recreación (si lo anterior no funciona)  │
+└─────────────────────────────────────────────────────────────┘
+docker-compose down
+docker-compose up -d
+
+
+═══════════════════════════════════════════════════════════════
+
+PROBLEMA MÁS COMÚN:
+Si los contenedores están UP pero los puertos no responden,
+generalmente es porque:
+
+1. Los servicios fallaron al iniciar (error en el código)
+2. El healthcheck está fallando
+3. Las dependencias (DB, Redis, ES) no están listas
+4. El contenedor se está reiniciando en loop
+
+La salida de CAPTURAR_DIAGNOSTICO.bat me dirá EXACTAMENTE cuál es.
+
+═══════════════════════════════════════════════════════════════

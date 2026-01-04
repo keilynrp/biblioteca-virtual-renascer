@@ -1,0 +1,52 @@
+# Configuración optimizada para desarrollo rápido en Windows/WSL2
+# Usa named volumes en lugar de bind mounts para mejor rendimiento
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=development
+    command: npm run dev
+    volumes:
+      # Usar named volume en lugar de bind mount = MUCHO más rápido
+      - frontend_code:/app
+      - /app/node_modules
+      - /app/.next
+      - frontend_cache:/app/.next/cache
+    ports:
+      - "3000:3000"
+    environment:
+      - WATCHPACK_POLLING=false
+      - CHOKIDAR_USEPOLLING=false
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+      - NEXT_TELEMETRY_DISABLED=1
+      - NODE_OPTIONS=--max-old-space-size=4096
+      - NODE_ENV=development
+      - TURBOPACK_VERBOSE=0
+      - NEXT_PRIVATE_STANDALONE=true
+    depends_on:
+      backend:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  frontend_code:
+    driver: local
+  frontend_cache:
+    driver: local

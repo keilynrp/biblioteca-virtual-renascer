@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Directo - BVS Framework</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .message.success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #047857;
+            display: block;
+        }
+
+        .message.error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+            display: block;
+        }
+
+        .message.info {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+            display: block;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .status-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .status-icon {
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        .success-icon { color: #10b981; }
+        .error-icon { color: #ef4444; }
+
+        .credentials {
+            background: #fef3c7;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #f59e0b;
+        }
+
+        .credentials h3 {
+            color: #92400e;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .credentials p {
+            color: #92400e;
+            font-size: 13px;
+            margin: 4px 0;
+        }
+
+        .credentials code {
+            background: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .instructions {
+            margin-top: 24px;
+            padding: 16px;
+            background: #eff6ff;
+            border-radius: 8px;
+            border: 1px solid #3b82f6;
+        }
+
+        .instructions h3 {
+            color: #1e40af;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+            color: #1e40af;
+            font-size: 13px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        .loader {
+            display: none;
+            margin-left: 10px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .button-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>�� Login Directo</h1>
+        <p class="subtitle">Sistema de autenticación BVS Framework</p>
+
+        <div class="credentials">
+            <h3>📋 Credenciales por defecto:</h3>
+            <p>Usuario: <code>admin</code></p>
+            <p>Contraseña: <code>admin123</code></p>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Usuario</label>
+                <input type="text" id="username" name="username" value="admin" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Contraseña</label>
+                <input type="password" id="password" name="password" value="admin123" required>
+            </div>
+
+            <button type="submit" id="loginBtn">
+                <span class="button-content">
+                    <span id="btnText">Iniciar Sesión</span>
+                    <span class="loader" id="loader"></span>
+                </span>
+            </button>
+        </form>
+
+        <div id="message" class="message"></div>
+
+        <div class="status" id="status" style="display: none;">
+            <h3 style="margin-bottom: 12px; color: #333;">Estado de la petición:</h3>
+            <div id="statusContent"></div>
+        </div>
+
+        <div class="instructions">
+            <h3>📖 ¿Qué hace este login?</h3>
+            <ol>
+                <li>Se conecta directamente a la API de Django</li>
+                <li>Obtiene los tokens JWT (access y refresh)</li>
+                <li>Guarda los tokens en localStorage</li>
+                <li>Te redirige automáticamente al dashboard</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000/api';
+        const FRONTEND_URL = 'http://localhost:3000';
+
+        const form = document.getElementById('loginForm');
+        const messageDiv = document.getElementById('message');
+        const statusDiv = document.getElementById('status');
+        const statusContent = document.getElementById('statusContent');
+        const loginBtn = document.getElementById('loginBtn');
+        const btnText = document.getElementById('btnText');
+        const loader = document.getElementById('loader');
+
+        function showMessage(text, type = 'info') {
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+        }
+
+        function addStatus(text, success = true) {
+            const icon = success ? '✓' : '✗';
+            const iconClass = success ? 'success-icon' : 'error-icon';
+            const div = document.createElement('div');
+            div.className = 'status-item';
+            div.innerHTML = `<span class="status-icon ${iconClass}">${icon}</span> ${text}`;
+            statusContent.appendChild(div);
+            statusDiv.style.display = 'block';
+        }
+
+        function clearStatus() {
+            statusContent.innerHTML = '';
+            statusDiv.style.display = 'none';
+        }
+
+        function setLoading(loading) {
+            loginBtn.disabled = loading;
+            if (loading) {
+                btnText.textContent = 'Iniciando sesión...';
+                loader.style.display = 'inline-block';
+            } else {
+                btnText.textContent = 'Iniciar Sesión';
+                loader.style.display = 'none';
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            clearStatus();
+            messageDiv.style.display = 'none';
+            setLoading(true);
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                // Step 1: Login
+                addStatus('Conectando al backend...', true);
+
+                const loginResponse = await fetch(`${API_URL}/auth/login/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (!loginResponse.ok) {
+                    const errorData = await loginResponse.json().catch(() => ({}));
+                    throw new Error(errorData.detail || 'Credenciales inválidas');
+                }
+
+                addStatus('Login exitoso', true);
+
+                const { access, refresh } = await loginResponse.json();
+                addStatus('Tokens JWT recibidos', true);
+
+                // Step 2: Get user data
+                addStatus('Obteniendo datos del usuario...', true);
+
+                const userResponse = await fetch(`${API_URL}/auth/user/`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${access}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (!userResponse.ok) {
+                    throw new Error('No se pudo obtener datos del usuario');
+                }
+
+                const userData = await userResponse.json();
+                addStatus(`Usuario: ${userData.username} (${userData.email})`, true);
+
+                // Step 3: Save to localStorage
+                addStatus('Guardando sesión en localStorage...', true);
+
+                const authStorage = {
+                    state: {
+                        user: userData,
+                        accessToken: access,
+                        refreshToken: refresh,
+                        isAuthenticated: true,
+                        _hasHydrated: true
+                    },
+                    version: 0
+                };
+
+                localStorage.setItem('auth-storage', JSON.stringify(authStorage));
+                addStatus('Sesión guardada correctamente', true);
+
+                // Step 4: Success message
+                showMessage('✅ Login exitoso! Redirigiendo al dashboard...', 'success');
+
+                // Step 5: Redirect
+                setTimeout(() => {
+                    addStatus('Redirigiendo...', true);
+                    window.location.href = `${FRONTEND_URL}/home`;
+                }, 1500);
+
+            } catch (error) {
+                console.error('Error:', error);
+                addStatus(`Error: ${error.message}`, false);
+                showMessage(`❌ Error: ${error.message}`, 'error');
+                setLoading(false);
+            }
+        });
+
+        // Auto-fill for quick testing
+        console.log('='.repeat(50));
+        console.log('LOGIN DIRECTO - BVS FRAMEWORK');
+        console.log('='.repeat(50));
+        console.log('API URL:', API_URL);
+        console.log('Frontend URL:', FRONTEND_URL);
+        console.log('Credenciales: admin / admin123');
+        console.log('='.repeat(50));
+    </script>
+</body>
+</html>

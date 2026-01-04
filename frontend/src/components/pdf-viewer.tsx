@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Button } from './ui/button';
 import {
@@ -139,6 +139,15 @@ export function PDFViewer({
     setZoomLevel((prev) => Math.max(prev - 0.25, 0.5));
   }, []);
 
+  // Memoize file object to prevent unnecessary reloads
+  const fileConfig = useMemo(() => ({
+    url: pdfUrl,
+    httpHeaders: accessToken ? {
+      'Authorization': `Bearer ${accessToken}`,
+    } : undefined,
+    withCredentials: false,
+  }), [pdfUrl, accessToken]);
+
   const handleKeyPress = useCallback((event: KeyboardEvent) => {
     if (event.key === 'ArrowLeft') {
       goToPreviousPage();
@@ -269,13 +278,7 @@ export function PDFViewer({
           )}
 
           <Document
-            file={{
-              url: pdfUrl,
-              httpHeaders: accessToken ? {
-                'Authorization': `Bearer ${accessToken}`,
-              } : undefined,
-              withCredentials: false,
-            }}
+            file={fileConfig}
             onLoadSuccess={onDocumentLoadSuccess}
             onLoadError={onDocumentLoadError}
             loading={null}

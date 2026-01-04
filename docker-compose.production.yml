@@ -1,0 +1,16 @@
+services:
+  backend:
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 4 --threads 4 --timeout 60 --max-requests 1000 --max-requests-jitter 50 --access-logfile - --error-logfile -
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - DEBUG=False
+
+  frontend:
+    build:
+      args:
+        - NODE_ENV=production
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+    command: npm run build && npm run start

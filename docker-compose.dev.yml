@@ -1,0 +1,133 @@
+# Configuración simplificada para desarrollo y debugging
+# Usa este archivo si tienes problemas con healthchecks
+# Comando: docker compose -f docker-compose.dev.yml up
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+      - elasticsearch
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DJANGO_SETTINGS_MODULE=config.settings
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    command: npm run dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+    environment:
+      - WATCHPACK_POLLING=false
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+      - NEXT_TELEMETRY_DISABLED=1
+      - NODE_OPTIONS=--max-old-space-size=3072
+    depends_on:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 3G
+        reservations:
+          memory: 1.5G
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=biblioteca
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    command: >
+      postgres
+      -c shared_buffers=128MB
+      -c effective_cache_size=384MB
+      -c max_connections=100
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    command: redis-server --maxmemory 192mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms768m -Xmx768m"
+      - bootstrap.memory_lock=false
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    deploy:
+      resources:
+        limits:
+          memory: 1.5G
+        reservations:
+          memory: 768M
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  default:
+    driver: bridge

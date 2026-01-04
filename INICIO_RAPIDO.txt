@@ -1,0 +1,130 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║        🚀 GUÍA RÁPIDA - Solución de Acceso Frontend/Backend     ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+
+📌 TU PROBLEMA:
+   Los contenedores están UP pero no puedes acceder vía web
+
+
+✅ SOLUCIÓN EN 1 COMANDO:
+┌──────────────────────────────────────────────────────────────────┐
+│                                                                  │
+│   bash solucion-rapida.sh                                        │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+   Este script:
+   1. Verifica el estado actual
+   2. Aplica la solución automáticamente
+   3. Re-verifica que funcione
+   4. Te dice exactamente qué hacer
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+📚 OTROS SCRIPTS DISPONIBLES:
+
+
+🔍 verificar-acceso.sh
+   Para ver el estado actual sin cambiar nada
+
+   bash verificar-acceso.sh
+
+
+🛠️ fix-servicios-completo.sh
+   Fix automático con espera inteligente
+
+   bash fix-servicios-completo.sh
+
+
+🔬 diagnostico-puertos.sh
+   Diagnóstico completo de frontend y backend
+
+   bash diagnostico-puertos.sh
+
+
+🐍 diagnostico-backend.sh
+   Diagnóstico específico del backend Django
+
+   bash diagnostico-backend.sh
+
+
+🔄 reset-completo.sh
+   Reset total (último recurso, no elimina datos)
+
+   bash reset-completo.sh
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+🎯 FLUJO RECOMENDADO:
+
+
+   1. PRIMERO ejecuta:
+      bash solucion-rapida.sh
+
+   2. Si NO funciona:
+      bash diagnostico-puertos.sh
+      (y pega el resultado para análisis)
+
+   3. Si NADA funciona:
+      bash reset-completo.sh
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+🌐 URLs CUANDO FUNCIONE:
+
+
+   Frontend:      http://localhost:3000
+   Backend Admin: http://localhost:8000/admin/
+   API Docs:      http://localhost:8000/api/docs/
+   API Root:      http://localhost:8000/api/
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+💡 COMANDOS ÚTILES DOCKER:
+
+
+   Ver estado:
+   docker-compose ps
+
+   Ver logs en vivo:
+   docker-compose logs -f backend frontend
+
+   Reiniciar todo:
+   docker-compose restart
+
+   Parar todo:
+   docker-compose down
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+📖 DOCUMENTACIÓN COMPLETA:
+
+
+   Lee: SOLUCION_DEFINITIVA_README.md
+
+   cat SOLUCION_DEFINITIVA_README.md
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+⚡ INICIO INMEDIATO:
+
+
+   bash solucion-rapida.sh
+
+
+╚══════════════════════════════════════════════════════════════════╝

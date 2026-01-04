@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Login Exacto</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 40px;
+            line-height: 1.8;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #0a0a0a;
+            padding: 30px;
+            border: 2px solid #00ff00;
+            border-radius: 8px;
+        }
+        h1 {
+            color: #00ff00;
+            border-bottom: 2px solid #00ff00;
+            padding-bottom: 10px;
+        }
+        button {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px 5px;
+            border-radius: 4px;
+        }
+        button:hover {
+            background: #00cc00;
+        }
+        .log {
+            background: #000;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #00ff00;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .success { color: #00ff00; }
+        .error { color: #ff0000; }
+        .info { color: #00ccff; }
+        .warning { color: #ffaa00; }
+        input {
+            background: #000;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            padding: 10px;
+            font-size: 14px;
+            font-family: monospace;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .credentials {
+            background: #0a0a0a;
+            border: 2px solid #ffaa00;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 TEST LOGIN EXACTO</h1>
+
+        <div class="credentials">
+            <strong style="color: #ffaa00;">CREDENCIALES CORRECTAS:</strong><br>
+            Username: <strong>admin</strong><br>
+            Password: <strong>admin123</strong>
+        </div>
+
+        <h3>Formulario de Test:</h3>
+        <input type="text" id="username" value="admin" placeholder="Username">
+        <input type="password" id="password" value="admin123" placeholder="Password">
+
+        <button onclick="testLogin()">🧪 Test Login</button>
+        <button onclick="testWithTrim()">✂️ Test con Trim</button>
+        <button onclick="testCaseSensitive()">🔤 Test Case Variations</button>
+        <button onclick="clearLog()">🗑️ Limpiar Log</button>
+
+        <div id="log" class="log">
+Presiona un botón para comenzar...
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000/api';
+        let logDiv = document.getElementById('log');
+
+        function log(msg, type = 'info') {
+            const colors = {
+                success: '#00ff00',
+                error: '#ff0000',
+                info: '#00ccff',
+                warning: '#ffaa00'
+            };
+            const timestamp = new Date().toTimeString().split(' ')[0];
+            logDiv.innerHTML += `<span style="color: ${colors[type]}">[${timestamp}] ${msg}</span>\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLog() {
+            logDiv.innerHTML = 'Log limpiado.\n';
+        }
+
+        async function testLogin() {
+            clearLog();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            log('🧪 INICIANDO TEST DE LOGIN', 'info');
+            log('━'.repeat(60), 'info');
+
+            // Mostrar valores exactos
+            log(`Username value: "${username}"`, 'info');
+            log(`Username length: ${username.length}`, 'info');
+            log(`Username bytes: [${Array.from(username).map(c => c.charCodeAt(0)).join(', ')}]`, 'info');
+            log('', 'info');
+            log(`Password value: "${password}"`, 'info');
+            log(`Password length: ${password.length}`, 'info');
+            log(`Password bytes: [${Array.from(password).map(c => c.charCodeAt(0)).join(', ')}]`, 'info');
+            log('━'.repeat(60), 'info');
+
+            const body = JSON.stringify({ username, password });
+            log(`Request body: ${body}`, 'info');
+            log(`Body length: ${body.length}`, 'info');
+
+            try {
+                log('📤 Enviando petición...', 'info');
+
+                const response = await fetch(`${API_URL}/auth/login/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: body
+                });
+
+                log(`📥 Response status: ${response.status} ${response.statusText}`,
+                    response.ok ? 'success' : 'error');
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    log('✅ LOGIN EXITOSO!', 'success');
+                    log('━'.repeat(60), 'success');
+                    log(`Access token: ${data.access.substring(0, 50)}...`, 'success');
+                    log(`Refresh token: ${data.refresh.substring(0, 50)}...`, 'success');
+                    log('━'.repeat(60), 'success');
+
+                    // Auto save to localStorage
+                    log('💾 Guardando en localStorage...', 'info');
+
+                    // Get user data
+                    const userResponse = await fetch(`${API_URL}/auth/user/`, {
+                        headers: {
+                            'Authorization': `Bearer ${data.access}`
+                        }
+                    });
+                    const userData = await userResponse.json();
+
+                    localStorage.setItem('auth-storage', JSON.stringify({
+                        state: {
+                            user: userData,
+                            accessToken: data.access,
+                            refreshToken: data.refresh,
+                            isAuthenticated: true,
+                            _hasHydrated: true
+                        },
+                        version: 0
+                    }));
+
+                    log('✅ Guardado en localStorage', 'success');
+                    log(`Usuario: ${userData.username} (${userData.email})`, 'success');
+                    log('', 'success');
+                    log('🚀 Redirigiendo a /home en 3 segundos...', 'success');
+
+                    setTimeout(() => {
+                        window.location.href = 'http://localhost:3000/home';
+                    }, 3000);
+
+                } else {
+                    log('❌ LOGIN FALLIDO', 'error');
+                    log('━'.repeat(60), 'error');
+                    log(`Error: ${JSON.stringify(data, null, 2)}`, 'error');
+                    log('━'.repeat(60), 'error');
+
+                    // Sugerencias
+                    log('💡 SUGERENCIAS:', 'warning');
+                    log('1. Verifica que username sea exactamente "admin"', 'warning');
+                    log('2. Verifica que password sea exactamente "admin123"', 'warning');
+                    log('3. No debe haber espacios al inicio o final', 'warning');
+                    log('4. Es case-sensitive (minúsculas/mayúsculas importan)', 'warning');
+                }
+
+            } catch (error) {
+                log('❌ ERROR DE RED', 'error');
+                log(`${error.message}`, 'error');
+                log('', 'error');
+                log('Posibles causas:', 'warning');
+                log('- Backend no está corriendo', 'warning');
+                log('- CORS bloqueado', 'warning');
+                log('- Firewall bloqueando la petición', 'warning');
+            }
+        }
+
+        async function testWithTrim() {
+            // Limpiar espacios y probar
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            document.getElementById('username').value = username;
+            document.getElementById('password').value = password;
+
+            log('✂️ Valores limpiados (trim aplicado)', 'info');
+            log(`Username: "${username}"`, 'info');
+            log(`Password: "${password}"`, 'info');
+            log('', 'info');
+
+            await testLogin();
+        }
+
+        async function testCaseSensitive() {
+            clearLog();
+            log('🔤 PROBANDO VARIACIONES DE CASE', 'info');
+            log('━'.repeat(60), 'info');
+
+            const variations = [
+                { user: 'admin', pass: 'admin123', desc: 'Original (correcto)' },
+                { user: 'Admin', pass: 'admin123', desc: 'Admin capitalizado' },
+                { user: 'ADMIN', pass: 'admin123', desc: 'ADMIN mayúsculas' },
+                { user: 'admin', pass: 'Admin123', desc: 'Password capitalizado' },
+                { user: 'admin', pass: 'ADMIN123', desc: 'Password mayúsculas' },
+            ];
+
+            for (const variant of variations) {
+                try {
+                    const response = await fetch(`${API_URL}/auth/login/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username: variant.user,
+                            password: variant.pass
+                        })
+                    });
+
+                    const icon = response.ok ? '✅' : '❌';
+                    const color = response.ok ? 'success' : 'error';
+                    log(`${icon} ${variant.desc}: ${variant.user} / ${variant.pass} → HTTP ${response.status}`, color);
+
+                } catch (error) {
+                    log(`❌ ${variant.desc}: ERROR - ${error.message}`, 'error');
+                }
+            }
+
+            log('━'.repeat(60), 'info');
+            log('✅ La correcta es: admin / admin123 (todo minúsculas)', 'success');
+        }
+
+        // Auto-focus en username
+        document.getElementById('username').focus();
+    </script>
+</body>
+</html>

@@ -115,7 +115,7 @@ def dashboard_stats(request):
         # Estadísticas por categoría (con manejo de errores)
         try:
             books_by_category = Category.objects.annotate(
-                book_count=Count('book')
+                book_count=Count('books')
             ).values('name', 'book_count').order_by('-book_count')[:5]
             top_categories = list(books_by_category)
         except Exception as e:

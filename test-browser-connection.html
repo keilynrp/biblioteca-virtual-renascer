@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Frontend Connection</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #2563eb; }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover { background: #1d4ed8; }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+        }
+        .success {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            color: #047857;
+        }
+        .error {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            color: #991b1b;
+        }
+        .info {
+            background: #dbeafe;
+            border: 2px solid #3b82f6;
+            color: #1e40af;
+        }
+        .test-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f9fafb;
+            border-left: 4px solid #9ca3af;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Test de Conexión al Frontend</h1>
+        <p>Este archivo HTML te ayudará a diagnosticar problemas de acceso al frontend.</p>
+
+        <button onclick="testLocalhost()">Test http://localhost:3000</button>
+        <button onclick="test127()">Test http://127.0.0.1:3000</button>
+        <button onclick="testBackend()">Test Backend API</button>
+        <button onclick="openFrontend()">Abrir Frontend</button>
+
+        <div id="results"></div>
+
+        <div style="margin-top: 30px; padding: 15px; background: #fef3c7; border-radius: 6px;">
+            <h3>📋 Instrucciones:</h3>
+            <ol>
+                <li>Haz clic en "Test http://localhost:3000"</li>
+                <li>Si ves error CORS o Network: <strong>El frontend SÍ funciona</strong>, es un problema de seguridad del navegador</li>
+                <li>Si ves error de conexión: El frontend NO está accesible desde tu navegador</li>
+                <li>Prueba "Abrir Frontend" para intentar acceso directo</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function showResult(html, type = 'info') {
+            const results = document.getElementById('results');
+            results.innerHTML = `<div class="result ${type}">${html}</div>`;
+        }
+
+        async function testLocalhost() {
+            showResult('🔄 Probando conexión a http://localhost:3000...', 'info');
+            try {
+                const response = await fetch('http://localhost:3000', {
+                    method: 'GET',
+                    mode: 'no-cors'  // Evitar errores CORS
+                });
+                showResult(`
+                    <strong>✅ ÉXITO</strong><br>
+                    <div class="test-item">
+                    El frontend ES ACCESIBLE desde tu navegador.<br>
+                    Si ves esto, el problema es solo de visualización o caché.<br><br>
+                    <strong>Solución:</strong><br>
+                    1. Presiona Ctrl+Shift+Del<br>
+                    2. Limpia la caché<br>
+                    3. Intenta: <a href="http://localhost:3000" target="_blank">http://localhost:3000</a>
+                    </div>
+                `, 'success');
+            } catch (error) {
+                showResult(`
+                    <strong>❌ ERROR</strong><br>
+                    <div class="test-item">
+                    No se puede conectar a localhost:3000<br>
+                    Error: ${error.message}<br><br>
+                    <strong>Posibles causas:</strong><br>
+                    • Frontend container no está corriendo<br>
+                    • Puerto 3000 no está mapeado correctamente<br>
+                    • Firewall bloqueando la conexión<br><br>
+                    <strong>Ejecuta en WSL:</strong><br>
+                    <code>docker compose ps</code><br>
+                    <code>docker compose logs frontend</code>
+                    </div>
+                `, 'error');
+            }
+        }
+
+        async function test127() {
+            showResult('🔄 Probando conexión a http://127.0.0.1:3000...', 'info');
+            try {
+                const response = await fetch('http://127.0.0.1:3000', {
+                    method: 'GET',
+                    mode: 'no-cors'
+                });
+                showResult(`
+                    <strong>✅ ÉXITO</strong><br>
+                    <div class="test-item">
+                    El frontend ES ACCESIBLE vía 127.0.0.1<br><br>
+                    <strong>Usa esta URL:</strong><br>
+                    <a href="http://127.0.0.1:3000" target="_blank">http://127.0.0.1:3000</a><br><br>
+                    Si localhost:3000 no funciona pero 127.0.0.1:3000 sí,<br>
+                    el problema es la resolución DNS de "localhost".
+                    </div>
+                `, 'success');
+            } catch (error) {
+                showResult(`
+                    <strong>❌ ERROR</strong><br>
+                    <div class="test-item">
+                    No se puede conectar a 127.0.0.1:3000<br>
+                    Error: ${error.message}
+                    </div>
+                `, 'error');
+            }
+        }
+
+        async function testBackend() {
+            showResult('🔄 Probando conexión al backend...', 'info');
+            try {
+                const response = await fetch('http://localhost:8000/api/', {
+                    method: 'GET',
+                    mode: 'no-cors'
+                });
+                showResult(`
+                    <strong>✅ Backend accesible</strong><br>
+                    <div class="test-item">
+                    Si el backend funciona pero el frontend no,<br>
+                    el problema es específico del contenedor frontend.
+                    </div>
+                `, 'success');
+            } catch (error) {
+                showResult(`
+                    <strong>⚠️ Backend no accesible</strong><br>
+                    <div class="test-item">
+                    Error: ${error.message}<br>
+                    Verifica que todos los contenedores estén corriendo.
+                    </div>
+                `, 'error');
+            }
+        }
+
+        function openFrontend() {
+            showResult('🔄 Abriendo frontend en nueva pestaña...', 'info');
+            window.open('http://127.0.0.1:3000', '_blank');
+            setTimeout(() => {
+                showResult(`
+                    <strong>Ventana abierta</strong><br>
+                    <div class="test-item">
+                    Si ves la página del frontend: ✅ Todo funciona<br>
+                    Si no carga: ❌ Hay un problema de conexión<br><br>
+                    Verifica la consola del navegador (F12) para ver errores.
+                    </div>
+                `, 'info');
+            }, 1000);
+        }
+
+        // Auto-test on load
+        window.onload = function() {
+            showResult(`
+                <strong>📋 Listo para diagnosticar</strong><br>
+                <div class="test-item">
+                Haz clic en los botones arriba para probar la conexión.<br><br>
+                <strong>Tip:</strong> Abre la consola del navegador (F12)<br>
+                para ver más detalles sobre errores de red.
+                </div>
+            `, 'info');
+        };
+    </script>
+</body>
+</html>

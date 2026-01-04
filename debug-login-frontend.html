@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Login Frontend - BVS Framework</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
+            background: #1a1a2e;
+            color: #eee;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #00d4ff;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            background: #16213e;
+            border: 2px solid #0f3460;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+            font-size: 20px;
+            border-bottom: 1px solid #0f3460;
+            padding-bottom: 10px;
+        }
+
+        .log-entry {
+            background: #0f0f23;
+            padding: 10px;
+            margin: 5px 0;
+            border-left: 3px solid #666;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .log-entry.success {
+            border-left-color: #00ff88;
+            background: #0a2817;
+        }
+
+        .log-entry.error {
+            border-left-color: #ff4444;
+            background: #2e0a0a;
+        }
+
+        .log-entry.info {
+            border-left-color: #00d4ff;
+            background: #0a1829;
+        }
+
+        .log-entry.warning {
+            border-left-color: #ffaa00;
+            background: #2e1f0a;
+        }
+
+        button {
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.danger {
+            background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+        }
+
+        input {
+            background: #0f0f23;
+            border: 2px solid #0f3460;
+            color: #eee;
+            padding: 10px;
+            border-radius: 6px;
+            width: 300px;
+            font-size: 14px;
+            margin: 5px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+
+        .status-badge.ok {
+            background: #00ff88;
+            color: #000;
+        }
+
+        .status-badge.fail {
+            background: #ff4444;
+            color: #fff;
+        }
+
+        .json-viewer {
+            background: #0f0f23;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .timestamp {
+            color: #888;
+            font-size: 11px;
+            margin-right: 10px;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .key {
+            color: #00d4ff;
+        }
+
+        .string {
+            color: #00ff88;
+        }
+
+        .number {
+            color: #ffaa00;
+        }
+
+        .boolean {
+            color: #ff66ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug Login Frontend</h1>
+        <p class="subtitle">Herramienta de diagnóstico para identificar problemas en el login del frontend</p>
+
+        <div class="section">
+            <h2>🎮 Controles</h2>
+            <div class="controls">
+                <input type="text" id="username" placeholder="Username" value="admin">
+                <input type="password" id="password" placeholder="Password" value="admin123">
+                <button onclick="testLogin()">🧪 Test Login</button>
+                <button onclick="checkFrontendLogin()">🌐 Test Frontend /login</button>
+                <button onclick="checkBackendHealth()">💊 Backend Health</button>
+                <button onclick="clearLogs()">🗑️ Limpiar Logs</button>
+                <button class="danger" onclick="clearStorage()">⚠️ Limpiar Storage</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📊 Estado del Sistema</h2>
+            <div id="systemStatus">
+                <div class="log-entry info">Presiona los botones arriba para iniciar diagnóstico...</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📝 Logs de Diagnóstico</h2>
+            <div id="logs"></div>
+        </div>
+
+        <div class="section">
+            <h2>🔐 LocalStorage</h2>
+            <div id="storageViewer"></div>
+        </div>
+
+        <div class="section">
+            <h2>🌐 Network Requests</h2>
+            <div id="networkLogs"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000/api';
+        const FRONTEND_URL = 'http://localhost:3000';
+
+        function getTimestamp() {
+            const now = new Date();
+            return now.toTimeString().split(' ')[0] + '.' + now.getMilliseconds();
+        }
+
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `<span class="timestamp">[${getTimestamp()}]</span>${message}`;
+            logsDiv.insertBefore(entry, logsDiv.firstChild);
+        }
+
+        function updateStatus(html) {
+            document.getElementById('systemStatus').innerHTML = html;
+        }
+
+        function updateStorage() {
+            const storageDiv = document.getElementById('storageViewer');
+            const authStorage = localStorage.getItem('auth-storage');
+
+            if (authStorage) {
+                try {
+                    const parsed = JSON.parse(authStorage);
+                    storageDiv.innerHTML = '<div class="json-viewer">' +
+                        syntaxHighlight(JSON.stringify(parsed, null, 2)) +
+                        '</div>';
+                } catch (e) {
+                    storageDiv.innerHTML = '<div class="log-entry error">Error parsing auth-storage: ' + e.message + '</div>';
+                }
+            } else {
+                storageDiv.innerHTML = '<div class="log-entry warning">No hay datos en localStorage (auth-storage)</div>';
+            }
+        }
+
+        function syntaxHighlight(json) {
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                let cls = 'number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'key';
+                    } else {
+                        cls = 'string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+
+        function addNetworkLog(request, response, success) {
+            const networkDiv = document.getElementById('networkLogs');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${success ? 'success' : 'error'}`;
+
+            let html = `<strong>${request.method} ${request.url}</strong><br>`;
+            html += `Status: ${response.status} ${response.statusText}<br>`;
+            html += `Time: ${response.time || 'N/A'}ms<br>`;
+
+            if (request.body) {
+                html += `Request Body: <pre>${JSON.stringify(request.body, null, 2)}</pre>`;
+            }
+
+            if (response.data) {
+                html += `Response: <pre>${JSON.stringify(response.data, null, 2)}</pre>`;
+            }
+
+            entry.innerHTML = html;
+            networkDiv.insertBefore(entry, networkDiv.firstChild);
+        }
+
+        async function testLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            log('🚀 Iniciando test de login...', 'info');
+            updateStatus('<div class="log-entry info">⏳ Testing...</div>');
+
+            try {
+                // Step 1: Login
+                log(`📤 POST ${API_URL}/auth/login/`, 'info');
+                log(`Credentials: ${username} / ${password.replace(/./g, '*')}`, 'info');
+
+                const startTime = performance.now();
+                const loginResponse = await fetch(`${API_URL}/auth/login/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                const loginTime = Math.round(performance.now() - startTime);
+
+                const loginData = await loginResponse.json();
+
+                addNetworkLog(
+                    { method: 'POST', url: '/auth/login/', body: { username, password: '***' } },
+                    { status: loginResponse.status, statusText: loginResponse.statusText, time: loginTime, data: loginData },
+                    loginResponse.ok
+                );
+
+                if (!loginResponse.ok) {
+                    throw new Error(`Login failed: ${loginResponse.status} ${loginResponse.statusText}`);
+                }
+
+                log(`✅ Login exitoso (${loginTime}ms)`, 'success');
+                log(`Access token: ${loginData.access.substring(0, 30)}...`, 'success');
+                log(`Refresh token: ${loginData.refresh.substring(0, 30)}...`, 'success');
+
+                // Step 2: Get user data
+                log(`📤 GET ${API_URL}/auth/user/`, 'info');
+
+                const userStartTime = performance.now();
+                const userResponse = await fetch(`${API_URL}/auth/user/`, {
+                    headers: {
+                        'Authorization': `Bearer ${loginData.access}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const userTime = Math.round(performance.now() - userStartTime);
+
+                const userData = await userResponse.json();
+
+                addNetworkLog(
+                    { method: 'GET', url: '/auth/user/' },
+                    { status: userResponse.status, statusText: userResponse.statusText, time: userTime, data: userData },
+                    userResponse.ok
+                );
+
+                if (!userResponse.ok) {
+                    throw new Error(`Get user failed: ${userResponse.status}`);
+                }
+
+                log(`✅ Usuario obtenido (${userTime}ms)`, 'success');
+                log(`Username: ${userData.username}`, 'success');
+                log(`Email: ${userData.email}`, 'success');
+
+                // Step 3: Save to localStorage
+                log('💾 Guardando en localStorage...', 'info');
+
+                const authStorage = {
+                    state: {
+                        user: userData,
+                        accessToken: loginData.access,
+                        refreshToken: loginData.refresh,
+                        isAuthenticated: true,
+                        _hasHydrated: true
+                    },
+                    version: 0
+                };
+
+                localStorage.setItem('auth-storage', JSON.stringify(authStorage));
+                log('✅ Datos guardados en localStorage', 'success');
+
+                updateStorage();
+
+                updateStatus(`
+                    <div class="log-entry success">
+                        <span class="status-badge ok">✓ LOGIN OK</span>
+                        Usuario: ${userData.username}<br>
+                        Email: ${userData.email}<br>
+                        Tiempo total: ${loginTime + userTime}ms
+                    </div>
+                `);
+
+                log('🎉 ¡Login completado exitosamente!', 'success');
+                log('Puedes ir a http://localhost:3000/home y deberías estar autenticado', 'info');
+
+            } catch (error) {
+                log(`❌ ERROR: ${error.message}`, 'error');
+                console.error('Full error:', error);
+
+                updateStatus(`
+                    <div class="log-entry error">
+                        <span class="status-badge fail">✗ FAILED</span>
+                        ${error.message}
+                    </div>
+                `);
+            }
+        }
+
+        async function checkFrontendLogin() {
+            log('🌐 Verificando página de login del frontend...', 'info');
+
+            try {
+                const response = await fetch(`${FRONTEND_URL}/login`);
+                const time = Math.round(performance.now());
+
+                addNetworkLog(
+                    { method: 'GET', url: '/login' },
+                    { status: response.status, statusText: response.statusText, time },
+                    response.ok
+                );
+
+                if (response.ok) {
+                    log(`✅ Frontend /login accesible (HTTP ${response.status})`, 'success');
+                } else {
+                    log(`❌ Frontend /login no accesible (HTTP ${response.status})`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error accediendo al frontend: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkBackendHealth() {
+            log('💊 Verificando salud del backend...', 'info');
+
+            const endpoints = [
+                { url: '/auth/login/', method: 'OPTIONS', desc: 'Login OPTIONS (CORS)' },
+                { url: '/', method: 'GET', desc: 'Root endpoint' },
+            ];
+
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(`${API_URL}${endpoint.url}`, {
+                        method: endpoint.method
+                    });
+
+                    if (response.ok || response.status === 405) {
+                        log(`✅ ${endpoint.desc}: HTTP ${response.status}`, 'success');
+                    } else {
+                        log(`⚠️ ${endpoint.desc}: HTTP ${response.status}`, 'warning');
+                    }
+                } catch (error) {
+                    log(`❌ ${endpoint.desc}: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+            document.getElementById('networkLogs').innerHTML = '';
+            log('🗑️ Logs limpiados', 'info');
+        }
+
+        function clearStorage() {
+            if (confirm('¿Estás seguro de que quieres limpiar localStorage?')) {
+                localStorage.clear();
+                log('⚠️ localStorage limpiado completamente', 'warning');
+                updateStorage();
+            }
+        }
+
+        // Auto-refresh storage every 2 seconds
+        setInterval(updateStorage, 2000);
+
+        // Initial load
+        updateStorage();
+        log('🎯 Debug tool cargado. Usa los botones arriba para diagnosticar.', 'info');
+        log(`API URL: ${API_URL}`, 'info');
+        log(`Frontend URL: ${FRONTEND_URL}`, 'info');
+    </script>
+</body>
+</html>

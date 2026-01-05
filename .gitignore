@@ -103,6 +103,8 @@ backend/media/
 backend/static_root/
 backend/celerybeat-schedule
 backend/celerybeat.pid
+backend/logs/
+logs/
 
 # Frontend specific
 frontend/.next/

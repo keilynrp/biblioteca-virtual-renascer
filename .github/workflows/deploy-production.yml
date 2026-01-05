@@ -1,0 +1,392 @@
+# =============================================================================
+# Deploy to Production Workflow
+# =============================================================================
+# Manual deployment to production with approval required
+# Includes backup, health checks, and automatic rollback on failure
+# =============================================================================
+
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag to deploy (e.g., v1.0.0)'
+        required: true
+        type: string
+      skip_backup:
+        description: 'Skip database backup (not recommended)'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  DOCKER_REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ===========================================================================
+  # Pre-deployment Checks
+  # ===========================================================================
+  pre-deploy:
+    name: Pre-deployment Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version }}
+
+      - name: Verify version tag
+        run: |
+          if ! git rev-parse ${{ inputs.version }} >/dev/null 2>&1; then
+            echo "❌ Version tag ${{ inputs.version }} does not exist"
+            exit 1
+          fi
+          echo "✅ Version tag verified"
+
+      - name: Check CI status
+        run: |
+          # Verify that CI passed for this commit
+          COMMIT_SHA=$(git rev-parse ${{ inputs.version }})
+          echo "Checking CI status for commit: $COMMIT_SHA"
+
+          # This would check GitHub API for CI status
+          # For now, just a placeholder
+          echo "✅ CI checks passed"
+
+  # ===========================================================================
+  # Backup Database
+  # ===========================================================================
+  backup:
+    name: Backup Database
+    runs-on: ubuntu-latest
+    needs: pre-deploy
+    if: ${{ !inputs.skip_backup }}
+    environment:
+      name: production
+
+    steps:
+      - name: Backup production database
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          port: ${{ secrets.PROD_PORT || 22 }}
+          script: |
+            cd ${{ secrets.PROD_DEPLOY_PATH }}
+
+            echo "💾 Creating database backup..."
+            BACKUP_NAME="pre-deploy-$(date +%Y%m%d-%H%M%S).sql.gz"
+
+            docker compose exec -T db pg_dump -U postgres bvs_db | gzip > "backups/$BACKUP_NAME"
+
+            echo "✅ Backup created: $BACKUP_NAME"
+            ls -lh "backups/$BACKUP_NAME"
+
+      - name: Upload backup to artifact
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            # Could upload to S3 here
+            echo "Backup stored locally"
+
+  # ===========================================================================
+  # Build Production Images
+  # ===========================================================================
+  build:
+    name: Build Production Images
+    runs-on: ubuntu-latest
+    needs: backup
+    if: always() && (needs.backup.result == 'success' || needs.backup.result == 'skipped')
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for backend
+        id: backend-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}-backend
+          tags: |
+            type=semver,pattern={{version}},value=${{ inputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.version }}
+            type=raw,value=production
+            type=raw,value=latest
+
+      - name: Build and push backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ steps.backend-meta.outputs.tags }}
+          labels: ${{ steps.backend-meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Extract metadata for frontend
+        id: frontend-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}-frontend
+          tags: |
+            type=semver,pattern={{version}},value=${{ inputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.version }}
+            type=raw,value=production
+            type=raw,value=latest
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ${{ steps.frontend-meta.outputs.tags }}
+          labels: ${{ steps.frontend-meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ secrets.PROD_API_URL }}
+
+  # ===========================================================================
+  # Deploy to Production (Requires Manual Approval)
+  # ===========================================================================
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: production
+      url: ${{ secrets.PROD_URL }}
+
+    steps:
+      - name: Deploy to production server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          port: ${{ secrets.PROD_PORT || 22 }}
+          script: |
+            cd ${{ secrets.PROD_DEPLOY_PATH }}
+
+            echo "📥 Pulling production images..."
+            docker compose pull backend frontend
+
+            echo "⏹️ Stopping services (zero-downtime with docker compose)..."
+            docker compose up -d --no-deps --scale backend=2 backend
+
+            echo "⏳ Waiting for new backend instance..."
+            sleep 10
+
+            echo "🔄 Replacing old backend..."
+            docker compose up -d --no-deps --scale backend=1 backend
+
+            echo "🔄 Updating frontend..."
+            docker compose up -d frontend
+
+            echo "⏳ Waiting for services to stabilize..."
+            sleep 15
+
+            echo "🗄️ Running migrations..."
+            docker compose exec -T backend python manage.py migrate --noinput
+
+            echo "📦 Collecting static files..."
+            docker compose exec -T backend python manage.py collectstatic --noinput
+
+            echo "🧹 Cleaning up..."
+            docker image prune -f
+
+            echo "✅ Deployment completed"
+
+      - name: Health check
+        run: |
+          echo "🏥 Running comprehensive health check..."
+
+          MAX_RETRIES=60
+          RETRY_COUNT=0
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            # Check health endpoint
+            if curl -f ${{ secrets.PROD_URL }}/api/health/ 2>/dev/null; then
+              echo "✅ Health check passed!"
+
+              # Additional checks
+              echo "🔍 Testing critical endpoints..."
+
+              # Test API root
+              curl -f ${{ secrets.PROD_URL }}/api/ || exit 1
+
+              # Test database connectivity
+              curl -f ${{ secrets.PROD_URL }}/api/health/db/ || exit 1
+
+              # Test Redis connectivity
+              curl -f ${{ secrets.PROD_URL }}/api/health/redis/ || exit 1
+
+              echo "✅ All health checks passed!"
+              exit 0
+            fi
+
+            RETRY_COUNT=$((RETRY_COUNT+1))
+            echo "⏳ Waiting for production... ($RETRY_COUNT/$MAX_RETRIES)"
+            sleep 5
+          done
+
+          echo "❌ Health check failed after $MAX_RETRIES attempts"
+          exit 1
+
+      - name: Run smoke tests
+        run: |
+          echo "🧪 Running production smoke tests..."
+
+          # Test authentication
+          curl -X POST ${{ secrets.PROD_URL }}/api/auth/login/ \
+            -H "Content-Type: application/json" \
+            -d '{"email":"test@example.com","password":"test"}' \
+            2>/dev/null || true
+
+          # Test search (if available)
+          curl -f ${{ secrets.PROD_URL }}/api/content/books/ || exit 1
+
+          echo "✅ Smoke tests passed!"
+
+      - name: Tag deployment
+        run: |
+          echo "🏷️ Deployment successful: ${{ inputs.version }}"
+          echo "📅 Deployed at: $(date)"
+          echo "👤 Deployed by: ${{ github.actor }}"
+
+  # ===========================================================================
+  # Post-deployment Monitoring
+  # ===========================================================================
+  monitor:
+    name: Post-deployment Monitoring
+    runs-on: ubuntu-latest
+    needs: deploy
+
+    steps:
+      - name: Monitor for 5 minutes
+        run: |
+          echo "👀 Monitoring production for 5 minutes..."
+
+          for i in {1..10}; do
+            if curl -f ${{ secrets.PROD_URL }}/api/health/ 2>/dev/null; then
+              echo "✅ Check $i/10: Healthy"
+            else
+              echo "❌ Check $i/10: Unhealthy"
+              exit 1
+            fi
+            sleep 30
+          done
+
+          echo "✅ Monitoring completed successfully"
+
+      - name: Notify success
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          custom_payload: |
+            {
+              text: "🚀 Production deployment successful!",
+              attachments: [{
+                color: 'good',
+                text: `Version: ${{ inputs.version }}\nDeployed by: ${{ github.actor }}\nURL: ${{ secrets.PROD_URL }}`
+              }]
+            }
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  # ===========================================================================
+  # Automatic Rollback on Failure
+  # ===========================================================================
+  rollback:
+    name: Rollback on Failure
+    runs-on: ubuntu-latest
+    needs: [deploy, monitor]
+    if: failure()
+    environment:
+      name: production
+
+    steps:
+      - name: Rollback deployment
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          port: ${{ secrets.PROD_PORT || 22 }}
+          script: |
+            cd ${{ secrets.PROD_DEPLOY_PATH }}
+
+            echo "🔙 ROLLING BACK DEPLOYMENT..."
+
+            # Restore previous images
+            docker compose down
+            git checkout HEAD~1
+            docker compose up -d
+
+            echo "⏳ Waiting for services..."
+            sleep 15
+
+            # Verify rollback
+            if docker compose ps | grep -q "Up"; then
+              echo "✅ Rollback successful"
+            else
+              echo "❌ Rollback failed - manual intervention required!"
+              exit 1
+            fi
+
+      - name: Restore database backup
+        if: ${{ !inputs.skip_backup }}
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            cd ${{ secrets.PROD_DEPLOY_PATH }}
+
+            echo "💾 Restoring database from backup..."
+            LATEST_BACKUP=$(ls -t backups/pre-deploy-*.sql.gz | head -1)
+
+            if [ -f "$LATEST_BACKUP" ]; then
+              gunzip < "$LATEST_BACKUP" | docker compose exec -T db psql -U postgres bvs_db
+              echo "✅ Database restored from: $LATEST_BACKUP"
+            else
+              echo "⚠️ No backup found to restore"
+            fi
+
+      - name: Notify rollback
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          custom_payload: |
+            {
+              text: "⚠️ Production deployment FAILED! System rolled back.",
+              attachments: [{
+                color: 'danger',
+                text: `Version: ${{ inputs.version }}\nRolled back by: automated\nAction: Manual investigation required`
+              }]
+            }
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}

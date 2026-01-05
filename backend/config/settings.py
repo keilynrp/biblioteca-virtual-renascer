@@ -103,6 +103,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Custom middleware
+    'apps.core.middleware.CorrelationIdMiddleware',  # Correlation ID (must be early)
+    'apps.core.middleware.RateLimitMiddleware',  # Rate limiting
+    'apps.core.middleware.RequestLoggingMiddleware',  # Request logging
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -240,3 +244,430 @@ CELERY_TIMEZONE = TIME_ZONE
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# =============================================================================
+# SENTRY CONFIGURATION - Error Tracking & Performance Monitoring
+# =============================================================================
+
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+from sentry_sdk.integrations.redis import RedisIntegration
+from sentry_sdk.integrations.celery import CeleryIntegration
+
+# Get Sentry DSN from environment
+SENTRY_DSN = os.getenv('SENTRY_DSN', '')
+SENTRY_ENVIRONMENT = os.getenv('SENTRY_ENVIRONMENT', 'development')
+SENTRY_RELEASE = os.getenv('SENTRY_RELEASE', 'bvs-backend@1.0.0')
+
+# Only initialize Sentry if DSN is provided
+if SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[
+            DjangoIntegration(
+                # Automatically capture transactions for Django views
+                transaction_style='url',
+                # Capture request data (body, headers, etc.)
+                # Be careful with sensitive data
+                middleware_spans=True,
+                # Signal breadcrumbs for Django signals
+                signals_spans=True,
+            ),
+            RedisIntegration(),
+            CeleryIntegration(
+                # Monitor Celery background tasks
+                monitor_beat_tasks=True,
+            ),
+        ],
+
+        # Environment (development, staging, production)
+        environment=SENTRY_ENVIRONMENT,
+
+        # Release version for tracking deployments
+        release=SENTRY_RELEASE,
+
+        # Performance Monitoring (Transactions)
+        # Set traces_sample_rate to a value between 0.0 and 1.0
+        # 1.0 = 100% of transactions, 0.1 = 10% (recommended for production)
+        traces_sample_rate=1.0 if DEBUG else 0.2,
+
+        # Error sampling
+        # In production, you might want to sample errors to reduce volume
+        # 1.0 = 100% of errors sent (recommended for now)
+        sample_rate=1.0,
+
+        # Send default PII (Personally Identifiable Information)
+        # Set to False if you want to avoid sending user data
+        send_default_pii=True,
+
+        # Maximum breadcrumbs (trail of events before error)
+        max_breadcrumbs=50,
+
+        # Attach stack locals (variable values) to stack frames
+        # Very useful for debugging but can be memory intensive
+        attach_stacktrace=True,
+
+        # Before send hook - filter/modify events before sending
+        # Useful for scrubbing sensitive data
+        before_send=lambda event, hint: (
+            # Filter out certain errors if needed
+            event if not _should_filter_event(event) else None
+        ),
+
+        # Ignore certain loggers
+        ignore_errors=[
+            # Django's DisallowedHost error (spammy)
+            'django.security.DisallowedHost',
+        ],
+
+        # Enable debug mode for Sentry SDK (verbose logging)
+        debug=DEBUG,
+    )
+
+    print(f"✓ Sentry initialized for environment: {SENTRY_ENVIRONMENT}")
+else:
+    if not DEBUG:
+        print("⚠ Warning: SENTRY_DSN not configured. Error tracking disabled.")
+
+
+def _should_filter_event(event):
+    """
+    Filter out events that we don't want to send to Sentry.
+
+    Examples:
+    - Health check requests
+    - Specific error types
+    - Test requests
+    """
+    # Get the request URL if available
+    if 'request' in event and 'url' in event['request']:
+        url = event['request']['url']
+
+        # Don't send errors from health checks
+        if '/health/' in url or '/healthz' in url:
+            return True
+
+    # Don't send errors with specific messages (customize as needed)
+    if 'exception' in event:
+        for exc in event['exception'].get('values', []):
+            message = exc.get('value', '')
+
+            # Example: filter out connection timeout errors
+            if 'connection timeout' in message.lower():
+                return True
+
+    return False
+
+
+# =============================================================================
+# RATE LIMITING CONFIGURATION
+# =============================================================================
+# Docs: https://django-ratelimit.readthedocs.io/
+
+# Use Redis for rate limiting cache
+RATELIMIT_USE_CACHE = 'default'
+
+# Enable rate limiting (can be disabled in development)
+RATELIMIT_ENABLE = os.getenv('RATELIMIT_ENABLE', 'True').lower() == 'true'
+
+# Default rate limit view for exceeded limits
+RATELIMIT_VIEW = 'apps.core.views.rate_limit_exceeded'
+
+# Rate limit groups for different endpoints
+RATELIMIT_RATE_GROUPS = {
+    # Authentication endpoints - strict limits
+    'auth_login': '5/m',        # 5 attempts per minute
+    'auth_register': '3/h',     # 3 registrations per hour
+    'auth_password_reset': '3/h',  # 3 password resets per hour
+
+    # API endpoints - moderate limits
+    'api_read': '100/m',        # 100 read requests per minute
+    'api_write': '30/m',        # 30 write requests per minute
+    'api_delete': '10/m',       # 10 delete requests per minute
+
+    # Search endpoints - higher limits
+    'search': '60/m',           # 60 searches per minute
+
+    # Upload endpoints - strict limits
+    'upload': '10/h',           # 10 uploads per hour
+
+    # Admin endpoints - very strict
+    'admin_critical': '20/h',   # 20 critical admin actions per hour
+}
+
+# IP addresses exempt from rate limiting (admin IPs, monitoring, etc.)
+RATELIMIT_IP_WHITELIST = os.getenv('RATELIMIT_IP_WHITELIST', '').split(',')
+
+# Headers to check for real IP (behind proxy/load balancer)
+RATELIMIT_IP_META_KEY = 'HTTP_X_FORWARDED_FOR'
+
+# Log rate limit violations
+RATELIMIT_LOG_VIOLATIONS = True
+
+
+# =============================================================================
+# LOGGING CONFIGURATION
+# =============================================================================
+# Comprehensive logging setup with JSON formatting for production
+# Docs: https://docs.djangoproject.com/en/stable/topics/logging/
+
+import os
+from pathlib import Path
+
+# Create logs directory if it doesn't exist
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(exist_ok=True)
+
+# Determine log level based on environment
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'DEBUG' if DEBUG else 'INFO')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+
+    # =============================================================================
+    # FORMATTERS
+    # =============================================================================
+    'formatters': {
+        # JSON formatter for production (structured logging)
+        'json': {
+            '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+            'format': '%(asctime)s %(name)s %(levelname)s %(message)s %(pathname)s %(lineno)d %(funcName)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+
+        # Verbose formatter for development
+        'verbose': {
+            'format': '{levelname} {asctime} [{name}] {message}',
+            'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+
+        # Simple formatter for console
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+
+        # Colored formatter for development (optional, requires colorlog)
+        'colored': {
+            'format': '%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(name)s%(reset)s - %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+    },
+
+    # =============================================================================
+    # FILTERS
+    # =============================================================================
+    'filters': {
+        # Only show logs when DEBUG=True
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+
+        # Only show logs when DEBUG=False
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+
+        # Custom filter to add correlation ID
+        'correlation_id': {
+            '()': 'apps.core.logging_filters.CorrelationIdFilter',
+        },
+    },
+
+    # =============================================================================
+    # HANDLERS
+    # =============================================================================
+    'handlers': {
+        # Console output (stdout) - Docker-friendly
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'json' if not DEBUG else 'verbose',
+            'filters': ['correlation_id'],
+        },
+
+        # File handler with rotation (by size)
+        'file': {
+            'level': LOG_LEVEL,
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'django.log',
+            'maxBytes': 1024 * 1024 * 10,  # 10 MB
+            'backupCount': 5,  # Keep 5 backup files
+            'formatter': 'json',
+            'filters': ['correlation_id'],
+        },
+
+        # Separate file for errors only
+        'error_file': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'errors.log',
+            'maxBytes': 1024 * 1024 * 10,  # 10 MB
+            'backupCount': 10,  # Keep more error logs
+            'formatter': 'json',
+            'filters': ['correlation_id'],
+        },
+
+        # Time-based rotation (daily)
+        'daily_file': {
+            'level': LOG_LEVEL,
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': LOGS_DIR / 'daily.log',
+            'when': 'midnight',
+            'interval': 1,
+            'backupCount': 30,  # Keep 30 days
+            'formatter': 'json',
+            'filters': ['correlation_id'],
+        },
+
+        # Security events
+        'security_file': {
+            'level': 'WARNING',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'security.log',
+            'maxBytes': 1024 * 1024 * 5,  # 5 MB
+            'backupCount': 10,
+            'formatter': 'json',
+            'filters': ['correlation_id'],
+        },
+
+        # Performance logs (slow queries, etc.)
+        'performance_file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'performance.log',
+            'maxBytes': 1024 * 1024 * 10,  # 10 MB
+            'backupCount': 5,
+            'formatter': 'json',
+            'filters': ['correlation_id'],
+        },
+
+        # Null handler (discard logs)
+        'null': {
+            'class': 'logging.NullHandler',
+        },
+    },
+
+    # =============================================================================
+    # LOGGERS
+    # =============================================================================
+    'loggers': {
+        # Root logger
+        '': {
+            'handlers': ['console', 'file', 'error_file'],
+            'level': LOG_LEVEL,
+            'propagate': False,
+        },
+
+        # Django core
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+
+        # Django request/response
+        'django.request': {
+            'handlers': ['console', 'error_file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+
+        # Django database queries (only in DEBUG)
+        'django.db.backends': {
+            'handlers': ['console'] if DEBUG else ['null'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+
+        # Django security
+        'django.security': {
+            'handlers': ['security_file', 'console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+
+        # Django server
+        'django.server': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+
+        # Application loggers
+        'apps': {
+            'handlers': ['console', 'file', 'error_file'],
+            'level': LOG_LEVEL,
+            'propagate': False,
+        },
+
+        'apps.authentication': {
+            'handlers': ['console', 'security_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+
+        'apps.content': {
+            'handlers': ['console', 'file'],
+            'level': LOG_LEVEL,
+            'propagate': False,
+        },
+
+        'apps.core': {
+            'handlers': ['console', 'file'],
+            'level': LOG_LEVEL,
+            'propagate': False,
+        },
+
+        # Celery
+        'celery': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+
+        # Third-party libraries
+        'elasticsearch': {
+            'handlers': ['console', 'file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+
+        'stripe': {
+            'handlers': ['console', 'security_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+
+        # Performance monitoring
+        'performance': {
+            'handlers': ['performance_file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+# =============================================================================
+# LOGGING CONFIGURATION HELPERS
+# =============================================================================
+
+# Log SQL queries in development
+if DEBUG:
+    LOGGING['loggers']['django.db.backends']['level'] = 'DEBUG'
+
+# Disable Django's default logging config
+# LOGGING_CONFIG = None
+
+# =============================================================================
+# MEILISEARCH CONFIGURATION
+# =============================================================================
+
+# Meilisearch connection settings
+MEILISEARCH_HOST = os.getenv('MEILISEARCH_HOST', 'http://meilisearch:7700')
+MEILISEARCH_MASTER_KEY = os.getenv('MEILISEARCH_MASTER_KEY', 'your-master-key-change-this')
+
+# Note: Meilisearch uses only 128MB RAM vs Elasticsearch's 2GB
+# This provides a 384MB memory savings with similar search performance

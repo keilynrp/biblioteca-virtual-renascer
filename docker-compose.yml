@@ -18,7 +18,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      elasticsearch:
+      # elasticsearch:
+      #   condition: service_healthy
+      meilisearch:
         condition: service_healthy
     deploy:
       resources:
@@ -150,55 +152,115 @@ services:
       start_period: 5s
     restart: unless-stopped
 
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+  # elasticsearch:
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+  #   environment:
+  #     - discovery.type=single-node
+  #     - xpack.security.enabled=false
+  #     - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+  #     - bootstrap.memory_lock=false
+  #     - cluster.routing.allocation.disk.threshold_enabled=true
+  #     - cluster.routing.allocation.disk.watermark.low=85%
+  #     - cluster.routing.allocation.disk.watermark.high=90%
+  #     - cluster.routing.allocation.disk.watermark.flood_stage=95%
+  #     - indices.memory.index_buffer_size=15%
+  #     - indices.queries.cache.size=10%
+  #     - indices.fielddata.cache.size=20%
+  #     - http.max_content_length=100mb
+  #     - thread_pool.write.queue_size=1000
+  #     - thread_pool.search.queue_size=1000
+  #     - action.destructive_requires_name=true
+  #     - indices.recovery.max_bytes_per_sec=100mb
+  #   volumes:
+  #     - elasticsearch_data:/usr/share/elasticsearch/data
+  #   ports:
+  #     - "9200:9200"
+  #     - "9300:9300"
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 2G
+  #       reservations:
+  #         memory: 1G
+  #   ulimits:
+  #     memlock:
+  #       soft: -1
+  #       hard: -1
+  #     nofile:
+  #       soft: 65536
+  #       hard: 65536
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s || exit 1"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 5
+  #     start_period: 60s
+  #   restart: unless-stopped
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.6
     environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
-      - bootstrap.memory_lock=false
-      - cluster.routing.allocation.disk.threshold_enabled=true
-      - cluster.routing.allocation.disk.watermark.low=85%
-      - cluster.routing.allocation.disk.watermark.high=90%
-      - cluster.routing.allocation.disk.watermark.flood_stage=95%
-      - indices.memory.index_buffer_size=15%
-      - indices.queries.cache.size=10%
-      - indices.fielddata.cache.size=20%
-      - http.max_content_length=100mb
-      - thread_pool.write.queue_size=1000
-      - thread_pool.search.queue_size=1000
-      - action.destructive_requires_name=true
-      - indices.recovery.max_bytes_per_sec=100mb
+      - MEILI_ENV=development
+      - MEILI_MASTER_KEY=your-master-key-change-this
+      - MEILI_NO_ANALYTICS=true
+      - MEILI_MAX_INDEXING_MEMORY=100mb
+      - MEILI_LOG_LEVEL=INFO
     volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
+      - meilisearch_data:/meili_data
     ports:
-      - "9200:9200"
-      - "9300:9300"
+      - "7700:7700"
     deploy:
       resources:
         limits:
-          memory: 2G
+          memory: 256M
         reservations:
-          memory: 1G
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
+          memory: 128M
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s || exit 1"]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD-SHELL", "curl -f http://localhost:7700/health || exit 1"]
+      interval: 10s
+      timeout: 5s
       retries: 5
-      start_period: 60s
+      start_period: 10s
     restart: unless-stopped
+
+  backup:
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile.backup
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=biblioteca
+      - POSTGRES_PASSWORD=postgres
+      - PGHOST=db
+      - PGPORT=5432
+      - BACKUP_RETENTION_DAYS=7
+      - MEDIA_DIR=/app/media
+    volumes:
+      - ./backups:/backups
+      - ./backend/media:/app/media:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "[ -f /var/run/crond.pid ] && ps | grep crond || exit 1"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
 volumes:
   postgres_data:
     driver: local
-  elasticsearch_data:
+  # elasticsearch_data:
+  #   driver: local
+  meilisearch_data:
     driver: local
   redis_data:
     driver: local

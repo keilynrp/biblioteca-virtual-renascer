@@ -1,4 +1,7 @@
 
+# =============================================================================
+# Content Views - BVS Backend
+# =============================================================================
 from rest_framework import generics, permissions, filters, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -6,6 +9,7 @@ from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Avg
 from django.shortcuts import get_object_or_404
+from django.utils.decorators import method_decorator
 from .models import Book, Category, Author, Review, ReviewHelpful, Favorite, ReadingHistory, Reading
 from .serializers import (
     BookListSerializer, BookDetailSerializer, CategorySerializer, AuthorSerializer,
@@ -14,11 +18,32 @@ from .serializers import (
 )
 from .documents import BookDocument
 from .permissions import IsOwnerOrReadOnly
+from apps.core.decorators import (
+    rate_limit_api_read,
+    rate_limit_api_write,
+    rate_limit_api_delete,
+    rate_limit_search,
+    rate_limit_upload
+)
 import logging
 
 logger = logging.getLogger(__name__)
 
+
+# =============================================================================
+# BOOK VIEWS
+# =============================================================================
+
+@method_decorator(rate_limit_api_read, name='get')
+@method_decorator(rate_limit_api_write, name='post')
 class BookListView(generics.ListCreateAPIView):
+    """
+    List and create books.
+
+    Rate limits:
+    - GET: 100 requests/min
+    - POST: 30 requests/min (upload with rate_limit_upload for file uploads)
+    """
     queryset = Book.objects.select_related('author', 'category').all()
     serializer_class = BookListSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
@@ -35,7 +60,20 @@ class BookListView(generics.ListCreateAPIView):
             return BookDetailSerializer
         return BookListSerializer
 
+
+@method_decorator(rate_limit_api_read, name='get')
+@method_decorator(rate_limit_api_write, name='put')
+@method_decorator(rate_limit_api_write, name='patch')
+@method_decorator(rate_limit_api_delete, name='delete')
 class BookDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve, update, or delete a book.
+
+    Rate limits:
+    - GET: 100 requests/min
+    - PUT/PATCH: 30 requests/min
+    - DELETE: 10 requests/min
+    """
     queryset = Book.objects.select_related('author', 'category').all()
     serializer_class = BookDetailSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
@@ -46,7 +84,21 @@ class BookDetailView(generics.RetrieveUpdateDestroyAPIView):
             return [permissions.IsAuthenticated()]
         return [permissions.AllowAny()]
 
+
+# =============================================================================
+# CATEGORY VIEWS
+# =============================================================================
+
+@method_decorator(rate_limit_api_read, name='get')
+@method_decorator(rate_limit_api_write, name='post')
 class CategoryListView(generics.ListCreateAPIView):
+    """
+    List and create categories.
+
+    Rate limits:
+    - GET: 100 requests/min
+    - POST: 30 requests/min
+    """
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
@@ -55,7 +107,20 @@ class CategoryListView(generics.ListCreateAPIView):
             return [permissions.IsAuthenticated()]
         return [permissions.AllowAny()]
 
+
+@method_decorator(rate_limit_api_read, name='get')
+@method_decorator(rate_limit_api_write, name='put')
+@method_decorator(rate_limit_api_write, name='patch')
+@method_decorator(rate_limit_api_delete, name='delete')
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve, update, or delete a category.
+
+    Rate limits:
+    - GET: 100 requests/min
+    - PUT/PATCH: 30 requests/min
+    - DELETE: 10 requests/min
+    """
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     lookup_field = 'id'
@@ -65,7 +130,21 @@ class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
             return [permissions.IsAuthenticated()]
         return [permissions.AllowAny()]
 
+
+# =============================================================================
+# AUTHOR VIEWS
+# =============================================================================
+
+@method_decorator(rate_limit_api_read, name='get')
+@method_decorator(rate_limit_api_write, name='post')
 class AuthorListView(generics.ListCreateAPIView):
+    """
+    List and create authors.
+
+    Rate limits:
+    - GET: 100 requests/min
+    - POST: 30 requests/min
+    """
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
 
@@ -74,7 +153,20 @@ class AuthorListView(generics.ListCreateAPIView):
             return [permissions.IsAuthenticated()]
         return [permissions.AllowAny()]
 
+
+@method_decorator(rate_limit_api_read, name='get')
+@method_decorator(rate_limit_api_write, name='put')
+@method_decorator(rate_limit_api_write, name='patch')
+@method_decorator(rate_limit_api_delete, name='delete')
 class AuthorDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve, update, or delete an author.
+
+    Rate limits:
+    - GET: 100 requests/min
+    - PUT/PATCH: 30 requests/min
+    - DELETE: 10 requests/min
+    """
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
     lookup_field = 'id'
@@ -83,10 +175,16 @@ class AuthorDetailView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method in ['PUT', 'PATCH', 'DELETE']:
             return [permissions.IsAuthenticated()]
         return [permissions.AllowAny()]
+
+
+# =============================================================================
+# DASHBOARD & STATS VIEWS
+# =============================================================================
 
 
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])  # Changed to AllowAny for dashboard accessibility
+@rate_limit_api_read
 def dashboard_stats(request):
     """
     Obtener estadísticas para el dashboard
@@ -141,9 +239,12 @@ def dashboard_stats(request):
 
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
+@rate_limit_search
 def search_books(request):
     """
     Búsqueda avanzada de libros usando Elasticsearch.
+
+    Rate limit: 60 requests/min
 
     Query params:
         - q: Texto de búsqueda
@@ -232,9 +333,12 @@ def search_books(request):
 
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
+@rate_limit_search
 def autocomplete_books(request):
     """
     Autocomplete para búsqueda de libros.
+
+    Rate limit: 60 requests/min
 
     Query params:
         - q: Texto para autocomplete (mínimo 2 caracteres)

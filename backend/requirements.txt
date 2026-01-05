@@ -13,8 +13,16 @@ stripe>=7.0
 python-magic>=0.4.27
 
 # Search
-elasticsearch>=8.11
-elasticsearch-dsl>=8.11
+# elasticsearch>=8.11  # Commented out - migrated to Meilisearch
+# elasticsearch-dsl>=8.11
+meilisearch>=0.31
+
+# Monitoring
+sentry-sdk[django]>=1.40
+python-json-logger>=2.0.7
+
+# Security
+django-ratelimit>=4.1
 
 # Testing
 pytest>=7.4

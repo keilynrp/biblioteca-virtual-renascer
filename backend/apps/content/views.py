@@ -6,9 +6,11 @@ from rest_framework import generics, permissions, filters, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Avg
 from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.clickjacking import xframe_options_exempt, xframe_options_sameorigin
 from django.core.cache import cache
@@ -55,6 +57,7 @@ class BookListView(generics.ListCreateAPIView):
     """
     queryset = Book.objects.select_related('author', 'category').all()
     serializer_class = BookListSerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['category__slug', 'author__id', 'is_premium']
     search_fields = ['title', 'author__name', 'description']
@@ -85,6 +88,7 @@ class BookDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     queryset = Book.objects.select_related('author', 'category').all()
     serializer_class = BookDetailSerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     lookup_field = 'slug'
 
@@ -525,7 +529,10 @@ def import_books_from_openlibrary(request):
         - subjects: Lista de temas (opcional)
         - query: Búsqueda por query (opcional)
         - limit: Número máximo de libros (default: 30, max: 500)
-        - auto_index: Auto-indexar en Elasticsearch (default: true)
+        - auto_index: Auto-indexar en Meilisearch (default: true, siempre activo)
+
+    Note: Los libros se indexan automáticamente en Meilisearch via signals,
+    independientemente del valor de auto_index.
     """
     try:
         import requests
@@ -1066,8 +1073,21 @@ class ServeBookFileView(APIView):
 
         # Check if user has access
         if book.is_premium:
-            # TODO: Verify user has active subscription
-            pass
+            # Verify user has active subscription
+            from apps.subscriptions.models import Subscription
+            from django.utils import timezone
+
+            has_active_subscription = Subscription.objects.filter(
+                user=user,
+                is_active=True,
+                end_date__gte=timezone.now()
+            ).exists()
+
+            if not has_active_subscription and not user.is_staff:
+                from django.http import JsonResponse
+                return JsonResponse({
+                    'error': 'Se requiere suscripción activa para acceder a este contenido premium'
+                }, status=403)
 
         # Check if file exists
         if not book.file:
@@ -1082,22 +1102,79 @@ class ServeBookFileView(APIView):
         # Log the access
         logger.info(f"User {user.username} accessed book {book.title}")
 
+        # Check for concurrent reading sessions (limit: 3 devices)
+        from django.utils import timezone
+        from datetime import timedelta
+
+        recent_threshold = timezone.now() - timedelta(minutes=5)
+        active_sessions = Reading.objects.filter(
+            user=user,
+            last_read_at__gte=recent_threshold
+        ).exclude(book=book).count()
+
+        MAX_CONCURRENT_SESSIONS = 3
+        if active_sessions >= MAX_CONCURRENT_SESSIONS:
+            from django.http import JsonResponse
+            return JsonResponse({
+                'error': f'Has alcanzado el límite de {MAX_CONCURRENT_SESSIONS} sesiones de lectura simultáneas'
+            }, status=429)
+
         # Update or create reading session
-        Reading.objects.get_or_create(
+        reading, created = Reading.objects.get_or_create(
             user=user,
             book=book,
             defaults={'current_page': 1}
         )
 
-        # Serve the file
-        response = FileResponse(
-            open(file_path, 'rb'),
-            content_type='application/pdf'
-        )
+        # Update last_read_at to track active session
+        reading.last_read_at = timezone.now()
+        reading.save(update_fields=['last_read_at'])
+
+        # Serve the file with range support for streaming
+        import mimetypes
+        from django.http import StreamingHttpResponse
+
+        file_size = os.path.getsize(file_path)
+        content_type = mimetypes.guess_type(file_path)[0] or 'application/pdf'
+
+        # Check for range request
+        range_header = request.META.get('HTTP_RANGE', '').strip()
+        range_match = None
+
+        if range_header:
+            import re
+            range_match = re.search(r'bytes=(\d+)-(\d*)', range_header)
+
+        if range_match:
+            # Handle range request for streaming
+            start = int(range_match.group(1))
+            end = int(range_match.group(2)) if range_match.group(2) else file_size - 1
+            length = end - start + 1
+
+            with open(file_path, 'rb') as f:
+                f.seek(start)
+                data = f.read(length)
+
+            response = HttpResponse(
+                data,
+                status=206,  # Partial Content
+                content_type=content_type
+            )
+            response['Content-Range'] = f'bytes {start}-{end}/{file_size}'
+            response['Content-Length'] = str(length)
+        else:
+            # Serve full file with streaming support
+            response = FileResponse(
+                open(file_path, 'rb'),
+                content_type=content_type
+            )
+            response['Content-Length'] = str(file_size)
 
         # Set headers for PDF viewing in browser
         response['Content-Disposition'] = f'inline; filename="{book.title}.pdf"'
         response['X-Content-Type-Options'] = 'nosniff'
-        # X-Frame-Options exempt to allow iframe embedding
+        response['Accept-Ranges'] = 'bytes'  # Enable range requests
+        # Cache for 1 hour
+        response['Cache-Control'] = 'private, max-age=3600'
 
         return response

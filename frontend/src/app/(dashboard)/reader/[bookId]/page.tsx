@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import api, { getErrorMessage } from '@/lib/api';
 
 // Load native PDF viewer (iframe-based, no SSR issues)
 const PDFViewer = dynamic(() => import('@/components/pdf-viewer-native').then(mod => ({ default: mod.PDFViewerNative })), {
@@ -72,28 +73,11 @@ export default function ReaderPage() {
       console.log('[Reader] Initializing reading for book:', bookId);
       console.log('[Reader] Access token present:', !!accessToken);
 
-      // Start or resume reading session
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/content/user/readings/start/${bookId}/`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      // Start or resume reading session using axios
+      const response = await api.post(`/content/user/readings/start/${bookId}/`);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        const errorMessage = errorData?.detail || errorData?.error || `Error ${response.status}: ${response.statusText}`;
-        console.error('[Reader] Backend error:', errorData);
-        throw new Error(`Error al iniciar la sesión de lectura: ${errorMessage}`);
-      }
-
-      const data = await response.json();
-      console.log('[Reader] Reading session initialized:', data);
-      setReading(data.reading);
+      console.log('[Reader] Reading session initialized:', response.data);
+      setReading(response.data.reading);
 
       // Get PDF URL
       const pdfUrl = `${process.env.NEXT_PUBLIC_API_URL}/content/books/${bookId}/file/`;
@@ -103,7 +87,8 @@ export default function ReaderPage() {
       setLoading(false);
     } catch (err) {
       console.error('[Reader] Error initializing reading:', err);
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      const errorMessage = getErrorMessage(err);
+      setError(`Error al iniciar la sesión de lectura: ${errorMessage}`);
       setLoading(false);
     }
   };
@@ -117,29 +102,16 @@ export default function ReaderPage() {
     if (!accessToken) return;
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/content/user/readings/${bookId}/progress/`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            current_page: progress.currentPage,
-            zoom_level: progress.zoomLevel.toFixed(2),
-            total_reading_time: reading ? reading.total_reading_time + progress.readingTime : progress.readingTime,
-          }),
-        }
-      );
+      await api.patch(`/content/user/readings/${bookId}/progress/`, {
+        current_page: progress.currentPage,
+        zoom_level: progress.zoomLevel.toFixed(2),
+        total_reading_time: reading ? reading.total_reading_time + progress.readingTime : progress.readingTime,
+      });
 
-      if (!response.ok) {
-        console.error('Error updating reading progress');
-      } else {
-        console.log('Progress saved successfully');
-      }
+      console.log('Progress saved successfully');
     } catch (err) {
       console.error('Error updating progress:', err);
+      // Don't show error to user for progress updates (non-critical)
     }
   };
 

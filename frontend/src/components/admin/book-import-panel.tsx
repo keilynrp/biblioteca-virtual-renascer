@@ -125,7 +125,6 @@ export function BookImportPanel() {
 
     // Common
     const [limit, setLimit] = useState(100)
-    const [autoIndex, setAutoIndex] = useState(true)
 
     const predefinedSubjects = [
         'programming', 'python', 'javascript', 'web_development',
@@ -182,7 +181,7 @@ export function BookImportPanel() {
 
             const payload: any = {
                 limit,
-                auto_index: autoIndex
+                auto_index: true  // Always auto-index with Meilisearch
             }
 
             if (importMode === 'subjects') {
@@ -392,27 +391,18 @@ export function BookImportPanel() {
                         <div className="space-y-3">
                             <Label className="text-sm font-semibold flex items-center gap-2">
                                 <Database className="h-4 w-4 text-primary" />
-                                Opciones de Indexación
+                                Indexación Automática
                             </Label>
-                            <div className="flex items-center gap-3 p-4 rounded-lg border-2 border-dashed border-primary/30 bg-background hover:bg-primary/5 transition-colors cursor-pointer group">
-                                <input
-                                    type="checkbox"
-                                    id="auto-index"
-                                    checked={autoIndex}
-                                    onChange={(e) => setAutoIndex(e.target.checked)}
-                                    className="h-5 w-5 rounded border-primary/30 text-primary focus:ring-primary focus:ring-offset-0 cursor-pointer"
-                                />
-                                <Label htmlFor="auto-index" className="cursor-pointer flex-1 flex items-start gap-2">
-                                    <div>
-                                        <div className="font-medium text-foreground group-hover:text-primary transition-colors">
-                                            Auto-indexar en Elasticsearch
-                                        </div>
-                                        <div className="text-xs text-muted-foreground mt-0.5">
-                                            Los libros estarán disponibles para búsqueda inmediatamente
-                                        </div>
+                            <div className="flex items-center gap-3 p-4 rounded-lg border-2 border-primary/30 bg-primary/5">
+                                <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0" />
+                                <div className="flex-1">
+                                    <div className="font-medium text-foreground">
+                                        Indexación en Meilisearch activada
                                     </div>
-                                </Label>
-                                {autoIndex && <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0" />}
+                                    <div className="text-xs text-muted-foreground mt-0.5">
+                                        Los libros se indexarán automáticamente y estarán disponibles para búsqueda inmediatamente
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

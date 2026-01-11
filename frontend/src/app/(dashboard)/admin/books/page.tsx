@@ -268,9 +268,11 @@ function AdminBooksPageContent() {
                 formDataToSend.append('file_upload', placeholderBlob, 'placeholder.pdf')
             }
 
+            // No establecer Content-Type manualmente para multipart/form-data
+            // El navegador lo configura automáticamente con el boundary correcto
             const config = {
                 headers: {
-                    'Content-Type': 'multipart/form-data',
+                    // Content-Type se establece automáticamente por el navegador
                 },
             }
 

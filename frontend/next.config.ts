@@ -14,12 +14,26 @@ const nextConfig: NextConfig = {
       '@radix-ui/react-slot',
       '@radix-ui/react-dialog',
       '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-avatar',
+      '@radix-ui/react-collapsible',
+      '@radix-ui/react-label',
+      '@radix-ui/react-popover',
+      '@radix-ui/react-progress',
+      '@radix-ui/react-select',
+      '@radix-ui/react-separator',
+      '@radix-ui/react-tabs',
+      '@radix-ui/react-toast',
       'class-variance-authority',
       'clsx',
-      'tailwind-merge'
+      'tailwind-merge',
+      'react-hook-form',
+      'zod',
+      'zustand'
     ],
     // Optimize CSS chunking
     optimizeCss: true,
+    // Faster TypeScript processing
+    typedRoutes: false,
   },
 
   // Optimize compilation
@@ -69,7 +83,10 @@ const nextConfig: NextConfig = {
 // Sentry Configuration
 // =============================================================================
 // Wrap Next.js config with Sentry for automatic error tracking
-export default withSentryConfig(nextConfig, {
+// Only enable Sentry in production to speed up development
+const shouldUseSentry = process.env.NODE_ENV === 'production';
+
+export default shouldUseSentry ? withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://github.com/getsentry/sentry-webpack-plugin#options
 
@@ -107,4 +124,4 @@ export default withSentryConfig(nextConfig, {
   // https://docs.sentry.io/product/crons/
   // https://vercel.com/docs/cron-jobs
   automaticVercelMonitors: true,
-});
+}) : nextConfig;

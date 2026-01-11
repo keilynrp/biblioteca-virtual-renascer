@@ -11,6 +11,10 @@ class Category(models.Model):
 
     class Meta:
         verbose_name_plural = 'Categories'
+        indexes = [
+            models.Index(fields=['slug'], name='category_slug_idx'),
+            models.Index(fields=['name'], name='category_name_idx'),
+        ]
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -36,6 +40,11 @@ class Author(models.Model):
         validators=[validate_image_file],
         help_text='Formatos permitidos: JPG, PNG, WebP, GIF. Tamaño máximo: 5MB'
     )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['name'], name='author_name_idx'),
+        ]
 
     def __str__(self):
         return self.name
@@ -79,6 +88,16 @@ class Book(models.Model):
 
     class Meta:
         ordering = ['-created_at']  # Más recientes primero
+        indexes = [
+            # Frequently queried fields
+            models.Index(fields=['category', '-created_at'], name='book_cat_created_idx'),
+            models.Index(fields=['author', '-created_at'], name='book_auth_created_idx'),
+            models.Index(fields=['is_premium', '-created_at'], name='book_prem_created_idx'),
+            models.Index(fields=['-created_at'], name='book_created_idx'),
+            # Search and filtering
+            models.Index(fields=['slug'], name='book_slug_idx'),
+            models.Index(fields=['title'], name='book_title_idx'),
+        ]
 
     def save(self, *args, **kwargs):
         if not self.slug:

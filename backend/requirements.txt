@@ -31,3 +31,6 @@ pytest-cov>=4.1
 factory-boy>=3.3
 faker>=20.0
 freezegun>=1.4
+
+# Development Tools
+django-debug-toolbar>=4.2  # SQL query analysis and performance profiling

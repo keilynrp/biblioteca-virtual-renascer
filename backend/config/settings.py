@@ -55,6 +55,15 @@ INSTALLED_APPS = [
     'apps.core',
 ]
 
+# Django Debug Toolbar (only in DEBUG mode)
+# Temporarily disabled due to Django 6.0 / Python 3.13 compatibility issues
+# if DEBUG:
+#     try:
+#         import debug_toolbar
+#         INSTALLED_APPS += ['debug_toolbar']
+#     except ImportError:
+#         pass
+
 AUTH_USER_MODEL = 'authentication.User'
 
 REST_FRAMEWORK = {
@@ -107,6 +116,21 @@ MIDDLEWARE = [
     'apps.core.middleware.CorrelationIdMiddleware',  # Correlation ID (must be early)
     'apps.core.middleware.RateLimitMiddleware',  # Rate limiting
     'apps.core.middleware.RequestLoggingMiddleware',  # Request logging
+]
+
+# Django Debug Toolbar middleware (only in DEBUG mode)
+# Temporarily disabled due to Django 6.0 / Python 3.13 compatibility issues
+# if DEBUG:
+#     try:
+#         import debug_toolbar
+#         MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+#     except ImportError:
+#         pass
+
+# Internal IPs for Debug Toolbar
+INTERNAL_IPS = [
+    '127.0.0.1',
+    'localhost',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -220,6 +244,10 @@ if DEBUG:
 else:
     CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
     CORS_ALLOW_CREDENTIALS = True
+
+# Security Headers
+# Allow PDF viewer to embed PDFs from same origin
+X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 # Stripe Configuration
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
@@ -671,3 +699,61 @@ MEILISEARCH_MASTER_KEY = os.getenv('MEILISEARCH_MASTER_KEY', 'your-master-key-ch
 
 # Note: Meilisearch uses only 128MB RAM vs Elasticsearch's 2GB
 # This provides a 384MB memory savings with similar search performance
+
+# =============================================================================
+# CACHE CONFIGURATION
+# =============================================================================
+# Using Redis for caching to improve performance and reduce database load
+# Docs: https://docs.djangoproject.com/en/stable/topics/cache/
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': os.getenv('REDIS_URL', 'redis://redis:6379/1'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django.core.cache.backends.redis.RedisClient',
+            'CONNECTION_POOL_KWARGS': {
+                'max_connections': 50,
+                'retry_on_timeout': True,
+            },
+            'SOCKET_CONNECT_TIMEOUT': 5,
+            'SOCKET_TIMEOUT': 5,
+        },
+        'KEY_PREFIX': 'bvs_cache',
+        'TIMEOUT': 300,  # Default timeout: 5 minutes
+        'VERSION': 1,
+    }
+}
+
+# Cache TTL (Time To Live) settings for different data types
+CACHE_TTL = {
+    'categories': 60 * 60,           # 1 hour (rarely changes)
+    'authors': 60 * 60,              # 1 hour (rarely changes)
+    'books_list': 60 * 15,           # 15 minutes (moderate changes)
+    'book_detail': 60 * 30,          # 30 minutes (moderate changes)
+    'search_results': 60 * 5,        # 5 minutes (frequent searches)
+    'dashboard_stats': 60 * 15,      # 15 minutes (aggregated data)
+    'user_favorites': 60 * 5,        # 5 minutes (user-specific)
+    'user_reading_history': 60 * 5,  # 5 minutes (user-specific)
+    'reviews': 60 * 30,              # 30 minutes (moderate changes)
+}
+
+# Enable cache middleware for entire site (optional)
+# MIDDLEWARE += [
+#     'django.middleware.cache.UpdateCacheMiddleware',
+#     'django.middleware.cache.FetchFromCacheMiddleware',
+# ]
+
+# Cache key builders
+def make_cache_key(prefix, *args, **kwargs):
+    """
+    Helper function to build consistent cache keys.
+
+    Example:
+        make_cache_key('books', 'list', page=1, category='fiction')
+        # Returns: 'books:list:page=1:category=fiction'
+    """
+    parts = [prefix] + list(args)
+    if kwargs:
+        parts.extend([f'{k}={v}' for k, v in sorted(kwargs.items())])
+    return ':'.join(str(p) for p in parts)

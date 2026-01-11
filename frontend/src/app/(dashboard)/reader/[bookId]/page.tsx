@@ -2,11 +2,22 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { PDFViewer } from '@/components/pdf-viewer';
+import dynamic from 'next/dynamic';
 import { useAuthStore } from '@/store/authStore';
 import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+
+// Load native PDF viewer (iframe-based, no SSR issues)
+const PDFViewer = dynamic(() => import('@/components/pdf-viewer-native').then(mod => ({ default: mod.PDFViewerNative })), {
+  ssr: false,
+  loading: () => (
+    <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
+      <Loader2 className="w-12 h-12 text-blue-600 animate-spin mb-4" />
+      <p className="text-gray-600">Cargando visor PDF...</p>
+    </div>
+  ),
+});
 
 interface Book {
   id: number;
@@ -15,17 +26,17 @@ interface Book {
   author: {
     id: number;
     name: string;
-  };
+  } | null;
   cover_image: string | null;
 }
 
 interface Reading {
   id: number;
-  book: Book;
-  current_page: number;
+  book: Book | null;
+  current_page: number | null;
   total_pages: number;
   progress_percentage: string;
-  zoom_level: string;
+  zoom_level: string | null;
   started_at: string;
   last_read_at: string;
   total_reading_time: number;
@@ -58,6 +69,9 @@ export default function ReaderPage() {
       setLoading(true);
       setError(null);
 
+      console.log('[Reader] Initializing reading for book:', bookId);
+      console.log('[Reader] Access token present:', !!accessToken);
+
       // Start or resume reading session
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/content/user/readings/start/${bookId}/`,
@@ -73,20 +87,22 @@ export default function ReaderPage() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         const errorMessage = errorData?.detail || errorData?.error || `Error ${response.status}: ${response.statusText}`;
-        console.error('Backend error:', errorData);
+        console.error('[Reader] Backend error:', errorData);
         throw new Error(`Error al iniciar la sesión de lectura: ${errorMessage}`);
       }
 
       const data = await response.json();
+      console.log('[Reader] Reading session initialized:', data);
       setReading(data.reading);
 
       // Get PDF URL
       const pdfUrl = `${process.env.NEXT_PUBLIC_API_URL}/content/books/${bookId}/file/`;
+      console.log('[Reader] PDF URL:', pdfUrl);
       setPdfUrl(pdfUrl);
 
       setLoading(false);
     } catch (err) {
-      console.error('Error initializing reading:', err);
+      console.error('[Reader] Error initializing reading:', err);
       setError(err instanceof Error ? err.message : 'Error desconocido');
       setLoading(false);
     }
@@ -136,7 +152,7 @@ export default function ReaderPage() {
     );
   }
 
-  if (error || !reading || !pdfUrl) {
+  if (error || !reading || !reading.book) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
         <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
@@ -157,9 +173,9 @@ export default function ReaderPage() {
       <PDFViewer
         bookId={bookId}
         bookTitle={reading.book.title}
-        pdfUrl={pdfUrl}
-        initialPage={reading.current_page}
-        initialZoom={parseFloat(reading.zoom_level)}
+        pdfUrl={pdfUrl || ''}
+        initialPage={reading.current_page || 1}
+        initialZoom={parseFloat(reading.zoom_level || '1.0')}
         accessToken={accessToken || undefined}
         onProgressUpdate={handleProgressUpdate}
       />

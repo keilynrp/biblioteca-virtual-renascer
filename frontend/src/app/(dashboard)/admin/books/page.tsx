@@ -48,11 +48,11 @@ interface Book {
     author: {
         id: number
         name: string
-    }
+    } | null
     category: {
         id: number
         name: string
-    }
+    } | null
     description: string
     isbn: string | null
     publication_date: string | null
@@ -84,7 +84,7 @@ interface BookFormData {
     file: File | null
 }
 
-export default function AdminBooksPage() {
+function AdminBooksPageContent() {
     const [books, setBooks] = useState<Book[]>([])
     const [categories, setCategories] = useState<Category[]>([])
     const [authors, setAuthors] = useState<Author[]>([])
@@ -140,8 +140,8 @@ export default function AdminBooksPage() {
 
     useEffect(() => {
         const filtered = books.filter(book =>
-            book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            book.author.name.toLowerCase().includes(searchQuery.toLowerCase())
+            book.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            book.author?.name?.toLowerCase().includes(searchQuery.toLowerCase())
         )
         setFilteredBooks(filtered)
     }, [searchQuery, books])
@@ -181,14 +181,14 @@ export default function AdminBooksPage() {
             console.log('🗓️ [DEBUG] year extraído:', year);
 
             setFormData({
-                title: book.title,
-                description: book.description,
-                author: String(book.author.id),
-                category: String(book.category.id),
+                title: book.title || "",
+                description: book.description || "",
+                author: book.author?.id ? String(book.author.id) : "",
+                category: book.category?.id ? String(book.category.id) : "",
                 isbn: book.isbn || "",
                 publication_date: book.publication_date || "",
                 publication_year: year,
-                is_premium: book.is_premium,
+                is_premium: book.is_premium || false,
                 cover_image: null,
                 file: null,
             })
@@ -239,30 +239,33 @@ export default function AdminBooksPage() {
             formDataToSend.append('category', formData.category)
             formDataToSend.append('isbn', formData.isbn)
 
-            // Solo enviar publication_date si tiene valor
+            // Enviar publication_date siempre (incluso si está vacío) para permitir actualizaciones
             console.log('📋 [DEBUG] Estado actual de formData:');
             console.log('  - publication_year:', formData.publication_year);
             console.log('  - publication_date:', formData.publication_date);
 
+            // Enviar el campo siempre, incluso si está vacío (para permitir borrar la fecha)
             if (formData.publication_date && formData.publication_date.trim() !== '') {
                 formDataToSend.append('publication_date', formData.publication_date)
                 console.log('📅 [DEBUG] Enviando publication_date:', formData.publication_date);
             } else {
-                console.log('⚠️ [DEBUG] publication_date está vacío, no se enviará');
+                // Enviar campo vacío para permitir actualizaciones a null
+                formDataToSend.append('publication_date', '')
+                console.log('📅 [DEBUG] Enviando publication_date vacío (para limpiar)');
             }
 
             formDataToSend.append('is_premium', String(formData.is_premium))
 
-            // Agregar archivos si existen
+            // Agregar archivos si existen (usar los nombres correctos del serializer)
             if (formData.cover_image) {
-                formDataToSend.append('cover_image', formData.cover_image)
+                formDataToSend.append('cover_image_upload', formData.cover_image)
             }
             if (formData.file) {
-                formDataToSend.append('file', formData.file)
+                formDataToSend.append('file_upload', formData.file)
             } else if (!editingBook) {
                 // Para nuevos libros sin archivo, usar placeholder
                 const placeholderBlob = new Blob(['placeholder'], { type: 'application/pdf' })
-                formDataToSend.append('file', placeholderBlob, 'placeholder.pdf')
+                formDataToSend.append('file_upload', placeholderBlob, 'placeholder.pdf')
             }
 
             const config = {
@@ -273,17 +276,16 @@ export default function AdminBooksPage() {
 
             if (editingBook) {
                 // Actualizar libro existente
-                const response = await api.patch(`/content/books/${editingBook.slug}/`, formDataToSend, config)
-                setBooks(books.map(book => book.id === editingBook.id ? response.data : book))
+                await api.patch(`/content/books/${editingBook.slug}/`, formDataToSend, config)
             } else {
                 // Crear nuevo libro
-                const response = await api.post("/content/books/", formDataToSend, config)
-                setBooks([response.data, ...books])
+                await api.post("/content/books/", formDataToSend, config)
             }
 
             handleCloseDialog()
             alert(editingBook ? "Libro actualizado exitosamente" : "Libro creado exitosamente")
-            fetchData() // Refrescar datos para obtener URLs completas
+            // Refrescar todos los datos para asegurar estructura correcta
+            await fetchData()
         } catch (err: any) {
             console.error("Error submitting book:", err)
             const errorMessage = err.response?.data?.detail || err.response?.data?.title?.[0] || "Error al guardar el libro"
@@ -298,11 +300,11 @@ export default function AdminBooksPage() {
         const headers = ['ID', 'Título', 'Autor', 'Categoría', 'ISBN', 'Fecha de Publicación', 'Premium']
         const rows = filteredBooks.map(book => [
             book.id,
-            `"${book.title.replace(/"/g, '""')}"`,
-            `"${book.author.name.replace(/"/g, '""')}"`,
-            `"${book.category.name.replace(/"/g, '""')}"`,
-            book.isbn,
-            book.publication_date,
+            `"${(book.title || '').replace(/"/g, '""')}"`,
+            `"${(book.author?.name || 'Sin autor').replace(/"/g, '""')}"`,
+            `"${(book.category?.name || 'Sin categoría').replace(/"/g, '""')}"`,
+            book.isbn || '',
+            book.publication_date || '',
             book.is_premium ? 'Sí' : 'No'
         ])
 
@@ -328,11 +330,11 @@ export default function AdminBooksPage() {
         const headers = ['ID', 'Título', 'Autor', 'Categoría', 'ISBN', 'Fecha de Publicación', 'Premium']
         const rows = filteredBooks.map(book => [
             book.id,
-            book.title,
-            book.author.name,
-            book.category.name,
-            book.isbn,
-            book.publication_date,
+            book.title || '',
+            book.author?.name || 'Sin autor',
+            book.category?.name || 'Sin categoría',
+            book.isbn || '',
+            book.publication_date || '',
             book.is_premium ? 'Sí' : 'No'
         ])
 
@@ -499,8 +501,8 @@ export default function AdminBooksPage() {
                                         filteredBooks.map((book) => (
                                             <TableRow key={book.id}>
                                                 <TableCell className="font-medium">{book.title}</TableCell>
-                                                <TableCell>{book.author.name}</TableCell>
-                                                <TableCell>{book.category.name}</TableCell>
+                                                <TableCell>{book.author?.name || 'Sin autor'}</TableCell>
+                                                <TableCell>{book.category?.name || 'Sin categoría'}</TableCell>
                                                 <TableCell>
                                                     {book.is_premium ? (
                                                         <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white border-0">
@@ -731,4 +733,8 @@ export default function AdminBooksPage() {
             </Dialog>
         </>
     )
+}
+
+export default function AdminBooksPage() {
+    return <AdminBooksPageContent />
 }

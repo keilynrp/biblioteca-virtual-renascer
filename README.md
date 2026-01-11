@@ -132,20 +132,12 @@ git clone https://github.com/tu-usuario/bvs_framework.git
 cd bvs_framework
 
 # Copiar variables de entorno
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env.local
+cp .env.example .env
 
-# Configurar variables de entorno
-# Editar backend/.env y frontend/.env.local
-
-# Iniciar con Docker Compose
-docker-compose up -d
-
-# Ejecutar migraciones
-docker-compose exec backend python manage.py migrate
-
-# Crear superusuario
-docker-compose exec backend python manage.py createsuperuser
+# Usar el script de inicio rápido
+./scripts/docker/start_containers.sh  # Linux/Mac/WSL
+# o
+scripts\docker\start_containers.bat   # Windows
 
 # La aplicación estará disponible en:
 # Frontend: http://localhost:3000
@@ -153,17 +145,17 @@ docker-compose exec backend python manage.py createsuperuser
 # Django Admin: http://localhost:8000/admin
 ```
 
+**Ver [docs/setup/](docs/setup/) para guías detalladas de instalación.**
+
 #### 🔒 Con SSL/HTTPS (Opcional)
 
 Para desarrollo local con HTTPS:
 
 ```bash
-# Generar certificados SSL autofirmados
-cd ssl
-bash generate-certs.sh  # o generate-certs.bat en Windows
-
-# Configurar y arrancar con SSL
-./setup-ssl.sh  # o setup-ssl.bat en Windows
+# Usar el script de setup SSL
+./scripts/setup/setup-ssl.sh  # Linux/Mac/WSL
+# o
+scripts\setup\setup-ssl.bat   # Windows
 
 # La aplicación estará disponible en:
 # Frontend: https://localhost
@@ -171,7 +163,7 @@ bash generate-certs.sh  # o generate-certs.bat en Windows
 # Django Admin: https://localhost/admin
 ```
 
-**Nota:** Debes confiar en el certificado autofirmado en tu sistema. Ver [docs/SSL_SETUP.md](docs/SSL_SETUP.md) para instrucciones detalladas.
+**Ver [docs/setup/](docs/setup/) para instrucciones detalladas de configuración SSL.**
 
 ### Opción 2: Instalación Local
 
@@ -268,25 +260,42 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 
 ## 📝 Scripts Disponibles
 
-### Backend
+El proyecto incluye una colección completa de scripts automatizados organizados en la carpeta [scripts/](scripts/).
+
+### Scripts Principales
+
+```bash
+# Docker
+./scripts/docker/start_containers.sh    # Iniciar todos los contenedores
+./scripts/docker/check_docker.sh        # Verificar estado de Docker
+
+# Mantenimiento
+./scripts/maintenance/crear-superusuario.sh     # Crear usuario admin
+./scripts/maintenance/importar-libros-custom.sh # Importar libros
+
+# Utilidades
+./scripts/utils/diagnostico-completo.sh # Diagnóstico del sistema
+./scripts/utils/verificar-acceso.sh     # Verificar acceso
+```
+
+**Ver [scripts/README.md](scripts/README.md) para la lista completa de scripts disponibles.**
+
+### Comandos Backend
+
 ```bash
 python manage.py runserver              # Iniciar servidor de desarrollo
 python manage.py migrate                # Ejecutar migraciones
-python manage.py makemigrations         # Crear migraciones
 python manage.py createsuperuser        # Crear superusuario
 python manage.py test                   # Ejecutar tests
-python manage.py collectstatic          # Recolectar archivos estáticos
 python manage.py import_openlibrary     # Importar libros desde OpenLibrary
 ```
 
-### Frontend
+### Comandos Frontend
+
 ```bash
 npm run dev              # Desarrollo
 npm run build            # Build de producción
-npm run start            # Iniciar en producción
-npm run lint             # Linter
 npm run test             # Tests en modo watch
-npm run test:ci          # Tests con coverage para CI
 npm run test:coverage    # Tests con reporte de coverage
 ```
 
@@ -388,23 +397,24 @@ Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más det
 - **Arquitectura**: Basada en mejores prácticas de Django y Next.js
 - **Diseño**: TailAdmin + shadcn/ui
 
-## 📚 Documentación Adicional
+## 📚 Documentación
 
-### 📋 Documentación Estratégica (Nuevo)
+Toda la documentación está organizada en la carpeta [docs/](docs/).
+
+### 📂 Categorías de Documentación
+
+- **[🚀 Setup](docs/setup/)** - Guías de instalación y configuración
+- **[📖 Guides](docs/guides/)** - Tutoriales y guías de uso
+- **[🔧 Fixes](docs/fixes/)** - Soluciones y correcciones
+- **[📋 Sprint Docs](docs/sprint-docs/)** - Documentación de sprints
+- **[🏗️ Architecture](docs/architecture/)** - Arquitectura técnica
+- **[🔍 Troubleshooting](docs/troubleshooting/)** - Diagnóstico y soluciones
+
+### 🔗 Enlaces Rápidos
 
 - **[📖 Índice de Documentación](docs/README.md)** - Punto de entrada a toda la documentación
-- **[🎯 Backlog Estratégico](BACKLOG_ESTRATEGICO.md)** - Planificación completa de features por fases
-- **[🏗️ Roadmap de Infraestructura](ROADMAP_INFRAESTRUCTURA.md)** - Guía de escalabilidad y arquitectura
-- **[⚡ Guía de Decisiones Rápidas](docs/QUICK_DECISION_GUIDE.md)** - "¿Debo usar X?" respondido
-
-### 📄 Documentación Técnica
-
-- [Arquitectura Técnica](arquitectura_tecnica.md)
-- [Roadmap del Proyecto](roadmap_biblioteca_virtual.md)
-- [Planning de Sprints](PLANNING_SPRINTS_DETALLADO.md)
-- [Mejoras Implementadas](MEJORAS_IMPLEMENTADAS.md)
-- [Sprint 4 - Resumen](SPRINT_4_RESUMEN.md)
-- [Integración de Stripe](STRIPE_INTEGRATION.md)
+- **[🔧 Scripts Disponibles](scripts/README.md)** - Guía completa de scripts
+- **[🤝 Guía de Contribución](CONTRIBUTING.md)** - Cómo contribuir al proyecto
 
 ## 🐛 Reporte de Bugs
 

@@ -10,13 +10,17 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Avg
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
+from django.views.decorators.clickjacking import xframe_options_exempt, xframe_options_sameorigin
+from django.core.cache import cache
+from django.conf import settings
 from .models import Book, Category, Author, Review, ReviewHelpful, Favorite, ReadingHistory, Reading
 from .serializers import (
     BookListSerializer, BookDetailSerializer, CategorySerializer, AuthorSerializer,
     ReviewSerializer, FavoriteSerializer, ReadingHistorySerializer, ReadingSerializer,
     ReadingProgressUpdateSerializer
 )
-from .documents import BookDocument
+# Elasticsearch disabled - using Meilisearch instead
+# from .documents import BookDocument
 from .permissions import IsOwnerOrReadOnly
 from apps.core.decorators import (
     rate_limit_api_read,
@@ -24,6 +28,11 @@ from apps.core.decorators import (
     rate_limit_api_delete,
     rate_limit_search,
     rate_limit_upload
+)
+from apps.core.cache_utils import (
+    make_cache_key,
+    make_hash_key,
+    get_or_set_cache,
 )
 import logging
 
@@ -98,6 +107,9 @@ class CategoryListView(generics.ListCreateAPIView):
     Rate limits:
     - GET: 100 requests/min
     - POST: 30 requests/min
+
+    Caching:
+    - GET: Cached for 1 hour (rarely changes)
     """
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -106,6 +118,26 @@ class CategoryListView(generics.ListCreateAPIView):
         if self.request.method == 'POST':
             return [permissions.IsAuthenticated()]
         return [permissions.AllowAny()]
+
+    def list(self, request, *args, **kwargs):
+        """Override list to add caching"""
+        if request.method == 'GET':
+            cache_key = make_cache_key('categories', 'list')
+
+            def get_categories():
+                queryset = self.filter_queryset(self.get_queryset())
+                serializer = self.get_serializer(queryset, many=True)
+                return serializer.data
+
+            data = get_or_set_cache(
+                cache_key,
+                get_categories,
+                timeout=settings.CACHE_TTL['categories']
+            )
+
+            return Response(data)
+
+        return super().list(request, *args, **kwargs)
 
 
 @method_decorator(rate_limit_api_read, name='get')
@@ -144,6 +176,9 @@ class AuthorListView(generics.ListCreateAPIView):
     Rate limits:
     - GET: 100 requests/min
     - POST: 30 requests/min
+
+    Caching:
+    - GET: Cached for 1 hour (rarely changes)
     """
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
@@ -152,6 +187,26 @@ class AuthorListView(generics.ListCreateAPIView):
         if self.request.method == 'POST':
             return [permissions.IsAuthenticated()]
         return [permissions.AllowAny()]
+
+    def list(self, request, *args, **kwargs):
+        """Override list to add caching"""
+        if request.method == 'GET':
+            cache_key = make_cache_key('authors', 'list')
+
+            def get_authors():
+                queryset = self.filter_queryset(self.get_queryset())
+                serializer = self.get_serializer(queryset, many=True)
+                return serializer.data
+
+            data = get_or_set_cache(
+                cache_key,
+                get_authors,
+                timeout=settings.CACHE_TTL['authors']
+            )
+
+            return Response(data)
+
+        return super().list(request, *args, **kwargs)
 
 
 @method_decorator(rate_limit_api_read, name='get')
@@ -188,46 +243,65 @@ class AuthorDetailView(generics.RetrieveUpdateDestroyAPIView):
 def dashboard_stats(request):
     """
     Obtener estadísticas para el dashboard
+
+    Caching:
+    - Cached for 15 minutes (aggregated data)
     """
+    cache_key = make_cache_key('dashboard', 'stats')
+
+    def compute_dashboard_stats():
+        """Compute dashboard statistics (heavy operation)"""
+        try:
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+
+            # Total de libros
+            total_books = Book.objects.count()
+
+            # Total de usuarios
+            total_users = User.objects.count()
+
+            # Calificación promedio (placeholder)
+            avg_rating = 4.5
+
+            # Libros recientes (con manejo de errores)
+            try:
+                recent_books = Book.objects.select_related('author', 'category').order_by('-created_at')[:5]
+                recent_books_data = BookListSerializer(recent_books, many=True, context={'request': request}).data
+            except Exception as e:
+                logger.error(f"Error fetching recent books: {str(e)}", exc_info=True)
+                recent_books_data = []
+
+            # Estadísticas por categoría (con manejo de errores)
+            try:
+                books_by_category = Category.objects.annotate(
+                    book_count=Count('books')
+                ).values('name', 'book_count').order_by('-book_count')[:5]
+                top_categories = list(books_by_category)
+            except Exception as e:
+                logger.error(f"Error fetching categories: {str(e)}")
+                top_categories = []
+
+            return {
+                'total_books': total_books,
+                'total_users': total_users,
+                'average_rating': round(avg_rating, 1),
+                'books_borrowed': 0,
+                'recent_books': recent_books_data,
+                'top_categories': top_categories,
+            }
+
+        except Exception as e:
+            logger.error(f"Error in dashboard_stats computation: {str(e)}", exc_info=True)
+            raise
+
     try:
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-
-        # Total de libros
-        total_books = Book.objects.count()
-
-        # Total de usuarios
-        total_users = User.objects.count()
-
-        # Calificación promedio (placeholder)
-        avg_rating = 4.5
-
-        # Libros recientes (con manejo de errores)
-        try:
-            recent_books = Book.objects.select_related('author', 'category').order_by('-created_at')[:5]
-            recent_books_data = BookListSerializer(recent_books, many=True, context={'request': request}).data
-        except Exception as e:
-            logger.error(f"Error fetching recent books: {str(e)}", exc_info=True)
-            recent_books_data = []
-
-        # Estadísticas por categoría (con manejo de errores)
-        try:
-            books_by_category = Category.objects.annotate(
-                book_count=Count('books')
-            ).values('name', 'book_count').order_by('-book_count')[:5]
-            top_categories = list(books_by_category)
-        except Exception as e:
-            logger.error(f"Error fetching categories: {str(e)}")
-            top_categories = []
-
-        return Response({
-            'total_books': total_books,
-            'total_users': total_users,
-            'average_rating': round(avg_rating, 1),
-            'books_borrowed': 0,
-            'recent_books': recent_books_data,
-            'top_categories': top_categories,
-        })
+        data = get_or_set_cache(
+            cache_key,
+            compute_dashboard_stats,
+            timeout=settings.CACHE_TTL['dashboard_stats']
+        )
+        return Response(data)
 
     except Exception as e:
         logger.error(f"Error in dashboard_stats: {str(e)}", exc_info=True)
@@ -279,49 +353,54 @@ def search_books(request):
         # Calcular offset para paginación
         from_ = (page - 1) * page_size
 
-        # Ejecutar búsqueda
-        search_result = BookDocument.search_books(
-            query=query,
-            category=category,
-            author=author,
-            is_premium=is_premium,
-            from_=from_,
-            size=page_size,
-            sort_by=sort_by
-        )
-
-        # Formatear resultados
-        results = []
-        for hit in search_result:
-            results.append({
-                'id': hit.meta.id,
-                'title': hit.title,
-                'slug': hit.slug,
-                'description': hit.description,
-                'author': {
-                    'id': hit.author_id,
-                    'name': hit.author_name
-                },
-                'category': {
-                    'id': hit.category_id,
-                    'name': hit.category_name
-                } if hit.category_id else None,
-                'is_premium': hit.is_premium,
-                'created_at': hit.created_at,
-                'cover_image_url': hit.cover_image_url,
-                'score': hit.meta.score  # Relevancia de la búsqueda
-            })
-
-        # Total de resultados
-        total = search_result.hits.total.value
-
+        # TODO: Migrate to Meilisearch
         return Response({
-            'count': total,
-            'page': page,
-            'page_size': page_size,
-            'total_pages': (total + page_size - 1) // page_size,
-            'results': results
-        })
+            'error': 'Search temporarily disabled - migrating from Elasticsearch to Meilisearch'
+        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        # # Ejecutar búsqueda
+        # search_result = BookDocument.search_books(
+        #     query=query,
+        #     category=category,
+        #     author=author,
+        #     is_premium=is_premium,
+        #     from_=from_,
+        #     size=page_size,
+        #     sort_by=sort_by
+        # )
+
+        # # Formatear resultados
+        # results = []
+        # for hit in search_result:
+        #     results.append({
+        #         'id': hit.meta.id,
+        #         'title': hit.title,
+        #         'slug': hit.slug,
+        #         'description': hit.description,
+        #         'author': {
+        #             'id': hit.author_id,
+        #             'name': hit.author_name
+        #         },
+        #         'category': {
+        #             'id': hit.category_id,
+        #             'name': hit.category_name
+        #         } if hit.category_id else None,
+        #         'is_premium': hit.is_premium,
+        #         'created_at': hit.created_at,
+        #         'cover_image_url': hit.cover_image_url,
+        #         'score': hit.meta.score  # Relevancia de la búsqueda
+        #     })
+
+        # # Total de resultados
+        # total = search_result.hits.total.value
+
+        # return Response({
+        #     'count': total,
+        #     'page': page,
+        #     'page_size': page_size,
+        #     'total_pages': (total + page_size - 1) // page_size,
+        #     'results': results
+        # })
 
     except Exception as e:
         logger.error(f"Error in search_books: {str(e)}")
@@ -351,10 +430,14 @@ def autocomplete_books(request):
         if not query or len(query) < 2:
             return Response({'suggestions': []})
 
-        # Obtener sugerencias
-        suggestions = BookDocument.autocomplete(query, size=size)
+        # TODO: Migrate to Meilisearch
+        return Response({
+            'error': 'Autocomplete temporarily disabled - migrating from Elasticsearch to Meilisearch'
+        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-        return Response({'suggestions': suggestions})
+        # # Obtener sugerencias
+        # suggestions = BookDocument.autocomplete(query, size=size)
+        # return Response({'suggestions': suggestions})
 
     except Exception as e:
         logger.error(f"Error in autocomplete_books: {str(e)}")
@@ -374,8 +457,13 @@ def search_facets(request):
         Categorías, autores y tipos disponibles con conteo de documentos
     """
     try:
-        aggregations = BookDocument.get_aggregations()
-        return Response(aggregations)
+        # TODO: Migrate to Meilisearch
+        return Response({
+            'error': 'Search facets temporarily disabled - migrating from Elasticsearch to Meilisearch'
+        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        # aggregations = BookDocument.get_aggregations()
+        # return Response(aggregations)
 
     except Exception as e:
         logger.error(f"Error in search_facets: {str(e)}")
@@ -393,25 +481,30 @@ def rebuild_search_index(request):
     Solo para administradores.
     """
     try:
-        # Recrear índice
-        BookDocument._index.delete(ignore=404)
-        BookDocument.init()
-
-        # Indexar todos los libros
-        books = Book.objects.select_related('author', 'category').all()
-        count = 0
-
-        for book in books:
-            doc = BookDocument.from_django_model(book)
-            doc.save()
-            count += 1
-
-        logger.info(f"Re-indexed {count} books in Elasticsearch")
-
+        # TODO: Migrate to Meilisearch
         return Response({
-            'message': f'Successfully re-indexed {count} books',
-            'count': count
-        })
+            'error': 'Index rebuild temporarily disabled - migrating from Elasticsearch to Meilisearch'
+        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        # # Recrear índice
+        # BookDocument._index.delete(ignore=404)
+        # BookDocument.init()
+
+        # # Indexar todos los libros
+        # books = Book.objects.select_related('author', 'category').all()
+        # count = 0
+
+        # for book in books:
+        #     doc = BookDocument.from_django_model(book)
+        #     doc.save()
+        #     count += 1
+
+        # logger.info(f"Re-indexed {count} books in Elasticsearch")
+
+        # return Response({
+        #     'message': f'Successfully re-indexed {count} books',
+        #     'count': count
+        # })
 
     except Exception as e:
         logger.error(f"Error rebuilding search index: {str(e)}")
@@ -597,15 +690,16 @@ def import_books_from_openlibrary(request):
 
         # Auto-indexar si está habilitado
         indexed_count = 0
-        if auto_index and imported_books:
-            try:
-                for book_data in imported_books:
-                    book = book_data['book']
-                    doc = BookDocument.from_django_model(book)
-                    doc.save()
-                    indexed_count += 1
-            except Exception as e:
-                logger.error(f"Error indexing books: {str(e)}")
+        # TODO: Migrate to Meilisearch
+        # if auto_index and imported_books:
+        #     try:
+        #         for book_data in imported_books:
+        #             book = book_data['book']
+        #             doc = BookDocument.from_django_model(book)
+        #             doc.save()
+        #             indexed_count += 1
+        #     except Exception as e:
+        #         logger.error(f"Error indexing books: {str(e)}")
 
         return Response({
             'success': True,
@@ -932,13 +1026,41 @@ class UpdateReadingProgressView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@method_decorator(xframe_options_exempt, name='dispatch')
 class ServeBookFileView(APIView):
     """Serve book PDF file with authentication and permission check"""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]  # We'll handle auth manually
 
     def get(self, request, book_id):
         from django.http import FileResponse, Http404
+        from rest_framework_simplejwt.tokens import AccessToken
+        from rest_framework.exceptions import AuthenticationFailed
         import os
+
+        # Try to get token from query params (for iframe/object embedding)
+        token = request.GET.get('token')
+
+        if not token:
+            # Try to get from Authorization header as fallback
+            auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+            if auth_header.startswith('Bearer '):
+                token = auth_header.split(' ')[1]
+
+        if not token:
+            from django.http import JsonResponse
+            return JsonResponse({'error': 'Authentication required'}, status=401)
+
+        # Validate token and get user
+        try:
+            access_token = AccessToken(token)
+            user_id = access_token['user_id']
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            user = User.objects.get(id=user_id)
+        except Exception as e:
+            logger.error(f"Authentication error: {str(e)}")
+            from django.http import JsonResponse
+            return JsonResponse({'error': 'Invalid or expired token'}, status=401)
 
         book = get_object_or_404(Book, id=book_id)
 
@@ -958,11 +1080,11 @@ class ServeBookFileView(APIView):
             raise Http404("Book file not found on server")
 
         # Log the access
-        logger.info(f"User {request.user.username} accessed book {book.title}")
+        logger.info(f"User {user.username} accessed book {book.title}")
 
         # Update or create reading session
         Reading.objects.get_or_create(
-            user=request.user,
+            user=user,
             book=book,
             defaults={'current_page': 1}
         )
@@ -976,5 +1098,6 @@ class ServeBookFileView(APIView):
         # Set headers for PDF viewing in browser
         response['Content-Disposition'] = f'inline; filename="{book.title}.pdf"'
         response['X-Content-Type-Options'] = 'nosniff'
+        # X-Frame-Options exempt to allow iframe embedding
 
         return response

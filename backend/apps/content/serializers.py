@@ -21,7 +21,7 @@ class BookListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Book
-        fields = ('id', 'title', 'slug', 'description', 'author', 'category', 'cover_image', 'is_premium')
+        fields = ('id', 'title', 'slug', 'description', 'author', 'category', 'cover_image', 'is_premium', 'publication_date', 'isbn', 'created_at')
 
     def get_cover_image(self, obj):
         if obj.cover_image:
@@ -37,8 +37,12 @@ class BookDetailSerializer(serializers.ModelSerializer):
     author = serializers.PrimaryKeyRelatedField(queryset=Author.objects.all(), write_only=True)
     category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), write_only=True)
     publication_date = serializers.DateField(required=False, allow_null=True)
-    cover_image = serializers.SerializerMethodField()
-    file = serializers.SerializerMethodField()
+    # Use ImageField for write operations, SerializerMethodField for read
+    cover_image_upload = serializers.ImageField(write_only=True, required=False, allow_null=True, validators=[validate_image_file])
+    cover_image = serializers.SerializerMethodField(read_only=True)
+    # Use FileField for write operations, SerializerMethodField for read
+    file_upload = serializers.FileField(write_only=True, required=False, allow_null=True, validators=[validate_pdf_file])
+    file = serializers.SerializerMethodField(read_only=True)
     average_rating = serializers.FloatField(read_only=True)
     review_count = serializers.IntegerField(read_only=True)
     favorite_count = serializers.IntegerField(read_only=True)
@@ -50,7 +54,8 @@ class BookDetailSerializer(serializers.ModelSerializer):
         model = Book
         fields = (
             'id', 'title', 'slug', 'description', 'author', 'author_detail',
-            'category', 'category_detail', 'cover_image', 'file', 'publication_date',
+            'category', 'category_detail', 'cover_image', 'cover_image_upload',
+            'file', 'file_upload', 'publication_date',
             'isbn', 'is_premium', 'average_rating', 'review_count', 'favorite_count',
             'user_has_favorited', 'user_review', 'user_reading_status'
         )
@@ -97,40 +102,65 @@ class BookDetailSerializer(serializers.ModelSerializer):
                 return ReadingHistorySerializer(history, context=self.context).data
         return None
 
+    def to_internal_value(self, data):
+        """Override to handle empty string for publication_date before validation"""
+        # Convert empty string to None for publication_date before DRF tries to parse it
+        if 'publication_date' in data and data['publication_date'] == '':
+            data = data.copy() if hasattr(data, 'copy') else dict(data)
+            data['publication_date'] = None
+        return super().to_internal_value(data)
+
     def validate_publication_date(self, value):
         """Validate publication date - allow None or empty string"""
         if value == '' or value is None:
             return None
         return value
 
-    def validate_file(self, value):
-        """
-        Validate PDF file upload.
-        The model validators will run, but we add additional REST API validation here.
-        """
-        if value:
-            try:
-                validate_pdf_file(value)
-            except DjangoValidationError as e:
-                raise serializers.ValidationError(str(e))
-        return value
+    def create(self, validated_data):
+        """Handle file uploads during creation"""
+        # Extract upload fields
+        cover_image_upload = validated_data.pop('cover_image_upload', None)
+        file_upload = validated_data.pop('file_upload', None)
 
-    def validate_cover_image(self, value):
-        """
-        Validate cover image upload.
-        The model validators will run, but we add additional REST API validation here.
-        """
-        if value:
-            try:
-                validate_image_file(value)
-            except DjangoValidationError as e:
-                raise serializers.ValidationError(str(e))
-        return value
+        # Create book instance
+        book = Book.objects.create(**validated_data)
+
+        # Set files if provided
+        if cover_image_upload:
+            book.cover_image = cover_image_upload
+        if file_upload:
+            book.file = file_upload
+
+        # Save to persist file changes
+        if cover_image_upload or file_upload:
+            book.save()
+
+        return book
+
+    def update(self, instance, validated_data):
+        """Handle file uploads during update"""
+        # Extract upload fields
+        cover_image_upload = validated_data.pop('cover_image_upload', None)
+        file_upload = validated_data.pop('file_upload', None)
+
+        # Update regular fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        # Update files if provided
+        if cover_image_upload:
+            instance.cover_image = cover_image_upload
+        if file_upload:
+            instance.file = file_upload
+
+        # Save all changes
+        instance.save()
+        return instance
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation['author'] = AuthorSerializer(instance.author).data
-        representation['category'] = CategorySerializer(instance.category).data
+        representation['author'] = AuthorSerializer(instance.author).data if instance.author else None
+        representation['category'] = CategorySerializer(instance.category).data if instance.category else None
         representation.pop('author_detail', None)
         representation.pop('category_detail', None)
         return representation

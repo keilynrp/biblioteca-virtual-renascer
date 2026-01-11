@@ -6,12 +6,14 @@ import { ChevronLeft, ChevronRight, Loader2, BookOpen, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import Link from 'next/link';
-import 'react-pdf/dist/Page/AnnotationLayer.css';
-import 'react-pdf/dist/Page/TextLayer.css';
 
 // Dynamically import react-pdf components to avoid SSR issues with DOMMatrix
 const Document = dynamic(
-  () => import('react-pdf').then((mod) => mod.Document),
+  () => import('react-pdf').then((mod) => {
+    // Configure worker when module loads
+    mod.pdfjs.GlobalWorkerOptions.workerSrc = '/pdf-worker/pdf.worker.min.mjs';
+    return mod.Document;
+  }),
   { ssr: false }
 );
 
@@ -19,15 +21,6 @@ const Page = dynamic(
   () => import('react-pdf').then((mod) => mod.Page),
   { ssr: false }
 );
-
-// Configure PDF.js worker on client side only
-if (typeof window !== 'undefined') {
-  import('react-pdf').then((pdfjs) => {
-    if (!pdfjs.pdfjs.GlobalWorkerOptions.workerSrc) {
-      pdfjs.pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.pdfjs.version}/pdf.worker.min.js`;
-    }
-  });
-}
 
 interface FlipbookPreviewProps {
   pdfUrl: string;

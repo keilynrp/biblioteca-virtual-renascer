@@ -168,3 +168,16 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
+
+# Cache TTL (Time To Live) settings for different data types
+CACHE_TTL = {
+    'categories': 60 * 60,           # 1 hour (rarely changes)
+    'authors': 60 * 60,              # 1 hour (rarely changes)
+    'books_list': 60 * 15,           # 15 minutes (moderate changes)
+    'book_detail': 60 * 30,          # 30 minutes (moderate changes)
+    'search_results': 60 * 5,        # 5 minutes (frequent searches)
+    'dashboard_stats': 60 * 15,      # 15 minutes (aggregated data)
+    'user_favorites': 60 * 5,        # 5 minutes (user-specific)
+    'user_reading_history': 60 * 5,  # 5 minutes (user-specific)
+    'reviews': 60 * 30,              # 30 minutes (moderate changes)
+}

@@ -66,4 +66,32 @@ echo ""
 
 # Iniciar cron
 echo "Iniciando servicio de backups..."
-exec "$@"
+
+# Fix para Docker en Windows: usar supercronic o simple loop en lugar de dcron
+# Si se usa CMD ["crond", ...], ejecutarlo; sino, mantener contenedor vivo
+if [ "$1" = "crond" ]; then
+    echo "⚠ Iniciando en modo compatibilidad (Windows)..."
+    # En lugar de crond, usar un loop que mantiene el contenedor vivo
+    # y espera ejecutar backups cuando sea necesario
+    while true; do
+        current_hour=$(date +%H)
+        current_minute=$(date +%M)
+
+        # Ejecutar backup de base de datos a las 2:00 AM
+        if [ "$current_hour" = "02" ] && [ "$current_minute" = "00" ]; then
+            echo "[$(date)] Ejecutando backup de base de datos..."
+            /scripts/backup_database.sh >> /var/log/backup.log 2>&1
+        fi
+
+        # Ejecutar backup de media a las 2:30 AM
+        if [ "$current_hour" = "02" ] && [ "$current_minute" = "30" ]; then
+            echo "[$(date)] Ejecutando backup de media..."
+            /scripts/backup_media.sh >> /var/log/backup.log 2>&1
+        fi
+
+        # Esperar 60 segundos antes de verificar nuevamente
+        sleep 60
+    done
+else
+    exec "$@"
+fi

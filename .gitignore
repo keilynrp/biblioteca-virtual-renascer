@@ -82,6 +82,7 @@ playwright/.cache/
 # Debug files
 nul
 =*
+d:bvs_framework*
 
 # Temporary files
 *.tmp
@@ -97,6 +98,15 @@ Desktop.ini
 CREDENCIALES_ACCESO.md
 credentials.json
 secrets.json
+
+# Docker backups
+docker-backup-*/
+
+# SSL certificates (keep examples)
+ssl/*.crt
+ssl/*.key
+ssl/*.pem
+!ssl/*.example
 
 # Backend specific
 backend/media/

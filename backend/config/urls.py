@@ -29,6 +29,18 @@ urlpatterns = [
     path('api/content/', include('apps.content.urls')),
 ]
 
-# Servir archivos media en desarrollo
+# Development-only URLs
 if settings.DEBUG:
+    # Servir archivos media
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+    # Django Debug Toolbar
+    # Temporarily disabled due to Django 6.0 / Python 3.13 compatibility issues
+    # if 'debug_toolbar' in settings.INSTALLED_APPS:
+    #     try:
+    #         import debug_toolbar
+    #         urlpatterns = [
+    #             path('__debug__/', include(debug_toolbar.urls)),
+    #         ] + urlpatterns
+    #     except ImportError:
+    #         pass

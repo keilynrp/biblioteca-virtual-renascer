@@ -7,9 +7,6 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Experimental features for better performance
   experimental: {
-    // Enable instrumentation for Sentry
-    instrumentationHook: true,
-
     // Optimize package imports for faster compilation
     optimizePackageImports: [
       'lucide-react',

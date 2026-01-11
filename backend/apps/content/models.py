@@ -277,3 +277,102 @@ class Reading(models.Model):
         if not self.total_pages:
             return None
         return max(0, self.total_pages - self.current_page)
+
+
+# =============================================================================
+# Annotation Models - Sprint 10
+# =============================================================================
+
+class Bookmark(models.Model):
+    """User bookmarks for specific pages in books"""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bookmarks')
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='bookmarks')
+    page_number = models.PositiveIntegerField()
+    title = models.CharField(max_length=200, blank=True, default='')
+    notes = models.TextField(blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['page_number', '-created_at']
+        unique_together = ['user', 'book', 'page_number']
+        indexes = [
+            models.Index(fields=['user', 'book']),
+            models.Index(fields=['created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.book.title} - Page {self.page_number}"
+
+
+class Highlight(models.Model):
+    """Text highlights in books"""
+    COLOR_CHOICES = [
+        ('yellow', 'Amarillo'),
+        ('green', 'Verde'),
+        ('blue', 'Azul'),
+        ('pink', 'Rosa'),
+        ('purple', 'Púrpura'),
+    ]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='highlights')
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='highlights')
+    page_number = models.PositiveIntegerField()
+    selected_text = models.TextField()
+    color = models.CharField(max_length=20, choices=COLOR_CHOICES, default='yellow')
+
+    # Position data for rendering
+    position_data = models.JSONField(default=dict, help_text="JSON with coordinates and selection info")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['page_number', 'created_at']
+        indexes = [
+            models.Index(fields=['user', 'book']),
+            models.Index(fields=['page_number']),
+            models.Index(fields=['created_at']),
+        ]
+
+    def __str__(self):
+        text_preview = self.selected_text[:50] + '...' if len(self.selected_text) > 50 else self.selected_text
+        return f"{self.user.username} - {self.book.title} - Page {self.page_number}: {text_preview}"
+
+
+class Annotation(models.Model):
+    """User annotations/notes on specific parts of books"""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='annotations')
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='annotations')
+    page_number = models.PositiveIntegerField()
+
+    # Optional: can be linked to a highlight
+    highlight = models.ForeignKey(Highlight, on_delete=models.SET_NULL, null=True, blank=True, related_name='annotations')
+
+    # The actual note content
+    content = models.TextField()
+
+    # Optional: selected text this annotation refers to
+    selected_text = models.TextField(blank=True, default='')
+
+    # Position data for rendering
+    position_data = models.JSONField(default=dict, help_text="JSON with coordinates and selection info")
+
+    # Privacy
+    is_private = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['page_number', 'created_at']
+        indexes = [
+            models.Index(fields=['user', 'book']),
+            models.Index(fields=['page_number']),
+            models.Index(fields=['created_at']),
+            models.Index(fields=['is_private']),
+        ]
+
+    def __str__(self):
+        content_preview = self.content[:50] + '...' if len(self.content) > 50 else self.content
+        return f"{self.user.username} - {self.book.title} - Page {self.page_number}: {content_preview}"

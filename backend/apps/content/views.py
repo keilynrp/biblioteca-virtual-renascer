@@ -15,11 +15,14 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.clickjacking import xframe_options_exempt, xframe_options_sameorigin
 from django.core.cache import cache
 from django.conf import settings
-from .models import Book, Category, Author, Review, ReviewHelpful, Favorite, ReadingHistory, Reading
+from .models import (
+    Book, Category, Author, Review, ReviewHelpful, Favorite, ReadingHistory, Reading,
+    Bookmark, Highlight, Annotation
+)
 from .serializers import (
     BookListSerializer, BookDetailSerializer, CategorySerializer, AuthorSerializer,
     ReviewSerializer, FavoriteSerializer, ReadingHistorySerializer, ReadingSerializer,
-    ReadingProgressUpdateSerializer
+    ReadingProgressUpdateSerializer, BookmarkSerializer, HighlightSerializer, AnnotationSerializer
 )
 # Elasticsearch disabled - using Meilisearch instead
 # from .documents import BookDocument
@@ -1178,3 +1181,97 @@ class ServeBookFileView(APIView):
         response['Cache-Control'] = 'private, max-age=3600'
 
         return response
+
+
+# =============================================================================
+# Annotation Views - Sprint 10
+# =============================================================================
+
+@method_decorator(rate_limit_api_read, name='get')
+@method_decorator(rate_limit_api_write, name='post')
+class BookmarkListCreateView(generics.ListCreateAPIView):
+    """List and create bookmarks for the authenticated user"""
+    serializer_class = BookmarkSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['book', 'page_number']
+    ordering_fields = ['page_number', 'created_at']
+    ordering = ['page_number']
+
+    def get_queryset(self):
+        """Return only bookmarks for the current user"""
+        return Bookmark.objects.filter(user=self.request.user).select_related('book')
+
+
+@method_decorator(rate_limit_api_read, name='get')
+@method_decorator(rate_limit_api_write, name='put')
+@method_decorator(rate_limit_api_write, name='patch')
+@method_decorator(rate_limit_api_delete, name='delete')
+class BookmarkDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update, or delete a bookmark"""
+    serializer_class = BookmarkSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """Return only bookmarks for the current user"""
+        return Bookmark.objects.filter(user=self.request.user).select_related('book')
+
+
+@method_decorator(rate_limit_api_read, name='get')
+@method_decorator(rate_limit_api_write, name='post')
+class HighlightListCreateView(generics.ListCreateAPIView):
+    """List and create highlights for the authenticated user"""
+    serializer_class = HighlightSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['book', 'page_number', 'color']
+    ordering_fields = ['page_number', 'created_at']
+    ordering = ['page_number', 'created_at']
+
+    def get_queryset(self):
+        """Return only highlights for the current user"""
+        return Highlight.objects.filter(user=self.request.user).select_related('book')
+
+
+@method_decorator(rate_limit_api_read, name='get')
+@method_decorator(rate_limit_api_write, name='put')
+@method_decorator(rate_limit_api_write, name='patch')
+@method_decorator(rate_limit_api_delete, name='delete')
+class HighlightDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update, or delete a highlight"""
+    serializer_class = HighlightSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """Return only highlights for the current user"""
+        return Highlight.objects.filter(user=self.request.user).select_related('book')
+
+
+@method_decorator(rate_limit_api_read, name='get')
+@method_decorator(rate_limit_api_write, name='post')
+class AnnotationListCreateView(generics.ListCreateAPIView):
+    """List and create annotations for the authenticated user"""
+    serializer_class = AnnotationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['book', 'page_number', 'is_private']
+    ordering_fields = ['page_number', 'created_at']
+    ordering = ['page_number', 'created_at']
+
+    def get_queryset(self):
+        """Return only annotations for the current user"""
+        return Annotation.objects.filter(user=self.request.user).select_related('book', 'highlight')
+
+
+@method_decorator(rate_limit_api_read, name='get')
+@method_decorator(rate_limit_api_write, name='put')
+@method_decorator(rate_limit_api_write, name='patch')
+@method_decorator(rate_limit_api_delete, name='delete')
+class AnnotationDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update, or delete an annotation"""
+    serializer_class = AnnotationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """Return only annotations for the current user"""
+        return Annotation.objects.filter(user=self.request.user).select_related('book', 'highlight')

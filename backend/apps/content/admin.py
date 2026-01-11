@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Author, Book
+from .models import Category, Author, Book, Bookmark, Highlight, Annotation
 
 
 @admin.register(Category)
@@ -41,3 +41,84 @@ class BookAdmin(admin.ModelAdmin):
             'fields': ('is_premium',)
         }),
     )
+
+
+# =============================================================================
+# Annotation Admin - Sprint 10
+# =============================================================================
+
+@admin.register(Bookmark)
+class BookmarkAdmin(admin.ModelAdmin):
+    list_display = ('user', 'book', 'page_number', 'title', 'created_at')
+    search_fields = ('user__username', 'book__title', 'title', 'notes')
+    list_filter = ('created_at', 'book')
+    ordering = ('-created_at',)
+    date_hierarchy = 'created_at'
+
+    fieldsets = (
+        ('Bookmark Information', {
+            'fields': ('user', 'book', 'page_number')
+        }),
+        ('Details', {
+            'fields': ('title', 'notes')
+        }),
+    )
+
+    readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(Highlight)
+class HighlightAdmin(admin.ModelAdmin):
+    list_display = ('user', 'book', 'page_number', 'color', 'text_preview', 'created_at')
+    search_fields = ('user__username', 'book__title', 'selected_text')
+    list_filter = ('color', 'created_at', 'book')
+    ordering = ('-created_at',)
+    date_hierarchy = 'created_at'
+
+    fieldsets = (
+        ('Highlight Information', {
+            'fields': ('user', 'book', 'page_number', 'color')
+        }),
+        ('Content', {
+            'fields': ('selected_text', 'position_data')
+        }),
+    )
+
+    readonly_fields = ('created_at', 'updated_at')
+
+    def text_preview(self, obj):
+        """Show preview of selected text"""
+        if len(obj.selected_text) > 50:
+            return obj.selected_text[:50] + '...'
+        return obj.selected_text
+    text_preview.short_description = 'Text Preview'
+
+
+@admin.register(Annotation)
+class AnnotationAdmin(admin.ModelAdmin):
+    list_display = ('user', 'book', 'page_number', 'content_preview', 'is_private', 'created_at')
+    search_fields = ('user__username', 'book__title', 'content', 'selected_text')
+    list_filter = ('is_private', 'created_at', 'book')
+    ordering = ('-created_at',)
+    date_hierarchy = 'created_at'
+
+    fieldsets = (
+        ('Annotation Information', {
+            'fields': ('user', 'book', 'page_number', 'highlight')
+        }),
+        ('Content', {
+            'fields': ('content', 'selected_text', 'position_data')
+        }),
+        ('Privacy', {
+            'fields': ('is_private',)
+        }),
+    )
+
+    readonly_fields = ('created_at', 'updated_at')
+
+    def content_preview(self, obj):
+        """Show preview of annotation content"""
+        if len(obj.content) > 50:
+            return obj.content[:50] + '...'
+        return obj.content
+    content_preview.short_description = 'Content Preview'

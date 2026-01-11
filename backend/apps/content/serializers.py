@@ -1,7 +1,10 @@
 
 from rest_framework import serializers
 from django.core.exceptions import ValidationError as DjangoValidationError
-from .models import Book, Author, Category, Review, ReviewHelpful, Favorite, ReadingHistory, Reading
+from .models import (
+    Book, Author, Category, Review, ReviewHelpful, Favorite, ReadingHistory, Reading,
+    Bookmark, Highlight, Annotation
+)
 from .validators import validate_pdf_file, validate_image_file
 
 class AuthorSerializer(serializers.ModelSerializer):
@@ -303,3 +306,111 @@ class ReadingProgressUpdateSerializer(serializers.ModelSerializer):
         if value < 1:
             raise serializers.ValidationError("La página actual debe ser mayor a 0.")
         return value
+
+
+# =============================================================================
+# Annotation Serializers - Sprint 10
+# =============================================================================
+
+class BookmarkSerializer(serializers.ModelSerializer):
+    """Serializer for bookmarks"""
+    book_title = serializers.CharField(source='book.title', read_only=True)
+    book_slug = serializers.CharField(source='book.slug', read_only=True)
+
+    class Meta:
+        model = Bookmark
+        fields = (
+            'id', 'user', 'book', 'book_title', 'book_slug',
+            'page_number', 'title', 'notes',
+            'created_at', 'updated_at'
+        )
+        read_only_fields = ('id', 'user', 'created_at', 'updated_at', 'book_title', 'book_slug')
+
+    def validate_page_number(self, value):
+        if value < 1:
+            raise serializers.ValidationError("El número de página debe ser mayor a 0.")
+        return value
+
+    def create(self, validated_data):
+        # Automatically set user from request context
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+class HighlightSerializer(serializers.ModelSerializer):
+    """Serializer for text highlights"""
+    book_title = serializers.CharField(source='book.title', read_only=True)
+    book_slug = serializers.CharField(source='book.slug', read_only=True)
+    color_display = serializers.CharField(source='get_color_display', read_only=True)
+
+    class Meta:
+        model = Highlight
+        fields = (
+            'id', 'user', 'book', 'book_title', 'book_slug',
+            'page_number', 'selected_text', 'color', 'color_display',
+            'position_data', 'created_at', 'updated_at'
+        )
+        read_only_fields = ('id', 'user', 'created_at', 'updated_at', 'book_title', 'book_slug', 'color_display')
+
+    def validate_page_number(self, value):
+        if value < 1:
+            raise serializers.ValidationError("El número de página debe ser mayor a 0.")
+        return value
+
+    def validate_selected_text(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("El texto seleccionado no puede estar vacío.")
+        if len(value) > 5000:
+            raise serializers.ValidationError("El texto seleccionado es demasiado largo (máximo 5000 caracteres).")
+        return value.strip()
+
+    def create(self, validated_data):
+        # Automatically set user from request context
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+class AnnotationSerializer(serializers.ModelSerializer):
+    """Serializer for annotations"""
+    book_title = serializers.CharField(source='book.title', read_only=True)
+    book_slug = serializers.CharField(source='book.slug', read_only=True)
+    highlight_data = HighlightSerializer(source='highlight', read_only=True)
+
+    class Meta:
+        model = Annotation
+        fields = (
+            'id', 'user', 'book', 'book_title', 'book_slug',
+            'page_number', 'highlight', 'highlight_data',
+            'content', 'selected_text', 'position_data',
+            'is_private', 'created_at', 'updated_at'
+        )
+        read_only_fields = ('id', 'user', 'created_at', 'updated_at', 'book_title', 'book_slug', 'highlight_data')
+
+    def validate_page_number(self, value):
+        if value < 1:
+            raise serializers.ValidationError("El número de página debe ser mayor a 0.")
+        return value
+
+    def validate_content(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("El contenido de la anotación no puede estar vacío.")
+        if len(value) > 10000:
+            raise serializers.ValidationError("El contenido es demasiado largo (máximo 10000 caracteres).")
+        return value.strip()
+
+    def validate(self, data):
+        """Validate that highlight belongs to same book if provided"""
+        highlight = data.get('highlight')
+        book = data.get('book')
+
+        if highlight and book and highlight.book != book:
+            raise serializers.ValidationError({
+                'highlight': "El resaltado debe pertenecer al mismo libro."
+            })
+
+        return data
+
+    def create(self, validated_data):
+        # Automatically set user from request context
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)

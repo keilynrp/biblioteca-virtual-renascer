@@ -19,7 +19,11 @@ from .views import (
     ReadingHistoryListView, UpdateReadingHistoryView,
     # Reading (PDF viewer) views
     ReadingListView, StartReadingView, ReadingDetailView,
-    UpdateReadingProgressView, ServeBookFileView
+    UpdateReadingProgressView, ServeBookFileView,
+    # Annotation views (Sprint 10)
+    BookmarkListCreateView, BookmarkDetailView,
+    HighlightListCreateView, HighlightDetailView,
+    AnnotationListCreateView, AnnotationDetailView
 )
 
 urlpatterns = [
@@ -68,4 +72,12 @@ urlpatterns = [
     path('user/readings/<int:book_id>/', ReadingDetailView.as_view(), name='reading_detail'),
     path('user/readings/<int:book_id>/progress/', UpdateReadingProgressView.as_view(), name='update_reading_progress'),
     path('books/<int:book_id>/file/', ServeBookFileView.as_view(), name='serve_book_file'),
+
+    # Annotations (Sprint 10)
+    path('user/bookmarks/', BookmarkListCreateView.as_view(), name='bookmark_list'),
+    path('user/bookmarks/<int:pk>/', BookmarkDetailView.as_view(), name='bookmark_detail'),
+    path('user/highlights/', HighlightListCreateView.as_view(), name='highlight_list'),
+    path('user/highlights/<int:pk>/', HighlightDetailView.as_view(), name='highlight_detail'),
+    path('user/annotations/', AnnotationListCreateView.as_view(), name='annotation_list'),
+    path('user/annotations/<int:pk>/', AnnotationDetailView.as_view(), name='annotation_detail'),
 ]

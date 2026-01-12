@@ -12,7 +12,10 @@ import {
   Maximize2,
   Moon,
   Sun,
+  PanelRightOpen,
 } from 'lucide-react';
+import { BookmarkButton } from './reader/bookmark-button';
+import { AnnotationsSidebar } from './reader/annotations-sidebar';
 
 interface PDFViewerNativeProps {
   bookId: number;
@@ -30,6 +33,7 @@ interface PDFViewerNativeProps {
 }
 
 export function PDFViewerNative({
+  bookId,
   bookTitle,
   pdfUrl,
   initialPage = 1,
@@ -44,6 +48,7 @@ export function PDFViewerNative({
   const [isLoading, setIsLoading] = useState(true);
   const [embedError, setEmbedError] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const progressSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedProgressRef = useRef({ currentPage, zoomLevel, readingTime });
@@ -312,16 +317,19 @@ export function PDFViewerNative({
 
             {/* Additional Controls */}
             <div className={`flex items-center gap-1 sm:gap-2 ${isDarkMode ? 'border-gray-600' : 'border-gray-300'} border-l pl-2 sm:pl-4`}>
+              <BookmarkButton
+                bookId={bookId}
+                pageNumber={currentPage}
+              />
+
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleOpenInNewTab}
-                title="Abrir en nueva pestaña"
-                className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3 hidden sm:flex"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                title="Abrir anotaciones"
+                className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
+                <PanelRightOpen className="w-4 h-4" />
               </Button>
 
               <Button
@@ -329,7 +337,7 @@ export function PDFViewerNative({
                 size="sm"
                 onClick={handleFullscreen}
                 title="Pantalla completa"
-                className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
+                className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3 hidden sm:flex"
               >
                 <Maximize2 className="w-4 h-4" />
               </Button>
@@ -423,6 +431,15 @@ export function PDFViewerNative({
           💡 Usa las flechas ← → para navegar, + / - para zoom
         </p>
       </div>
+
+      {/* Annotations Sidebar */}
+      <AnnotationsSidebar
+        bookId={bookId}
+        currentPage={currentPage}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        onNavigateToPage={(page) => setCurrentPage(page)}
+      />
     </div>
   );
 }

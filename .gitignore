@@ -89,6 +89,14 @@ d:bvs_framework*
 *.temp
 tmp/
 temp/
+tmpclaude-*
+
+# Backups
+backups/database/*.sql.gz
+backups/database/*.custom
+backups/database/*.meta
+backups/database/backup.log
+backups/media/*.tar.gz
 
 # OS
 Thumbs.db

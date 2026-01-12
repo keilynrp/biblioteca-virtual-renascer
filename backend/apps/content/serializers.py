@@ -46,9 +46,9 @@ class BookDetailSerializer(serializers.ModelSerializer):
     # Use FileField for write operations, SerializerMethodField for read
     file_upload = serializers.FileField(write_only=True, required=False, allow_null=True, validators=[validate_pdf_file])
     file = serializers.SerializerMethodField(read_only=True)
-    average_rating = serializers.FloatField(read_only=True)
-    review_count = serializers.IntegerField(read_only=True)
-    favorite_count = serializers.IntegerField(read_only=True)
+    average_rating = serializers.SerializerMethodField()
+    review_count = serializers.SerializerMethodField()
+    favorite_count = serializers.SerializerMethodField()
     user_has_favorited = serializers.SerializerMethodField()
     user_review = serializers.SerializerMethodField()
     user_reading_status = serializers.SerializerMethodField()
@@ -83,13 +83,61 @@ class BookDetailSerializer(serializers.ModelSerializer):
             return obj.file.url
         return None
 
+    def get_average_rating(self, obj):
+        """
+        Get average rating from annotation (optimized) or fallback to property
+        """
+        # Try to get from annotation first (optimized)
+        if hasattr(obj, 'average_rating_annotated'):
+            avg = obj.average_rating_annotated
+            return round(avg, 1) if avg else 0.0
+        # Fallback to property (causes query)
+        return obj.average_rating
+
+    def get_review_count(self, obj):
+        """
+        Get review count from annotation (optimized) or fallback to property
+        """
+        # Try to get from annotation first (optimized)
+        if hasattr(obj, 'review_count_annotated'):
+            return obj.review_count_annotated
+        # Fallback to property (causes query)
+        return obj.review_count
+
+    def get_favorite_count(self, obj):
+        """
+        Get favorite count from annotation (optimized) or fallback to property
+        """
+        # Try to get from annotation first (optimized)
+        if hasattr(obj, 'favorite_count_annotated'):
+            return obj.favorite_count_annotated
+        # Fallback to property (causes query)
+        return obj.favorite_count
+
     def get_user_has_favorited(self, obj):
+        """
+        Check if user has favorited using prefetched data (optimized)
+        """
+        # Try to use prefetched data first (optimized - no query)
+        if hasattr(obj, 'user_favorites_cached'):
+            return len(obj.user_favorites_cached) > 0
+        # Fallback to query if not prefetched
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             return obj.favorited_by.filter(user=request.user).exists()
         return False
 
     def get_user_review(self, obj):
+        """
+        Get user's review using prefetched data (optimized)
+        """
+        # Try to use prefetched data first (optimized - no query)
+        if hasattr(obj, 'user_reviews_cached'):
+            reviews = obj.user_reviews_cached
+            if reviews:
+                return ReviewSerializer(reviews[0], context=self.context).data
+            return None
+        # Fallback to query if not prefetched
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             review = obj.reviews.filter(user=request.user).first()
@@ -98,6 +146,16 @@ class BookDetailSerializer(serializers.ModelSerializer):
         return None
 
     def get_user_reading_status(self, obj):
+        """
+        Get user's reading status using prefetched data (optimized)
+        """
+        # Try to use prefetched data first (optimized - no query)
+        if hasattr(obj, 'user_reading_cached'):
+            histories = obj.user_reading_cached
+            if histories:
+                return ReadingHistorySerializer(histories[0], context=self.context).data
+            return None
+        # Fallback to query if not prefetched
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             history = obj.readers.filter(user=request.user).first()

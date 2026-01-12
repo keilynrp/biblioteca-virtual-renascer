@@ -30,7 +30,10 @@ export function BookmarksList({
     );
   }
 
-  if (bookmarks.length === 0) {
+  // Defensive check: ensure bookmarks is always an array
+  const bookmarksList = Array.isArray(bookmarks) ? bookmarks : [];
+
+  if (bookmarksList.length === 0) {
     return (
       <div className="text-center text-gray-500 dark:text-gray-400 py-8">
         <Bookmark className="w-12 h-12 mx-auto mb-2 opacity-50" />
@@ -45,10 +48,10 @@ export function BookmarksList({
   return (
     <div className="space-y-3">
       <p className="text-sm text-gray-500 dark:text-gray-400">
-        {bookmarks.length} marcador{bookmarks.length !== 1 ? 'es' : ''}
+        {bookmarksList.length} marcador{bookmarksList.length !== 1 ? 'es' : ''}
       </p>
 
-      {bookmarks.map((bookmark) => {
+      {bookmarksList.map((bookmark) => {
         const isCurrentPage = bookmark.page_number === currentPage;
 
         return (

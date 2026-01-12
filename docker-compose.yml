@@ -52,7 +52,7 @@ services:
       - /app/.next
       - frontend_cache:/app/.next/cache
     ports:
-      - "3000:3000"
+      - "3002:3000"
     environment:
       - WATCHPACK_POLLING=false
       - CHOKIDAR_USEPOLLING=false
@@ -233,6 +233,7 @@ services:
       - POSTGRES_PASSWORD=postgres
       - PGHOST=db
       - PGPORT=5432
+      - PGPASSWORD=postgres
       - BACKUP_RETENTION_DAYS=7
       - MEDIA_DIR=/app/media
     volumes:
@@ -249,7 +250,7 @@ services:
           memory: 128M
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "[ -f /var/run/crond.pid ] && ps | grep crond || exit 1"]
+      test: ["CMD-SHELL", "ps | grep -E '(entrypoint-backup|sleep)' || exit 1"]
       interval: 60s
       timeout: 10s
       retries: 3

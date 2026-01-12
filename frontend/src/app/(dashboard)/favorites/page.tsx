@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { useBookStore } from "@/store/bookStore"
 import { BookCard } from "@/components/book-card"
 import { Button } from "@/components/ui/button"
@@ -10,21 +10,54 @@ import { Heart, ArrowLeft, Loader2 } from "lucide-react"
 
 export default function FavoritesPage() {
     const router = useRouter()
+    const pathname = usePathname()
     const { favorites, fetchFavorites } = useBookStore()
     const [isLoading, setIsLoading] = useState(true)
 
+    console.log('[FavoritesPage] Component rendered with favorites:', favorites?.length || 0)
+
+    // Reload favorites when component mounts OR when pathname changes back to /favorites
     useEffect(() => {
-        loadFavorites()
+        console.log('[FavoritesPage] Pathname changed to:', pathname)
+        if (pathname === '/favorites') {
+            console.log('[FavoritesPage] Loading favorites...')
+            loadFavorites()
+        }
+    }, [pathname])
+
+    // Reload favorites when window regains focus (e.g., after adding a favorite from another page)
+    useEffect(() => {
+        const handleFocus = () => {
+            loadFavorites()
+        }
+
+        window.addEventListener('focus', handleFocus)
+        return () => window.removeEventListener('focus', handleFocus)
+    }, [])
+
+    // Reload favorites when component becomes visible (e.g., switching tabs)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (!document.hidden) {
+                loadFavorites()
+            }
+        }
+
+        document.addEventListener('visibilitychange', handleVisibilityChange)
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
     }, [])
 
     const loadFavorites = async () => {
+        console.log('[loadFavorites] Starting to load favorites...')
         setIsLoading(true)
         try {
             await fetchFavorites()
+            console.log('[loadFavorites] Favorites loaded successfully')
         } catch (error) {
-            console.error("Error loading favorites:", error)
+            console.error("[loadFavorites] Error loading favorites:", error)
         } finally {
             setIsLoading(false)
+            console.log('[loadFavorites] Loading finished')
         }
     }
 

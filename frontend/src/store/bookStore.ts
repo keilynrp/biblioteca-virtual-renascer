@@ -135,7 +135,10 @@ export const useBookStore = create<BookStore>((set) => ({
 
     fetchFavorites: async () => {
         try {
+            console.log('[fetchFavorites] Fetching favorites from API...');
             const response = await api.get('/content/user/favorites/');
+            console.log('[fetchFavorites] Response:', response.data);
+            console.log('[fetchFavorites] Favorites count:', response.data?.length || 0);
             set({ favorites: Array.isArray(response.data) ? response.data : [] });
         } catch (error) {
             console.error('Error fetching favorites:', error);
@@ -146,20 +149,28 @@ export const useBookStore = create<BookStore>((set) => ({
 
     toggleFavorite: async (bookId: number) => {
         try {
+            console.log('[toggleFavorite] Toggling favorite for book:', bookId);
             const response = await api.post(`/content/user/favorites/${bookId}/`);
+            console.log('[toggleFavorite] API Response:', response.data);
 
             if (response.data.status === 'added') {
-                set((state) => ({
-                    favorites: Array.isArray(state.favorites)
+                console.log('[toggleFavorite] Adding favorite:', response.data.favorite);
+                set((state) => {
+                    const newFavorites = Array.isArray(state.favorites)
                         ? [response.data.favorite, ...state.favorites]
-                        : [response.data.favorite]
-                }));
+                        : [response.data.favorite];
+                    console.log('[toggleFavorite] New favorites count:', newFavorites.length);
+                    return { favorites: newFavorites };
+                });
             } else {
-                set((state) => ({
-                    favorites: Array.isArray(state.favorites)
+                console.log('[toggleFavorite] Removing favorite for book:', bookId);
+                set((state) => {
+                    const newFavorites = Array.isArray(state.favorites)
                         ? state.favorites.filter((f) => f.book.id !== bookId)
-                        : []
-                }));
+                        : [];
+                    console.log('[toggleFavorite] New favorites count:', newFavorites.length);
+                    return { favorites: newFavorites };
+                });
             }
 
             return response.data.is_favorited;

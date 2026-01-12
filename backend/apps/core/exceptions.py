@@ -69,6 +69,13 @@ def custom_exception_handler(exc, context):
 
     # Para cualquier otra excepción no manejada
     if not response:
+        # Log the full exception for debugging
+        import logging
+        import traceback
+        logger = logging.getLogger(__name__)
+        logger.error(f"Unhandled exception: {exc.__class__.__name__}: {str(exc)}")
+        logger.error(f"Traceback:\n{traceback.format_exc()}")
+
         error_data = {
             'error': {
                 'code': 'internal_server_error',

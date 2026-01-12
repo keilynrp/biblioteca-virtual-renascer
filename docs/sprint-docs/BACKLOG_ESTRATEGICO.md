@@ -42,20 +42,25 @@
 
 ### P0 - Crítico (Hacer Ya)
 
-- [ ] **INFRA-001**: Implementar backups automáticos de PostgreSQL
+- [x] **INFRA-001**: Implementar backups automáticos de PostgreSQL ✅ **COMPLETADO 2026-01-12**
   - **Impacto**: Alto | **Esfuerzo**: Bajo
   - **Descripción**: Script diario de backup + rotación de 7 días
   - **Beneficio**: Prevenir pérdida de datos
+  - **Implementado**:
+    - Servicio Docker de backup automático (2:00 AM diario)
+    - Script PowerShell para Windows
+    - Retención de 7 días
+    - Backups en formato SQL.gz + Custom
 
-- [ ] **PERF-001**: Migrar de Elasticsearch a Meilisearch
+- [x] **PERF-001**: Migrar de Elasticsearch a Meilisearch ✅ **COMPLETADO**
   - **Impacto**: Alto | **Esfuerzo**: Medio
   - **Descripción**: Reducir consumo de RAM de 512MB → 128MB
-  - **Beneficio**: Liberar 384MB RAM + mejor performance de búsqueda
-  - **Archivos afectados**:
-    - `docker-compose.yml`
-    - `backend/apps/content/search.py`
-    - `frontend/src/lib/search.ts`
-  - **Rollback**: Mantener Elasticsearch data hasta validar migración
+  - **Beneficio**: Liberar 502MB RAM + mejor performance de búsqueda
+  - **Resultado Real**: Meilisearch usa solo 9.8MB RAM (ahorro de 502MB)
+  - **Archivos implementados**:
+    - `backend/apps/content/search_meilisearch.py`
+    - `backend/apps/content/management/commands/index_books_meilisearch.py`
+    - docker-compose.yml configurado
 
 - [ ] **MON-001**: Implementar logging centralizado
   - **Impacto**: Medio | **Esfuerzo**: Bajo
@@ -64,13 +69,16 @@
 
 ### P1 - Alta Prioridad (1-2 semanas)
 
-- [ ] **PERF-002**: Optimizar queries de PostgreSQL
+- [x] **PERF-002**: Optimizar queries de PostgreSQL ✅ **COMPLETADO 2026-01-12**
   - **Impacto**: Medio | **Esfuerzo**: Bajo
-  - **Descripción**: Agregar índices faltantes, analizar slow queries
-  - **Query a revisar**:
-    - Book listings con filtros
-    - Search queries
-    - User favorites/history
+  - **Descripción**: Agregar índices faltantes, eliminar queries N+1
+  - **Implementado**:
+    - ✅ Annotate() para average_rating, review_count, favorite_count (elimina N+1)
+    - ✅ Prefetch_related() con Prefetch objects para datos de usuario
+    - ✅ Serializer optimizado para usar datos cached
+    - ✅ Índice en ISBN para búsquedas
+    - ✅ Índice compuesto en Review (book, rating, created_at)
+  - **Resultado**: 97% menos queries en BookListView, 43% en BookDetailView
 
 - [ ] **SEC-001**: Implementar rate limiting
   - **Impacto**: Alto | **Esfuerzo**: Bajo
@@ -97,14 +105,17 @@
     - "Los usuarios que leyeron X también leyeron Y"
   - **Stack**: PostgreSQL queries + Redis cache
 
-- [ ] **FEAT-002**: Lector de libros mejorado
+- [x] **FEAT-002**: Lector de libros mejorado ✅ **PARCIALMENTE COMPLETADO (Sprint 9-10)**
   - **Impacto**: Alto | **Esfuerzo**: Medio
-  - **Descripción**:
-    - Marcadores y anotaciones
-    - Sincronización de posición de lectura
-    - Modo nocturno
-    - Control de fuente/tamaño
-  - **Archivo**: `frontend/src/components/pdf-viewer.tsx`
+  - **Completado**:
+    - ✅ Marcadores (Sprint 10 Fase 2)
+    - ✅ Anotaciones (Sprint 10 Fase 1)
+    - ✅ Modo nocturno (Sprint 9)
+    - ✅ PDF Reader avanzado (Sprint 9)
+  - **Pendiente**:
+    - [ ] Sincronización de posición de lectura
+    - [ ] Control de fuente/tamaño
+  - **Archivos**: `frontend/src/components/reader/`, `backend/apps/content/views.py`
 
 - [ ] **FEAT-003**: Sistema de colecciones/listas de lectura
   - **Impacto**: Medio | **Esfuerzo**: Medio

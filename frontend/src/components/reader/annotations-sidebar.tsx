@@ -46,11 +46,16 @@ export function AnnotationsSidebar({
         annotationsApi.listByBook(bookId),
       ]);
 
-      setBookmarks(bookmarksData);
-      setHighlights(highlightsData);
-      setAnnotations(annotationsData);
+      // Ensure data is always an array
+      setBookmarks(Array.isArray(bookmarksData) ? bookmarksData : []);
+      setHighlights(Array.isArray(highlightsData) ? highlightsData : []);
+      setAnnotations(Array.isArray(annotationsData) ? annotationsData : []);
     } catch (error) {
       console.error('Error loading annotations data:', error);
+      // Reset to empty arrays on error
+      setBookmarks([]);
+      setHighlights([]);
+      setAnnotations([]);
     } finally {
       setIsLoading(false);
     }

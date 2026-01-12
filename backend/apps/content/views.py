@@ -57,13 +57,27 @@ class BookListView(generics.ListCreateAPIView):
     Rate limits:
     - GET: 100 requests/min
     - POST: 30 requests/min (upload with rate_limit_upload for file uploads)
+
+    Optimizations:
+    - Uses annotate() for average_rating, review_count, favorite_count
+    - Eliminates N+1 queries from @property methods
     """
-    queryset = Book.objects.select_related('author', 'category').all()
     serializer_class = BookListSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['category__slug', 'author__id', 'is_premium']
     search_fields = ['title', 'author__name', 'description']
+
+    def get_queryset(self):
+        """
+        Optimized queryset with annotations to prevent N+1 queries
+        """
+        queryset = Book.objects.select_related('author', 'category').annotate(
+            average_rating_annotated=Avg('reviews__rating'),
+            review_count_annotated=Count('reviews', distinct=True),
+            favorite_count_annotated=Count('favorited_by', distinct=True)
+        )
+        return queryset
 
     def get_permissions(self):
         if self.request.method == 'POST':
@@ -88,12 +102,51 @@ class BookDetailView(generics.RetrieveUpdateDestroyAPIView):
     - GET: 100 requests/min
     - PUT/PATCH: 30 requests/min
     - DELETE: 10 requests/min
+
+    Optimizations:
+    - Uses annotate() for average_rating, review_count, favorite_count
+    - Uses prefetch_related() with Prefetch objects for user-specific data
+    - Eliminates N+1 queries from serializer methods
     """
-    queryset = Book.objects.select_related('author', 'category').all()
     serializer_class = BookDetailSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     lookup_field = 'slug'
+
+    def get_queryset(self):
+        """
+        Optimized queryset with annotations and prefetching
+        """
+        from django.db.models import Prefetch
+
+        queryset = Book.objects.select_related('author', 'category').annotate(
+            average_rating_annotated=Avg('reviews__rating'),
+            review_count_annotated=Count('reviews', distinct=True),
+            favorite_count_annotated=Count('favorited_by', distinct=True)
+        )
+
+        # Add user-specific prefetching for authenticated users
+        user = self.request.user
+        if user.is_authenticated:
+            queryset = queryset.prefetch_related(
+                Prefetch(
+                    'favorited_by',
+                    queryset=Favorite.objects.filter(user=user),
+                    to_attr='user_favorites_cached'
+                ),
+                Prefetch(
+                    'reviews',
+                    queryset=Review.objects.filter(user=user).select_related('user'),
+                    to_attr='user_reviews_cached'
+                ),
+                Prefetch(
+                    'readers',
+                    queryset=ReadingHistory.objects.filter(user=user),
+                    to_attr='user_reading_cached'
+                )
+            )
+
+        return queryset
 
     def get_permissions(self):
         if self.request.method in ['PUT', 'PATCH', 'DELETE']:
@@ -872,6 +925,7 @@ class FavoriteListView(generics.ListAPIView):
     """List all favorites for the authenticated user"""
     serializer_class = FavoriteSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None  # Disable pagination for favorites
 
     def get_queryset(self):
         return Favorite.objects.filter(user=self.request.user).select_related(
@@ -1077,10 +1131,10 @@ class ServeBookFileView(APIView):
         # Check if user has access
         if book.is_premium:
             # Verify user has active subscription
-            from apps.subscriptions.models import Subscription
+            from apps.subscriptions.models import UserSubscription
             from django.utils import timezone
 
-            has_active_subscription = Subscription.objects.filter(
+            has_active_subscription = UserSubscription.objects.filter(
                 user=user,
                 is_active=True,
                 end_date__gte=timezone.now()

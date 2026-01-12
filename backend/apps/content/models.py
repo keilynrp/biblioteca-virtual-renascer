@@ -97,6 +97,7 @@ class Book(models.Model):
             # Search and filtering
             models.Index(fields=['slug'], name='book_slug_idx'),
             models.Index(fields=['title'], name='book_title_idx'),
+            models.Index(fields=['isbn'], name='book_isbn_idx'),  # PERF-002: ISBN searches
         ]
 
     def save(self, *args, **kwargs):
@@ -146,6 +147,7 @@ class Review(models.Model):
         indexes = [
             models.Index(fields=['book', '-created_at']),
             models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['book', '-rating', '-created_at'], name='review_book_rating_idx'),  # PERF-002: Sort by rating
         ]
 
     def __str__(self):

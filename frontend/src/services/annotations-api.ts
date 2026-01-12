@@ -2,7 +2,7 @@
 // Annotations API Client - Sprint 10
 // =============================================================================
 
-import api from '../api';
+import api from '../lib/api';
 import type {
   Bookmark,
   BookmarkCreate,

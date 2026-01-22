@@ -29,7 +29,7 @@ services:
         reservations:
           memory: 512M
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/admin/ || exit 1"]
+      test: [ "CMD-SHELL", "curl -f http://localhost:8000/admin/ || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -73,11 +73,11 @@ services:
         reservations:
           memory: 2G
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
+      test: [ "CMD-SHELL", "curl -f http://localhost:3000 || exit 1" ]
       interval: 30s
-      timeout: 10s
+      timeout: 30s
       retries: 3
-      start_period: 90s
+      start_period: 180s
     restart: unless-stopped
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -100,20 +100,9 @@ services:
         reservations:
           memory: 256M
     command: >
-      postgres
-      -c shared_buffers=128MB
-      -c effective_cache_size=384MB
-      -c max_connections=100
-      -c work_mem=4MB
-      -c maintenance_work_mem=64MB
-      -c random_page_cost=1.1
-      -c effective_io_concurrency=200
-      -c wal_buffers=16MB
-      -c checkpoint_completion_target=0.9
-      -c max_wal_size=1GB
-      -c min_wal_size=80MB
+      postgres -c shared_buffers=128MB -c effective_cache_size=384MB -c max_connections=100 -c work_mem=4MB -c maintenance_work_mem=64MB -c random_page_cost=1.1 -c effective_io_concurrency=200 -c wal_buffers=16MB -c checkpoint_completion_target=0.9 -c max_wal_size=1GB -c min_wal_size=80MB
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d biblioteca"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d biblioteca" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -134,18 +123,9 @@ services:
         reservations:
           memory: 256M
     command: >
-      redis-server
-      --maxmemory 480mb
-      --maxmemory-policy allkeys-lru
-      --save 60 1000
-      --appendonly yes
-      --appendfsync everysec
-      --tcp-backlog 511
-      --timeout 300
-      --tcp-keepalive 60
-      --maxclients 10000
+      redis-server --maxmemory 480mb --maxmemory-policy allkeys-lru --save 60 1000 --appendonly yes --appendfsync everysec --tcp-backlog 511 --timeout 300 --tcp-keepalive 60 --maxclients 10000
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -216,7 +196,7 @@ services:
         reservations:
           memory: 128M
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:7700/health || exit 1"]
+      test: [ "CMD-SHELL", "curl -f http://localhost:7700/health || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -250,7 +230,7 @@ services:
           memory: 128M
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "ps | grep -E '(entrypoint-backup|sleep)' || exit 1"]
+      test: [ "CMD-SHELL", "ps | grep -E '(entrypoint-backup|sleep)' || exit 1" ]
       interval: 60s
       timeout: 10s
       retries: 3

@@ -9,12 +9,15 @@ import { useEffect, useState, useMemo, memo, useCallback } from "react"
 import api, { handleApiError } from "@/lib/api"
 import { DashboardSkeleton } from "@/components/dashboard-skeleton"
 import Image from "next/image"
+import { contentApi, Book } from "@/services/contentApi"
+import { BookCard } from "@/components/book-card"
 
 interface DashboardStats {
     total_books: number
     total_users: number
     average_rating: number
     books_borrowed: number
+    total_reading_hours: number
     recent_books: Array<{
         id: number
         title: string
@@ -68,9 +71,8 @@ const BookItem = memo(({ book }: { book: DashboardStats['recent_books'][0] }) =>
 
             {/* Premium Badge */}
             <div className="flex-shrink-0">
-                <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                    book.is_premium ? "bg-warning/10 text-warning" : "bg-success/10 text-success"
-                }`}>
+                <span className={`text-xs font-semibold px-3 py-1 rounded-full ${book.is_premium ? "bg-warning/10 text-warning" : "bg-success/10 text-success"
+                    }`}>
                     {book.is_premium ? 'Premium' : 'Gratis'}
                 </span>
             </div>
@@ -82,6 +84,7 @@ BookItem.displayName = 'BookItem'
 
 export default function DashboardPage() {
     const [stats, setStats] = useState<DashboardStats | null>(null)
+    const [recommendations, setRecommendations] = useState<Book[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
@@ -91,6 +94,15 @@ export default function DashboardPage() {
             setError(null)
             const response = await api.get('/content/dashboard/stats/')
             setStats(response.data)
+
+            // Fetch recommendations
+            try {
+                const recs = await contentApi.getRecommendedForYou()
+                setRecommendations(recs)
+            } catch (recError) {
+                console.error('Error fetching recommendations:', recError)
+                // Don't block whole dashboard for this
+            }
         } catch (err) {
             console.error('Error fetching dashboard stats:', err)
             setError('Error al cargar estadísticas')
@@ -127,12 +139,12 @@ export default function DashboardPage() {
                 description: "registrados"
             },
             {
-                title: "Libros Prestados",
-                value: stats.books_borrowed.toLocaleString(),
+                title: "Horas de Lectura",
+                value: (stats.total_reading_hours || 0).toLocaleString(),
                 change: 0,
                 trend: "up" as const,
-                icon: TrendingUp,
-                description: "este mes"
+                icon: Clock,
+                description: "total acumulado"
             },
             {
                 title: "Calificación Promedio",
@@ -234,6 +246,25 @@ export default function DashboardPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Recommendations Section */}
+            {recommendations.length > 0 && (
+                <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-2">
+                            <TrendingUp className="h-5 w-5 text-primary" />
+                            <h2 className="text-xl font-bold text-foreground">Recomendado para ti</h2>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                        {recommendations.slice(0, 6).map((book, i) => (
+                            <div key={book.id} className="h-full">
+                                <BookCard book={book} index={i} />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Popular Categories */}
             <div className="bg-card rounded-xl border border-border p-6 shadow-sm">

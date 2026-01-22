@@ -25,7 +25,7 @@ COPY package.json package-lock.json* ./
 
 # Install dependencies with optimizations and fallback
 # Try npm ci first, fall back to npm install if it fails
-RUN npm ci --no-audit --progress=false || npm install --no-audit --progress=false; \
+RUN (npm ci --no-audit --progress=false || npm install --no-audit --progress=false) && \
     npm cache clean --force
 
 # Copy project files

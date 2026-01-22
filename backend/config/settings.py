@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'apps.subscriptions',
     'apps.payments',
     'apps.content',
+    'apps.communities',
     'apps.core',
 ]
 

@@ -27,6 +27,9 @@ urlpatterns = [
     path('api/subscriptions/', include('apps.subscriptions.urls')),
     path('api/payments/', include('apps.payments.urls')),
     path('api/content/', include('apps.content.urls')),
+    path('api/loans/', include('apps.loans.urls')),
+    path('api/communities/', include('apps.communities.urls')),
+    path('api/notifications/', include('apps.notifications.urls')),
 ]
 
 # Development-only URLs

@@ -2,7 +2,10 @@
 File validators for content uploads (PDFs, images, etc.)
 """
 import os
-import magic
+try:
+    import magic
+except ImportError:
+    magic = None
 from django.core.exceptions import ValidationError
 from django.template.defaultfilters import filesizeformat
 
@@ -66,9 +69,12 @@ class FileValidator:
             file.seek(0)  # Reset file pointer
 
             try:
-                mime_type = magic.from_buffer(file_content, mime=True)
+                if magic:
+                    mime_type = magic.from_buffer(file_content, mime=True)
+                else:
+                    mime_type = None
             except Exception:
-                # Fallback to file extension if magic fails
+                # Fallback to file extension if magic fails or is unavailable
                 mime_type = None
 
             if mime_type and mime_type not in self.allowed_types:

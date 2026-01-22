@@ -34,7 +34,10 @@ INSTALLED_APPS = [
     'apps.subscriptions',
     'apps.payments',
     'apps.content',
+    'apps.notifications',
+    'apps.loans',
     'apps.core',
+    'apps.communities', # Sprint 7
 ]
 
 AUTH_USER_MODEL = 'authentication.User'
@@ -181,3 +184,7 @@ CACHE_TTL = {
     'user_reading_history': 60 * 5,  # 5 minutes (user-specific)
     'reviews': 60 * 30,              # 30 minutes (moderate changes)
 }
+
+# Meilisearch Configuration
+MEILISEARCH_HOST = os.getenv('MEILI_URL', 'http://localhost:7700')
+MEILISEARCH_MASTER_KEY = os.getenv('MEILI_MASTER_KEY', 'your-master-key-change-this')

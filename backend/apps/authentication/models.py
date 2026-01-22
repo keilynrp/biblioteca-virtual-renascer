@@ -7,6 +7,9 @@ class User(AbstractUser):
         STUDENT = 'student', _('Estudiante')
         EMPLOYEE = 'employee', _('Funcionário')
         TEACHER = 'teacher', _('Professor')
+        LIBRARIAN = 'librarian', _('Bibliotecário')
+        MODERATOR = 'moderator', _('Moderador')
+        CONTENT_MANAGER = 'content_manager', _('Gestor de Conteúdo')
         OTHER = 'other', _('Outro')
 
     user_type = models.CharField(

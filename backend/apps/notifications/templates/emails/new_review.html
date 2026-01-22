@@ -1,0 +1,17 @@
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2>{{ notification.title }}</h2>
+
+<p>{{ notification.message }}</p>
+
+{% if notification.link %}
+<a href="{{ notification.link }}" class="button">Ver más</a>
+{% endif %}
+
+<hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+
+<p style="color: #666; font-size: 14px;">
+    Si tienes alguna pregunta, no dudes en contactarnos.
+</p>
+{% endblock %}

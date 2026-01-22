@@ -1,7 +1,7 @@
 
 from django.urls import path
 from .views import (
-    BookListView, BookDetailView,
+    BookListView, BookDetailView, BookSimilarView, BookRecommendationsView,
     CategoryListView, CategoryDetailView,
     AuthorListView, AuthorDetailView,
     dashboard_stats,
@@ -23,7 +23,8 @@ from .views import (
     # Annotation views (Sprint 10)
     BookmarkListCreateView, BookmarkDetailView,
     HighlightListCreateView, HighlightDetailView,
-    AnnotationListCreateView, AnnotationDetailView
+    AnnotationListCreateView, AnnotationDetailView,
+    institutional_analytics
 )
 
 urlpatterns = [
@@ -42,7 +43,9 @@ urlpatterns = [
 
     # Books
     path('books/', BookListView.as_view(), name='book_list'),
+    path('recommendations/for-you/', BookRecommendationsView.as_view(), name='recommended_for_you'),
     path('books/<slug:slug>/', BookDetailView.as_view(), name='book_detail'),
+    path('books/<slug:slug>/similar/', BookSimilarView.as_view(), name='book_similar'),
 
     # Categories
     path('categories/', CategoryListView.as_view(), name='category_list'),
@@ -80,4 +83,5 @@ urlpatterns = [
     path('user/highlights/<int:pk>/', HighlightDetailView.as_view(), name='highlight_detail'),
     path('user/annotations/', AnnotationListCreateView.as_view(), name='annotation_list'),
     path('user/annotations/<int:pk>/', AnnotationDetailView.as_view(), name='annotation_detail'),
+    path('institutions/analytics/', institutional_analytics, name='institutional_analytics'),
 ]

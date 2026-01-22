@@ -345,3 +345,55 @@ class TestPlanModel:
         str_repr = str(basic_plan)
         assert basic_plan.name in str_repr
         assert str(basic_plan.price) in str_repr
+@pytest.mark.django_db
+class TestSubscriptionRenewal:
+    """Tests for subscription renewal (deactivate old, create new)"""
+
+    def test_renewal_deactivates_old_subscription(
+        self, authenticated_client, user, basic_plan, premium_plan, create_transaction
+    ):
+        """Test that paying for a new plan deactivates the existing one"""
+        # 1. Create initial active subscription
+        old_sub = UserSubscription.objects.create(
+            user=user,
+            plan=basic_plan,
+            is_active=True
+        )
+
+        # 2. Create and confirm a new transaction for a different plan
+        transaction = create_transaction(
+            user=user,
+            plan=premium_plan,
+            stripe_payment_intent_id='pi_renewal_123',
+            status='PENDING'
+        )
+
+        # Simulate confirmation (this calls the logic in views.ConfirmPaymentView)
+        payload = {
+            'transaction_id': str(transaction.id),
+            'payment_intent_id': 'pi_renewal_123'
+        }
+
+        # We need to mock stripe.PaymentIntent.retrieve because ConfirmPaymentView calls it
+        with patch('stripe.PaymentIntent.retrieve') as mock_retrieve:
+            mock_intent = MagicMock()
+            mock_intent.status = 'succeeded'
+            mock_retrieve.return_value = mock_intent
+
+            response = authenticated_client.post(
+                '/api/payments/confirm-payment/',
+                payload,
+                format='json'
+            )
+
+        assert response.status_code == status.HTTP_200_OK
+
+        # 3. Verify old subscription is deactivated
+        old_sub.refresh_from_db()
+        assert old_sub.is_active is False
+
+        # 4. Verify new subscription is active
+        new_sub = UserSubscription.objects.get(user=user, plan=premium_plan, is_active=True)
+        assert new_sub.id != old_sub.id
+        assert new_sub.is_active is True
+        assert new_sub.start_date > old_sub.start_date

@@ -26,6 +26,13 @@ from .serializers import (
 )
 # Elasticsearch disabled - using Meilisearch instead
 # from .documents import BookDocument
+from .search_meilisearch import (
+    search_books as meili_search,
+    autocomplete as meili_autocomplete,
+    get_facets as meili_get_facets,
+    index_books_bulk,
+    clear_index
+)
 from .permissions import IsOwnerOrReadOnly
 from apps.core.decorators import (
     rate_limit_api_read,
@@ -39,6 +46,7 @@ from apps.core.cache_utils import (
     make_hash_key,
     get_or_set_cache,
 )
+from .recommendations import get_similar_books, get_recommended_for_user
 import logging
 
 logger = logging.getLogger(__name__)
@@ -153,6 +161,67 @@ class BookDetailView(generics.RetrieveUpdateDestroyAPIView):
             return [permissions.IsAuthenticated()]
         return [permissions.AllowAny()]
 
+
+
+@method_decorator(rate_limit_api_read, name='get')
+class BookSimilarView(generics.ListAPIView):
+    """
+    Get books similar to a specific book.
+    Strategy: Same author OR Same category.
+    """
+    serializer_class = BookListSerializer
+    permission_classes = [permissions.AllowAny]
+    pagination_class = None  # We want a simple list
+
+    def get_queryset(self):
+        slug = self.kwargs.get('slug')
+        book = get_object_or_404(Book, slug=slug)
+        return get_similar_books(book, limit=6)
+
+    def list(self, request, *args, **kwargs):
+        # Cache for 1 hour
+        slug = self.kwargs.get('slug')
+        cache_key = make_cache_key('book', 'similar', slug=slug)
+        
+        def get_data():
+            queryset = self.get_queryset()
+            serializer = self.get_serializer(queryset, many=True)
+            return serializer.data
+
+        data = get_or_set_cache(
+            cache_key,
+            get_data,
+            timeout=3600 # 1 hour
+        )
+        return Response(data)
+
+@method_decorator(rate_limit_api_read, name='get')
+class BookRecommendationsView(generics.ListAPIView):
+    """
+    Get personalized recommendations for the authenticated user.
+    """
+    serializer_class = BookListSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None
+
+    def get_queryset(self):
+        return get_recommended_for_user(self.request.user, limit=12)
+
+    def list(self, request, *args, **kwargs):
+        # Cache for 5 minutes per user
+        cache_key = make_cache_key('user', 'recommendations', user_id=request.user.id)
+        
+        def get_data():
+            queryset = self.get_queryset()
+            serializer = self.get_serializer(queryset, many=True)
+            return serializer.data
+
+        data = get_or_set_cache(
+            cache_key,
+            get_data,
+            timeout=300 # 5 minutes
+        )
+        return Response(data)
 
 # =============================================================================
 # CATEGORY VIEWS
@@ -314,15 +383,21 @@ def dashboard_stats(request):
         try:
             from django.contrib.auth import get_user_model
             User = get_user_model()
+            from django.db.models import Avg, Sum, Count
 
             # Total de libros
             total_books = Book.objects.count()
 
             # Total de usuarios
             total_users = User.objects.count()
+            avg_rating = Review.objects.aggregate(Avg('rating'))['rating__avg'] or 0.0
 
-            # Calificación promedio (placeholder)
-            avg_rating = 4.5
+            # Total de libros leídos (sesiones únicas)
+            books_borrowed = Reading.objects.count()
+
+            # Tiempo total de lectura (segundos a horas)
+            total_time_seconds = Reading.objects.aggregate(Sum('total_reading_time'))['total_reading_time__sum'] or 0
+            total_reading_hours = round(total_time_seconds / 3600, 1)
 
             # Libros recientes (con manejo de errores)
             try:
@@ -346,7 +421,8 @@ def dashboard_stats(request):
                 'total_books': total_books,
                 'total_users': total_users,
                 'average_rating': round(avg_rating, 1),
-                'books_borrowed': 0,
+                'books_borrowed': books_borrowed,
+                'total_reading_hours': total_reading_hours,
                 'recent_books': recent_books_data,
                 'top_categories': top_categories,
             }
@@ -376,7 +452,7 @@ def dashboard_stats(request):
 @rate_limit_search
 def search_books(request):
     """
-    Búsqueda avanzada de libros usando Elasticsearch.
+    Búsqueda avanzada de libros usando Meilisearch.
 
     Rate limit: 60 requests/min
 
@@ -387,7 +463,7 @@ def search_books(request):
         - is_premium: true/false
         - page: Número de página (default: 1)
         - page_size: Tamaño de página (default: 12)
-        - sort_by: Campo para ordenar (_score, created_at, title, publication_date)
+        - sort_by: Campo para ordenar (created_at, title, publication_date)
     """
     try:
         # Parámetros de búsqueda
@@ -397,7 +473,7 @@ def search_books(request):
         is_premium_param = request.GET.get('is_premium', None)
         page = int(request.GET.get('page', 1))
         page_size = int(request.GET.get('page_size', 12))
-        sort_by = request.GET.get('sort_by', '_score')
+        sort_by = request.GET.get('sort_by', None)
 
         # Convertir is_premium a booleano si está presente
         is_premium = None
@@ -411,56 +487,35 @@ def search_books(request):
             author = int(author)
 
         # Calcular offset para paginación
-        from_ = (page - 1) * page_size
+        offset = (page - 1) * page_size
 
-        # TODO: Migrate to Meilisearch
+        # Ejecutar búsqueda en Meilisearch
+        search_result = meili_search(
+            query=query,
+            category=category,
+            author=author,
+            is_premium=is_premium,
+            offset=offset,
+            limit=page_size,
+            sort_by=sort_by
+        )
+
+        if 'error' in search_result:
+            return Response(
+                {'error': 'Error en el servicio de búsqueda', 'detail': search_result['error']},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        total = search_result['total']
+
         return Response({
-            'error': 'Search temporarily disabled - migrating from Elasticsearch to Meilisearch'
-        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-        # # Ejecutar búsqueda
-        # search_result = BookDocument.search_books(
-        #     query=query,
-        #     category=category,
-        #     author=author,
-        #     is_premium=is_premium,
-        #     from_=from_,
-        #     size=page_size,
-        #     sort_by=sort_by
-        # )
-
-        # # Formatear resultados
-        # results = []
-        # for hit in search_result:
-        #     results.append({
-        #         'id': hit.meta.id,
-        #         'title': hit.title,
-        #         'slug': hit.slug,
-        #         'description': hit.description,
-        #         'author': {
-        #             'id': hit.author_id,
-        #             'name': hit.author_name
-        #         },
-        #         'category': {
-        #             'id': hit.category_id,
-        #             'name': hit.category_name
-        #         } if hit.category_id else None,
-        #         'is_premium': hit.is_premium,
-        #         'created_at': hit.created_at,
-        #         'cover_image_url': hit.cover_image_url,
-        #         'score': hit.meta.score  # Relevancia de la búsqueda
-        #     })
-
-        # # Total de resultados
-        # total = search_result.hits.total.value
-
-        # return Response({
-        #     'count': total,
-        #     'page': page,
-        #     'page_size': page_size,
-        #     'total_pages': (total + page_size - 1) // page_size,
-        #     'results': results
-        # })
+            'count': total,
+            'page': page,
+            'page_size': page_size,
+            'total_pages': (total + page_size - 1) // page_size if page_size > 0 else 1,
+            'processing_time_ms': search_result['processing_time_ms'],
+            'results': search_result['hits']
+        })
 
     except Exception as e:
         logger.error(f"Error in search_books: {str(e)}")
@@ -475,7 +530,7 @@ def search_books(request):
 @rate_limit_search
 def autocomplete_books(request):
     """
-    Autocomplete para búsqueda de libros.
+    Autocomplete para búsqueda de libros usando Meilisearch.
 
     Rate limit: 60 requests/min
 
@@ -490,14 +545,8 @@ def autocomplete_books(request):
         if not query or len(query) < 2:
             return Response({'suggestions': []})
 
-        # TODO: Migrate to Meilisearch
-        return Response({
-            'error': 'Autocomplete temporarily disabled - migrating from Elasticsearch to Meilisearch'
-        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-        # # Obtener sugerencias
-        # suggestions = BookDocument.autocomplete(query, size=size)
-        # return Response({'suggestions': suggestions})
+        suggestions = meili_autocomplete(query, limit=size)
+        return Response({'suggestions': suggestions})
 
     except Exception as e:
         logger.error(f"Error in autocomplete_books: {str(e)}")
@@ -511,19 +560,14 @@ def autocomplete_books(request):
 @permission_classes([permissions.AllowAny])
 def search_facets(request):
     """
-    Obtiene agregaciones para filtros facetados.
+    Obtiene agregaciones para filtros facetados usando Meilisearch.
 
     Returns:
         Categorías, autores y tipos disponibles con conteo de documentos
     """
     try:
-        # TODO: Migrate to Meilisearch
-        return Response({
-            'error': 'Search facets temporarily disabled - migrating from Elasticsearch to Meilisearch'
-        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-        # aggregations = BookDocument.get_aggregations()
-        # return Response(aggregations)
+        facets = meili_get_facets()
+        return Response(facets)
 
     except Exception as e:
         logger.error(f"Error in search_facets: {str(e)}")
@@ -537,42 +581,34 @@ def search_facets(request):
 @permission_classes([permissions.IsAdminUser])
 def rebuild_search_index(request):
     """
-    Re-indexa todos los libros en Elasticsearch.
+    Re-indexa todos los libros en Meilisearch.
     Solo para administradores.
     """
     try:
-        # TODO: Migrate to Meilisearch
+        # Limpiar índice
+        clear_index()
+        
+        # Obtener todos los libros con relaciones optimizadas
+        books = Book.objects.select_related('author', 'category').all()
+        
+        # Indexar en bloques
+        count = books.count()
+        if count > 0:
+            index_books_bulk(books)
+            logger.info(f"Manual index rebuild completed for {count} books")
+            
         return Response({
-            'error': 'Index rebuild temporarily disabled - migrating from Elasticsearch to Meilisearch'
-        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-        # # Recrear índice
-        # BookDocument._index.delete(ignore=404)
-        # BookDocument.init()
-
-        # # Indexar todos los libros
-        # books = Book.objects.select_related('author', 'category').all()
-        # count = 0
-
-        # for book in books:
-        #     doc = BookDocument.from_django_model(book)
-        #     doc.save()
-        #     count += 1
-
-        # logger.info(f"Re-indexed {count} books in Elasticsearch")
-
-        # return Response({
-        #     'message': f'Successfully re-indexed {count} books',
-        #     'count': count
-        # })
+            'message': f'Re-indexación completada para {count} libros',
+            'count': count,
+            'status': 'success'
+        })
 
     except Exception as e:
         logger.error(f"Error rebuilding search index: {str(e)}")
         return Response(
-            {'error': 'Error al reconstruir índice', 'detail': str(e)},
+            {'error': f'Error al reconstruir el índice: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAdminUser])
@@ -1329,3 +1365,56 @@ class AnnotationDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         """Return only annotations for the current user"""
         return Annotation.objects.filter(user=self.request.user).select_related('book', 'highlight')
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def institutional_analytics(request):
+    """
+    Obtener estadísticas detalladas para una institución.
+    Solo accesible para administradores de la institución o staff.
+    """
+    user = request.user
+    institution = user.institution
+
+    if not institution and not user.is_staff:
+        return Response(
+            {'error': 'No perteneces a ninguna institución.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    # Si es staff pero no tiene institución, requerir institution_id en query params
+    if user.is_staff and not institution:
+        institution_id = request.GET.get('institution_id')
+        if not institution_id:
+            return Response({'error': 'institution_id es requerido para staff.'}, status=400)
+        from apps.institutions.models import Institution
+        institution = get_object_or_404(Institution, id=institution_id)
+
+    # Métricas de la institución
+    from django.contrib.auth import get_user_model
+    from django.db.models import Sum, Count
+    User = get_user_model()
+    
+    users_in_inst = User.objects.filter(institution=institution)
+    total_students = users_in_inst.count()
+    
+    # Lecturas de usuarios de esta institución
+    inst_readings = Reading.objects.filter(user__in=users_in_inst)
+    total_reading_time = inst_readings.aggregate(Sum('total_reading_time'))['total_reading_time__sum'] or 0
+    pages_read = inst_readings.aggregate(Sum('current_page'))['current_page__sum'] or 0
+    
+    # Top 5 libros en la institución
+    top_books = Book.objects.filter(
+        reading_sessions__user__in=users_in_inst
+    ).annotate(
+        read_count=Count('reading_sessions')
+    ).order_by('-read_count')[:5]
+    
+    top_books_data = BookListSerializer(top_books, many=True, context={'request': request}).data
+
+    return Response({
+        'institution_name': institution.name,
+        'total_students': total_students,
+        'total_reading_hours': round(total_reading_time / 3600, 1),
+        'total_pages_read': pages_read,
+        'top_books': top_books_data
+    })

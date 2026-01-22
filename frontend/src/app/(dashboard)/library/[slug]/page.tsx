@@ -25,6 +25,9 @@ import { ReviewForm } from "@/components/review-form"
 import { ReviewList } from "@/components/review-list"
 import { FavoriteButton } from "@/components/favorite-button"
 import { ReadingStatusSelector } from "@/components/reading-status-selector"
+import { BorrowBookButton } from "@/components/loans/borrow-book-button"
+import { contentApi, Book } from "@/services/contentApi"
+import { BookCard } from "@/components/book-card"
 import dynamic from "next/dynamic"
 
 // Dynamically import FlipbookPreview to avoid SSR issues with PDF.js DOMMatrix
@@ -77,6 +80,7 @@ export default function BookDetailPage() {
     const router = useRouter()
     const { slug } = params
     const [book, setBook] = useState<BookDetail | null>(null)
+    const [similarBooks, setSimilarBooks] = useState<Book[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
@@ -86,6 +90,17 @@ export default function BookDetailPage() {
                 setLoading(true)
                 const response = await api.get(`/content/books/${slug}/`)
                 setBook(response.data)
+
+                // Fetch similar books
+                try {
+                    const slugStr = Array.isArray(slug) ? slug[0] : slug;
+                    if (slugStr) {
+                        const similar = await contentApi.getSimilarBooks(slugStr)
+                        setSimilarBooks(similar)
+                    }
+                } catch (simError) {
+                    console.error("Failed to fetch similar books", simError)
+                }
             } catch (err) {
                 console.error("Failed to fetch book details", err)
                 setError("No se pudo cargar el libro")
@@ -196,6 +211,13 @@ export default function BookDetailPage() {
                                 className="w-full"
                             />
 
+                            {/* Borrow Book Button */}
+                            <BorrowBookButton
+                                bookId={book.id}
+                                bookTitle={book.title}
+                                className="w-full"
+                            />
+
                             {/* Share Button */}
                             <Button variant="outline" className="w-full" size="lg">
                                 <Share2 className="mr-2 h-4 w-4" />
@@ -293,11 +315,10 @@ export default function BookDetailPage() {
                                                     {[...Array(5)].map((_, i) => (
                                                         <Star
                                                             key={i}
-                                                            className={`h-5 w-5 ${
-                                                                i < Math.round(book.average_rating!)
-                                                                    ? "fill-amber-400 text-amber-400"
-                                                                    : "text-gray-300"
-                                                            }`}
+                                                            className={`h-5 w-5 ${i < Math.round(book.average_rating!)
+                                                                ? "fill-amber-400 text-amber-400"
+                                                                : "text-gray-300"
+                                                                }`}
                                                         />
                                                     ))}
                                                 </div>
@@ -394,11 +415,10 @@ export default function BookDetailPage() {
                                             {[...Array(5)].map((_, i) => (
                                                 <Star
                                                     key={i}
-                                                    className={`h-5 w-5 ${
-                                                        i < Math.round(book.average_rating!)
-                                                            ? "fill-amber-400 text-amber-400"
-                                                            : "text-gray-300"
-                                                    }`}
+                                                    className={`h-5 w-5 ${i < Math.round(book.average_rating!)
+                                                        ? "fill-amber-400 text-amber-400"
+                                                        : "text-gray-300"
+                                                        }`}
                                                 />
                                             ))}
                                         </div>
@@ -442,11 +462,10 @@ export default function BookDetailPage() {
                                         {[...Array(5)].map((_, i) => (
                                             <Star
                                                 key={i}
-                                                className={`h-5 w-5 ${
-                                                    i < book.user_review.rating
-                                                        ? "fill-amber-400 text-amber-400"
-                                                        : "text-gray-300"
-                                                }`}
+                                                className={`h-5 w-5 ${i < book.user_review.rating
+                                                    ? "fill-amber-400 text-amber-400"
+                                                    : "text-gray-300"
+                                                    }`}
                                             />
                                         ))}
                                     </div>
@@ -468,6 +487,21 @@ export default function BookDetailPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Similar Books Section */}
+            {similarBooks.length > 0 && (
+                <div className="mt-12">
+                    <Separator className="mb-8" />
+                    <h2 className="text-3xl font-bold mb-6">Libros Similares</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                        {similarBooks.map((book, i) => (
+                            <div key={book.id} className="h-full">
+                                <BookCard book={book} index={i} />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

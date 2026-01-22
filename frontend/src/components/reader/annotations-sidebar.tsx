@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { bookmarksApi, highlightsApi, annotationsApi } from '@/services/annotations-api';
 import type { Bookmark as BookmarkType, Highlight, Annotation } from '@/types/annotations';
 import { BookmarksList } from './bookmarks-list';
+import { HighlightsList } from './highlights-list';
+import { AnnotationsList } from './annotations-list';
 
 interface AnnotationsSidebarProps {
   bookId: number;
@@ -70,6 +72,24 @@ export function AnnotationsSidebar({
     }
   };
 
+  const handleDeleteHighlight = async (id: number) => {
+    try {
+      await highlightsApi.delete(id);
+      setHighlights(highlights.filter((h) => h.id !== id));
+    } catch (error) {
+      console.error('Error deleting highlight:', error);
+    }
+  };
+
+  const handleDeleteAnnotation = async (id: number) => {
+    try {
+      await annotationsApi.delete(id);
+      setAnnotations(annotations.filter((a) => a.id !== id));
+    } catch (error) {
+      console.error('Error deleting annotation:', error);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -125,28 +145,13 @@ export function AnnotationsSidebar({
           <TabsContent value="highlights" className="h-full m-0">
             <ScrollArea className="h-full">
               <div className="p-4">
-                {isLoading ? (
-                  <div className="text-center text-gray-500 dark:text-gray-400 py-8">
-                    Cargando resaltados...
-                  </div>
-                ) : highlights.length === 0 ? (
-                  <div className="text-center text-gray-500 dark:text-gray-400 py-8">
-                    <Highlighter className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>No hay resaltados aún</p>
-                    <p className="text-sm mt-1">
-                      Selecciona texto en el PDF para resaltar
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {highlights.length} resaltado{highlights.length !== 1 ? 's' : ''}
-                    </p>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">
-                      Funcionalidad de resaltados próximamente...
-                    </div>
-                  </div>
-                )}
+                <HighlightsList
+                  highlights={highlights}
+                  currentPage={currentPage}
+                  onNavigate={onNavigateToPage}
+                  onDelete={handleDeleteHighlight}
+                  isLoading={isLoading}
+                />
               </div>
             </ScrollArea>
           </TabsContent>
@@ -154,28 +159,13 @@ export function AnnotationsSidebar({
           <TabsContent value="annotations" className="h-full m-0">
             <ScrollArea className="h-full">
               <div className="p-4">
-                {isLoading ? (
-                  <div className="text-center text-gray-500 dark:text-gray-400 py-8">
-                    Cargando anotaciones...
-                  </div>
-                ) : annotations.length === 0 ? (
-                  <div className="text-center text-gray-500 dark:text-gray-400 py-8">
-                    <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>No hay anotaciones aún</p>
-                    <p className="text-sm mt-1">
-                      Crea anotaciones mientras lees
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {annotations.length} anotación{annotations.length !== 1 ? 'es' : ''}
-                    </p>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">
-                      Funcionalidad de anotaciones próximamente...
-                    </div>
-                  </div>
-                )}
+                <AnnotationsList
+                  annotations={annotations}
+                  currentPage={currentPage}
+                  onNavigate={onNavigateToPage}
+                  onDelete={handleDeleteAnnotation}
+                  isLoading={isLoading}
+                />
               </div>
             </ScrollArea>
           </TabsContent>

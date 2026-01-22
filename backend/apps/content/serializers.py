@@ -52,6 +52,7 @@ class BookDetailSerializer(serializers.ModelSerializer):
     user_has_favorited = serializers.SerializerMethodField()
     user_review = serializers.SerializerMethodField()
     user_reading_status = serializers.SerializerMethodField()
+    similar_books = serializers.SerializerMethodField()
 
     class Meta:
         model = Book
@@ -60,7 +61,7 @@ class BookDetailSerializer(serializers.ModelSerializer):
             'category', 'category_detail', 'cover_image', 'cover_image_upload',
             'file', 'file_upload', 'publication_date',
             'isbn', 'is_premium', 'average_rating', 'review_count', 'favorite_count',
-            'user_has_favorited', 'user_review', 'user_reading_status'
+            'user_has_favorited', 'user_review', 'user_reading_status', 'similar_books'
         )
         read_only_fields = ('slug',)
         extra_kwargs = {
@@ -163,6 +164,20 @@ class BookDetailSerializer(serializers.ModelSerializer):
                 return ReadingHistorySerializer(history, context=self.context).data
         return None
 
+    def get_similar_books(self, obj):
+        """
+        Logic for 'Similar Books' recommendations:
+        - Books from the same category (excl. actual)
+        - Books from the same author (excl. actual)
+        - Limit to 5 books
+        """
+        from django.db.models import Q
+        similar = Book.objects.select_related('author', 'category').filter(
+            Q(category=obj.category) | Q(author=obj.author)
+        ).exclude(id=obj.id)[:5]
+        
+        return BookListSerializer(similar, many=True, context=self.context).data
+
     def to_internal_value(self, data):
         """Override to handle empty string for publication_date before validation"""
         # Convert empty string to None for publication_date before DRF tries to parse it
@@ -231,12 +246,9 @@ class BookDetailSerializer(serializers.ModelSerializer):
 class ReviewUserSerializer(serializers.ModelSerializer):
     """Minimal user info for reviews"""
     class Meta:
-        model = serializers.SerializerMethodField()  # Will use AUTH_USER_MODEL
-        fields = ('id', 'username', 'avatar')
-
-    def get_model(self):
         from django.contrib.auth import get_user_model
-        return get_user_model()
+        model = get_user_model()
+        fields = ('id', 'username', 'avatar')
 
 
 class ReviewSerializer(serializers.ModelSerializer):

@@ -1,5 +1,9 @@
-from django.contrib import admin
-from .models import Category, Author, Book, Bookmark, Highlight, Annotation
+from django.contrib import admin, messages
+from django.shortcuts import render, redirect
+from django.urls import path
+from django import forms
+from .models import Category, Author, Book, Bookmark, Highlight, Annotation, Review
+from .utils.import_books import import_books_from_csv
 
 
 @admin.register(Category)
@@ -25,6 +29,32 @@ class BookAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('title',)}
     ordering = ('-created_at',)
     date_hierarchy = 'created_at'
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('import-csv/', self.admin_site.admin_view(self.import_csv), name='import-csv'),
+        ]
+        return custom_urls + urls
+
+    def import_csv(self, request):
+        if request.method == "POST":
+            csv_file = request.FILES.get("csv_file")
+            if not csv_file or not csv_file.name.endswith('.csv'):
+                self.message_user(request, "Error: Debe subir un archivo CSV válido.", level=messages.ERROR)
+                return redirect("..")
+            
+            count, errors = import_books_from_csv(csv_file)
+            if errors:
+                for error in errors:
+                    self.message_user(request, error, level=messages.WARNING)
+            
+            self.message_user(request, f"Éxito: Se han importado {count} libros correctamente.", level=messages.SUCCESS)
+            return redirect("..")
+        
+        form = CsvImportForm()
+        payload = {"form": form}
+        return render(request, "admin/csv_form.html", payload)
 
     fieldsets = (
         ('Basic Information', {
@@ -122,3 +152,25 @@ class AnnotationAdmin(admin.ModelAdmin):
             return obj.content[:50] + '...'
         return obj.content
     content_preview.short_description = 'Content Preview'
+
+
+class CsvImportForm(forms.Form):
+    csv_file = forms.FileField()
+
+
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = ('book', 'user', 'rating', 'is_verified_reader', 'created_at')
+    list_filter = ('rating', 'is_verified_reader', 'created_at')
+    search_fields = ('book__title', 'user__username', 'comment')
+    actions = ['approve_reviews', 'disapprove_reviews']
+
+    def approve_reviews(self, request, queryset):
+        queryset.update(is_verified_reader=True)
+        self.message_user(request, "Reseñas marcadas como verificadas.")
+    approve_reviews.short_description = "Marcar como verificado"
+
+    def disapprove_reviews(self, request, queryset):
+        queryset.update(is_verified_reader=False)
+        self.message_user(request, "Reseñas marcadas como no verificadas.")
+    disapprove_reviews.short_description = "Quitar verificación"

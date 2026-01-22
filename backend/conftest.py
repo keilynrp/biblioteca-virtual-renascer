@@ -40,6 +40,11 @@ def create_user(db):
     def make_user(**kwargs):
         if 'email' not in kwargs:
             kwargs['email'] = 'testuser@example.com'
+        if 'username' not in kwargs:
+            kwargs['username'] = kwargs['email'].split('@')[0]
+        if 'user_type' not in kwargs:
+            kwargs['user_type'] = 'student'
+            
         if 'password' not in kwargs:
             password = 'TestPass123!'
         else:

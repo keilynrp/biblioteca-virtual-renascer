@@ -5,6 +5,7 @@ import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  typedRoutes: true,
   // Experimental features for better performance
   experimental: {
     // Optimize package imports for faster compilation
@@ -33,7 +34,7 @@ const nextConfig: NextConfig = {
     // Optimize CSS chunking
     optimizeCss: true,
     // Faster TypeScript processing
-    typedRoutes: false,
+
   },
 
   // Optimize compilation
@@ -86,7 +87,16 @@ const nextConfig: NextConfig = {
 // Only enable Sentry in production to speed up development
 const shouldUseSentry = process.env.NODE_ENV === 'production';
 
-export default shouldUseSentry ? withSentryConfig(nextConfig, {
+const withPWA = require('@ducanh2912/next-pwa').default({
+  dest: 'public',
+  disable: process.env.NODE_ENV === 'development',
+  register: true,
+  skipWaiting: true,
+});
+
+const configWithPWA = withPWA(nextConfig);
+
+export default shouldUseSentry ? withSentryConfig(configWithPWA, {
   // For all available options, see:
   // https://github.com/getsentry/sentry-webpack-plugin#options
 
@@ -124,4 +134,5 @@ export default shouldUseSentry ? withSentryConfig(nextConfig, {
   // https://docs.sentry.io/product/crons/
   // https://vercel.com/docs/cron-jobs
   automaticVercelMonitors: true,
-}) : nextConfig;
+}) : configWithPWA;
+

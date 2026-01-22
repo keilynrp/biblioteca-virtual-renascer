@@ -54,17 +54,14 @@ class MeilisearchClient:
     def get_index(cls, index_name: str = 'books'):
         """
         Get or create Meilisearch index.
-
-        Args:
-            index_name: Name of the index
-
-        Returns:
-            meilisearch.Index: Configured index
         """
+        id_mock = id(cls.get_client())
+        # print(f"DEBUG: get_index called. Client ID: {id_mock}")
         client = cls.get_client()
 
         try:
             cls._index = client.get_index(index_name)
+            # print(f"DEBUG: returning index: {cls._index}")
         except meilisearch.errors.MeilisearchApiError:
             # Index doesn't exist, create it
             task = client.create_index(index_name, {'primaryKey': 'id'})

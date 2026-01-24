@@ -5,7 +5,7 @@ import { Loader2 } from 'lucide-react';
 
 // Dynamically import PDF viewer to avoid SSR issues with DOMMatrix
 const PDFViewerClient = dynamic(
-  () => import('./pdf-viewer-client'),
+  () => import('./pdf-viewer-native').then(mod => ({ default: mod.PDFViewerNative })),
   {
     ssr: false,
     loading: () => (

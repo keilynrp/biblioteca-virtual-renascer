@@ -88,16 +88,20 @@ export default function BookDetailPage() {
         const fetchBook = async () => {
             try {
                 setLoading(true)
-                const response = await api.get(`/content/books/${slug}/`)
+                // Normalize slug - can be string or string[] in Next.js App Router
+                const slugStr = Array.isArray(slug) ? slug[0] : slug
+                if (!slugStr) {
+                    setError("Slug de libro no válido")
+                    return
+                }
+
+                const response = await api.get(`/content/books/${slugStr}/`)
                 setBook(response.data)
 
                 // Fetch similar books
                 try {
-                    const slugStr = Array.isArray(slug) ? slug[0] : slug;
-                    if (slugStr) {
-                        const similar = await contentApi.getSimilarBooks(slugStr)
-                        setSimilarBooks(similar)
-                    }
+                    const similar = await contentApi.getSimilarBooks(slugStr)
+                    setSimilarBooks(similar)
                 } catch (simError) {
                     console.error("Failed to fetch similar books", simError)
                 }

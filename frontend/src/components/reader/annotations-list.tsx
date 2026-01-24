@@ -68,9 +68,9 @@ export function AnnotationsList({
                                             Página {annotation.page_number}
                                         </span>
                                         {annotation.is_private ? (
-                                            <Lock className="w-3 h-3 text-gray-400" title="Privada" />
+                                            <span title="Privada"><Lock className="w-3 h-3 text-gray-400" /></span>
                                         ) : (
-                                            <Globe className="w-3 h-3 text-primary/60" title="Pública" />
+                                            <span title="Pública"><Globe className="w-3 h-3 text-primary/60" /></span>
                                         )}
                                     </div>
 

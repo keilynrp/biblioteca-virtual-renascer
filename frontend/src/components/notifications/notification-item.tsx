@@ -6,9 +6,9 @@ import { Bell, BookOpen, Star, Package, Megaphone, Sparkles } from 'lucide-react
 import { cn } from '@/lib/utils'
 import type { Notification } from '@/types/notification'
 
-interface NotificationItemProps {
+export interface NotificationItemProps {
     notification: Notification
-    onChange: (id: number) => void
+    onMarkAsRead: (id: number) => void
 }
 
 export function NotificationItem({ notification, onMarkAsRead }: NotificationItemProps) {

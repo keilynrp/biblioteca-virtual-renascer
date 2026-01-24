@@ -31,29 +31,6 @@ export function useOfflineSync() {
         localStorage.setItem('pendingSyncs', JSON.stringify(pendingSyncs))
     }, [pendingSyncs])
 
-    // Monitor connectivity
-    useEffect(() => {
-        const handleOnline = () => {
-            setIsOnline(true)
-            if (pendingSyncs.length > 0) {
-                syncData()
-            }
-        }
-        const handleOffline = () => setIsOnline(false)
-
-        if (typeof window !== 'undefined') {
-            setIsOnline(navigator.onLine)
-        }
-
-        window.addEventListener('online', handleOnline)
-        window.addEventListener('offline', handleOffline)
-
-        return () => {
-            window.removeEventListener('online', handleOnline)
-            window.removeEventListener('offline', handleOffline)
-        }
-    }, [pendingSyncs])
-
     const syncData = async () => {
         if (pendingSyncs.length === 0) return
 
@@ -76,6 +53,30 @@ export function useOfflineSync() {
             })
         }, 2000)
     }
+
+    // Monitor connectivity
+    useEffect(() => {
+        const handleOnline = () => {
+            setIsOnline(true)
+            if (pendingSyncs.length > 0) {
+                syncData()
+            }
+        }
+        const handleOffline = () => setIsOnline(false)
+
+        if (typeof window !== 'undefined') {
+            setIsOnline(navigator.onLine)
+        }
+
+        window.addEventListener('online', handleOnline)
+        window.addEventListener('offline', handleOffline)
+
+        return () => {
+            window.removeEventListener('online', handleOnline)
+            window.removeEventListener('offline', handleOffline)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pendingSyncs])
 
     const saveOffline = (type: SyncItem['type'], action: SyncItem['action'], data: any) => {
         const newItem: SyncItem = {

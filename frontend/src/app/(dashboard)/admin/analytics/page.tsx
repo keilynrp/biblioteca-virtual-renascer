@@ -54,7 +54,6 @@ export default function InstitutionalAnalyticsPage() {
             <PageHeader
                 title="Analíticas Institucionales"
                 description="Métricas de lectura y participación de tu institución"
-                icon={<TrendingUp className="h-8 w-8 text-primary" />}
             />
 
             <InstitutionalAnalyticsPanel />

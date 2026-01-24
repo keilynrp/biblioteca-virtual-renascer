@@ -56,15 +56,6 @@ export default function ReaderPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!isAuthenticated || !accessToken) {
-      router.push('/login');
-      return;
-    }
-
-    initializeReading();
-  }, [bookId, accessToken, isAuthenticated, router]);
-
   const initializeReading = async () => {
     try {
       setLoading(true);
@@ -92,6 +83,16 @@ export default function ReaderPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!isAuthenticated || !accessToken) {
+      router.push('/login');
+      return;
+    }
+
+    initializeReading();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookId, accessToken, isAuthenticated, router]);
 
   const handleProgressUpdate = async (progress: {
     currentPage: number;

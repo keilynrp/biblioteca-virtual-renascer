@@ -57,28 +57,6 @@ export function ThemeSwitcher() {
   const [isOpen, setIsOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
 
-  // Marca el componente como montado (previene errores de hidratación)
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
-
-  // Load saved preferences on mount (solo en el cliente)
-  useEffect(() => {
-    if (!isMounted) return
-
-    const savedTheme = localStorage.getItem('app-theme') || ''
-    const savedDarkMode = localStorage.getItem('app-dark-mode') === 'true'
-
-    setCurrentTheme(savedTheme)
-    setDarkMode(savedDarkMode)
-
-    // Apply saved preferences
-    applyTheme(savedTheme, false)
-    if (savedDarkMode) {
-      document.documentElement.classList.add('dark')
-    }
-  }, [isMounted])
-
   const applyTheme = (themeClass: string, save = true) => {
     // Remove all theme classes
     themes.forEach(t => {
@@ -99,6 +77,29 @@ export function ThemeSwitcher() {
       localStorage.setItem('app-theme', themeClass)
     }
   }
+
+  // Marca el componente como montado (previene errores de hidratación)
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  // Load saved preferences on mount (solo en el cliente)
+  useEffect(() => {
+    if (!isMounted) return
+
+    const savedTheme = localStorage.getItem('app-theme') || ''
+    const savedDarkMode = localStorage.getItem('app-dark-mode') === 'true'
+
+    setCurrentTheme(savedTheme)
+    setDarkMode(savedDarkMode)
+
+    // Apply saved preferences
+    applyTheme(savedTheme, false)
+    if (savedDarkMode) {
+      document.documentElement.classList.add('dark')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMounted])
 
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode

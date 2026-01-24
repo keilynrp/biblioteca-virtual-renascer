@@ -61,6 +61,24 @@ export function useNotifications() {
         }
     }, [])
 
+    // Delete a notification
+    const deleteNotification = useCallback(async (id: number) => {
+        try {
+            await notificationsApi.deleteNotification(id)
+
+            // Update local state
+            const notificationToDelete = notifications.find(n => n.id === id)
+            setNotifications(prev => prev.filter(n => n.id !== id))
+
+            // Update unread count if the deleted notification was unread
+            if (notificationToDelete && !notificationToDelete.is_read) {
+                setUnreadCount(prev => Math.max(0, prev - 1))
+            }
+        } catch (error) {
+            console.error('Error deleting notification:', error)
+        }
+    }, [notifications])
+
     // Initial fetch
     useEffect(() => {
         fetchNotifications()
@@ -82,6 +100,7 @@ export function useNotifications() {
         isLoading,
         markAsRead,
         markAllAsRead,
+        deleteNotification,
         refresh: fetchNotifications
     }
 }

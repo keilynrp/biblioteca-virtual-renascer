@@ -137,7 +137,7 @@ cp .env.example .env
 # Usar el script de inicio rápido
 ./scripts/docker/start_containers.sh  # Linux/Mac/WSL
 # o
-scripts\docker\start_containers.bat   # Windows
+scripts\docker\start_containers.ps1   # Windows
 
 # La aplicación estará disponible en:
 # Frontend: http://localhost:3000

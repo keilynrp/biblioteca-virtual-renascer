@@ -27,7 +27,7 @@ import { useRouter } from 'next/navigation'
 const formSchema = z.object({
     name: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
     description: z.string().min(10, "La descripción debe tener al menos 10 caracteres"),
-    is_private: z.boolean().default(false),
+    is_private: z.boolean(),
 })
 
 export function CreateClubModal() {
@@ -49,10 +49,7 @@ export function CreateClubModal() {
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsLoading(true)
         try {
-            await clubsApi.createClub({
-                ...values,
-                create_date: new Date() // Mock if needed or handled by backend
-            })
+            await clubsApi.createClub(values)
             toast({
                 title: "Club creado",
                 description: `El club "${values.name}" ha sido creado exitosamente.`,

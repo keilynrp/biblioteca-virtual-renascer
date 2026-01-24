@@ -100,26 +100,83 @@
 }
 
 @theme inline {
+  /* Primary Colors */
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
   --color-primary-dark: hsl(var(--primary-dark));
+  --color-primary-darker: hsl(var(--primary-darker));
   --color-primary-light: hsl(var(--primary-light));
+  --color-primary-lighter: hsl(var(--primary-lighter));
+  --color-primary-soft: hsl(var(--primary-soft));
+
+  /* Background & Foreground */
   --color-background: hsl(var(--background));
+  --color-background-secondary: hsl(var(--background-secondary));
   --color-foreground: hsl(var(--foreground));
+  --color-foreground-muted: hsl(var(--foreground-muted));
+
+  /* Card & Surfaces */
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
+  --color-card-hover: hsl(var(--card-hover));
+
+  /* Muted */
   --color-muted: hsl(var(--muted));
+  --color-muted-dark: hsl(var(--muted-dark));
   --color-muted-foreground: hsl(var(--muted-foreground));
+
+  /* Borders & Inputs */
   --color-border: hsl(var(--border));
+  --color-border-strong: hsl(var(--border-strong));
   --color-input: hsl(var(--input));
+  --color-input-hover: hsl(var(--input-hover));
   --color-ring: hsl(var(--ring));
+
+  /* Semantic Colors */
   --color-success: hsl(var(--success));
+  --color-success-light: hsl(var(--success-light));
+  --color-success-dark: hsl(var(--success-dark));
   --color-warning: hsl(var(--warning));
+  --color-warning-light: hsl(var(--warning-light));
+  --color-warning-dark: hsl(var(--warning-dark));
   --color-danger: hsl(var(--danger));
+  --color-danger-light: hsl(var(--danger-light));
+  --color-danger-dark: hsl(var(--danger-dark));
+  --color-info: hsl(var(--info));
+  --color-info-light: hsl(var(--info-light));
+  --color-info-dark: hsl(var(--info-dark));
+
+  /* Secondary & Accent */
   --color-secondary: hsl(var(--secondary));
   --color-secondary-foreground: hsl(var(--secondary-foreground));
   --color-accent: hsl(var(--accent));
   --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent-hover: hsl(var(--accent-hover));
+
+  /* Destructive */
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  /* Popover */
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  /* Sidebar */
+  --color-sidebar: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-hover: hsl(var(--sidebar-hover));
+  --color-sidebar-active: hsl(var(--sidebar-active));
+
+  /* Chart Colors */
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+  --color-chart-6: hsl(var(--chart-6));
+
+  /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
@@ -199,7 +256,7 @@
 
   /* Glass Effect - For glassmorphism in dark mode */
   --glass-background: 222 47% 14% / 0.7;
-  --glass-border: 255 255% 255% / 0.1;
+  --glass-border: 0 0% 100% / 0.1;
 }
 
 /* Alternative Theme: Ocean Blue */
@@ -285,11 +342,22 @@ body {
   background: hsl(var(--muted-foreground) / 0.5);
 }
 
-/* Smooth Transitions */
-* {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+/* Smooth Transitions - Applied to interactive elements only for better performance */
+*:not(img, video, canvas, svg, path) {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
+}
+
+/* Disable transitions for reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Book Card Shadows - OpenLibrary Style */
@@ -433,24 +501,6 @@ body {
   );
 }
 
-/* Animated Gradients */
-@keyframes gradientShift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-.gradient-animated {
-  background: linear-gradient(
-    -45deg,
-    hsl(var(--primary)),
-    hsl(var(--primary-light)),
-    hsl(var(--primary-dark)),
-    hsl(var(--primary))
-  );
-  background-size: 400% 400%;
-  animation: gradientShift 15s ease infinite;
-}
-
 /* Glass Morphism Effects */
 .glass {
   background: hsl(var(--glass-background));
@@ -512,58 +562,11 @@ body {
     radial-gradient(at 0% 50%, hsl(var(--primary-dark) / 0.12) 0px, transparent 50%);
 }
 
-.mesh-gradient-2 {
-  background-color: hsl(var(--background));
-  background-image:
-    radial-gradient(at 27% 37%, hsl(var(--chart-1) / 0.08) 0px, transparent 50%),
-    radial-gradient(at 97% 21%, hsl(var(--chart-2) / 0.08) 0px, transparent 50%),
-    radial-gradient(at 52% 99%, hsl(var(--chart-3) / 0.08) 0px, transparent 50%),
-    radial-gradient(at 10% 29%, hsl(var(--chart-4) / 0.08) 0px, transparent 50%),
-    radial-gradient(at 84% 72%, hsl(var(--chart-5) / 0.08) 0px, transparent 50%);
-}
-
-/* Holographic Effect */
-@keyframes holographic {
-  0% {
-    background-position: 0% 50%;
-  }
-  100% {
-    background-position: 200% 50%;
-  }
-}
-
-.holographic {
-  background: linear-gradient(
-    124deg,
-    hsl(var(--primary)),
-    hsl(var(--chart-4)),
-    hsl(var(--chart-2)),
-    hsl(var(--chart-3)),
-    hsl(var(--chart-5))
-  );
-  background-size: 1800% 1800%;
-  animation: holographic 10s ease infinite;
-}
-
 /* Text Gradients */
 .text-gradient-primary {
   background: linear-gradient(135deg,
     hsl(var(--primary-light)),
     hsl(var(--primary-dark))
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.text-gradient-rainbow {
-  background: linear-gradient(
-    90deg,
-    hsl(var(--chart-1)),
-    hsl(var(--chart-2)),
-    hsl(var(--chart-3)),
-    hsl(var(--chart-4)),
-    hsl(var(--chart-5))
   );
   -webkit-background-clip: text;
   background-clip: text;

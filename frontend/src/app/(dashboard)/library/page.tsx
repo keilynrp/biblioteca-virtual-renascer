@@ -125,7 +125,7 @@ export default function LibraryPage() {
     }
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="px-6 py-5 space-y-6">
             <PageHeader
                 title="Biblioteca"
                 description="Explora nuestra vasta colección de conocimiento"

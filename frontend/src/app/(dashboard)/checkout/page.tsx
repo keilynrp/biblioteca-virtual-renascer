@@ -162,7 +162,7 @@ function CheckoutPageContent() {
     }
 
     return (
-        <div className="flex justify-center items-center min-h-[80vh]">
+        <div className="flex justify-center items-center min-h-[80vh] py-5">
             <Card className="w-full max-w-md">
                 <CardHeader>
                     <CardTitle className="flex items-center space-x-2">

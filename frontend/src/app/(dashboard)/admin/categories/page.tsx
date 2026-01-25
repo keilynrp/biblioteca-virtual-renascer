@@ -170,7 +170,7 @@ export default function CategoriesAdminPage() {
     }
 
     return (
-        <div className="container mx-auto py-8 px-4 max-w-7xl">
+        <div className="container mx-auto py-5 px-4 max-w-7xl">
             {/* Header */}
             <div className="flex flex-col gap-4 mb-8">
                 <div>

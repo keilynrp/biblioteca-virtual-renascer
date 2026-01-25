@@ -51,7 +51,7 @@ export default function AdminPage() {
     }
 
     return (
-        <div className="p-6 space-y-8">
+        <div className="px-6 py-5 space-y-8">
             <PageHeader
                 title="Panel de Administración"
                 description="Gestiona la importación de libros y configura la biblioteca"

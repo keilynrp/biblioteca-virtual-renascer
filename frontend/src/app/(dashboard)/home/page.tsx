@@ -173,7 +173,7 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="p-6 space-y-8">
+        <div className="px-6 py-5 space-y-8">
             <PageHeader
                 title="Dashboard"
                 description="Bienvenido a tu biblioteca virtual"

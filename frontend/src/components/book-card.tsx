@@ -40,7 +40,7 @@ export function BookCard({ book, index = 0 }: BookCardProps) {
             }}
         >
             {/* Book Cover - Enhanced with 3D Effect */}
-            <Link href={`/library/${book.slug}`} className="relative block mb-3">
+            <Link href={`/library/${book.slug}`} className="relative block mb-3 cursor-pointer">
                 <div className="relative w-full aspect-[2/3] bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-2 group-hover:scale-[1.02] transform perspective-1000"
                     style={{
                         transform: isHovered ? 'rotateY(-5deg) rotateX(2deg)' : 'rotateY(0deg) rotateX(0deg)',
@@ -113,7 +113,7 @@ export function BookCard({ book, index = 0 }: BookCardProps) {
             {/* Book Info - Enhanced */}
             <div className="flex-grow flex flex-col space-y-2">
                 {/* Title with Better Typography */}
-                <Link href={`/library/${book.slug}`}>
+                <Link href={`/library/${book.slug}`} className="cursor-pointer">
                     <h3 className="text-sm font-bold text-foreground line-clamp-2 leading-tight group-hover:text-primary transition-colors duration-300">
                         {book.title}
                     </h3>
@@ -122,7 +122,7 @@ export function BookCard({ book, index = 0 }: BookCardProps) {
                 {/* Author with Icon */}
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <span className="w-1 h-1 rounded-full bg-muted-foreground/60" />
-                    <span className="hover:text-primary transition-colors cursor-pointer">{book.author?.name}</span>
+                    <span className="hover:text-primary transition-colors cursor-pointer" role="button" tabIndex={0}>{book.author?.name}</span>
                 </p>
 
                 {/* Category Badge - Enhanced */}

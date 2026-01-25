@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
@@ -32,6 +31,8 @@ import Link from "next/link"
 import { useAuthStore } from "@/store/authStore"
 import { AvatarUpload } from "@/components/ui/avatar-upload"
 import { toast } from "@/hooks/use-toast"
+import { Camera, Mail, Phone, Building2, Edit2, Lock, CreditCard, User2 } from "lucide-react"
+import Image from "next/image"
 
 const profileSchema = z.object({
     username: z.string().min(2),
@@ -51,6 +52,7 @@ export default function ProfilePage() {
     const [institutions, setInstitutions] = useState<Institution[]>([])
     const [loading, setLoading] = useState(false)
     const [avatarFile, setAvatarFile] = useState<File | null>(null)
+    const [showEditModal, setShowEditModal] = useState(false)
 
     const form = useForm<z.infer<typeof profileSchema>>({
         resolver: zodResolver(profileSchema),
@@ -85,10 +87,9 @@ export default function ProfilePage() {
                 })
             } catch (error) {
                 console.error("Failed to load profile data", error)
-                // Set empty array as fallback
                 setInstitutions([])
                 toast({
-                    variant: "error",
+                    variant: "destructive",
                     title: "Error",
                     description: "Failed to load profile data. Please refresh the page."
                 })
@@ -122,6 +123,8 @@ export default function ProfilePage() {
                 title: "Success",
                 description: "Profile updated successfully!",
             })
+            setShowEditModal(false)
+            setAvatarFile(null)
         } catch (error) {
             console.error("Failed to update profile", error)
             toast({
@@ -134,29 +137,220 @@ export default function ProfilePage() {
         }
     }
 
-    if (!user) return <div>Loading...</div>
+    if (!user) return (
+        <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+                <div className="h-12 w-12 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading profile...</p>
+            </div>
+        </div>
+    )
+
+    const userInstitution = institutions.find(inst => inst.id === user.institution_id)
 
     return (
-        <div className="space-y-6">
-            <h2 className="text-3xl font-bold tracking-tight">Profile</h2>
+        <div className="px-10 py-5 space-y-6">
+            {/* Page Header */}
+            <div>
+                <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">Profile</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                    Manage your account settings and preferences
+                </p>
+            </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Personal Information</CardTitle>
-                        <CardDescription>Update your profile details</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="mb-6">
-                            <AvatarUpload
-                                username={user.username}
-                                currentAvatar={user.avatar}
-                                onFileSelect={setAvatarFile}
-                            />
+            {/* Profile Header Card */}
+            <Card className="border-border/50">
+                <CardContent className="p-6 lg:p-8">
+                    <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
+                        {/* Avatar and Info */}
+                        <div className="flex flex-col sm:flex-row items-center gap-6 w-full xl:w-auto">
+                            {/* Avatar */}
+                            <div className="relative group">
+                                <div className="h-24 w-24 rounded-full border-2 border-border overflow-hidden bg-muted">
+                                    {user.avatar ? (
+                                        <Image
+                                            src={user.avatar}
+                                            alt={user.username}
+                                            width={96}
+                                            height={96}
+                                            className="h-full w-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="h-full w-full flex items-center justify-center bg-primary/10">
+                                            <User2 className="h-12 w-12 text-primary" />
+                                        </div>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={() => setShowEditModal(true)}
+                                    className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors"
+                                    aria-label="Change avatar"
+                                >
+                                    <Camera className="h-4 w-4" />
+                                </button>
+                            </div>
+
+                            {/* User Info */}
+                            <div className="text-center sm:text-left">
+                                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
+                                    {user.username}
+                                </h3>
+                                <p className="text-sm text-muted-foreground mb-3">
+                                    {user.email}
+                                </p>
+                                {user.bio && (
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md">
+                                        {user.bio}
+                                    </p>
+                                )}
+                            </div>
                         </div>
 
-                        <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        {/* Action Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
+                            <Button
+                                variant="outline"
+                                onClick={() => setShowEditModal(true)}
+                                className="w-full sm:w-auto"
+                            >
+                                <Edit2 className="h-4 w-4 mr-2" />
+                                Edit Profile
+                            </Button>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Content Grid */}
+            <div className="grid gap-6 lg:grid-cols-2">
+                {/* Personal Information Card */}
+                <Card className="border-border/50">
+                    <CardHeader>
+                        <div className="flex items-center gap-2">
+                            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                <User2 className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                                <CardTitle>Personal Information</CardTitle>
+                                <CardDescription>Your account details</CardDescription>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-3">
+                            <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                                <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-muted-foreground">Email</p>
+                                    <p className="text-sm text-gray-900 dark:text-white break-all">
+                                        {user.email}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {user.phone && (
+                                <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                                    <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-muted-foreground">Phone</p>
+                                        <p className="text-sm text-gray-900 dark:text-white">
+                                            {user.phone}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {userInstitution && (
+                                <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                                    <Building2 className="h-5 w-5 text-muted-foreground mt-0.5" />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-muted-foreground">Institution</p>
+                                        <p className="text-sm text-gray-900 dark:text-white">
+                                            {userInstitution.name}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {!user.phone && !userInstitution && (
+                                <div className="text-center py-6">
+                                    <p className="text-sm text-muted-foreground mb-3">
+                                        Complete your profile information
+                                    </p>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setShowEditModal(true)}
+                                    >
+                                        <Edit2 className="h-4 w-4 mr-2" />
+                                        Add Details
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Security Card */}
+                <Card className="border-border/50">
+                    <CardHeader>
+                        <div className="flex items-center gap-2">
+                            <div className="h-10 w-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                                <Lock className="h-5 w-5 text-orange-500" />
+                            </div>
+                            <div>
+                                <CardTitle>Security</CardTitle>
+                                <CardDescription>Password and account security</CardDescription>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <ChangePasswordForm />
+                    </CardContent>
+                </Card>
+
+                {/* Subscription Card */}
+                <Card className="border-border/50 lg:col-span-2">
+                    <CardHeader>
+                        <div className="flex items-center gap-2">
+                            <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+                                <CreditCard className="h-5 w-5 text-green-500" />
+                            </div>
+                            <div>
+                                <CardTitle>Subscription</CardTitle>
+                                <CardDescription>Manage your subscription plan</CardDescription>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <SubscriptionInfo />
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Edit Profile Modal */}
+            <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>Edit Profile</DialogTitle>
+                        <DialogDescription>
+                            Update your personal information and profile picture
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                            {/* Avatar Upload Section */}
+                            <div className="flex justify-center pb-4 border-b">
+                                <AvatarUpload
+                                    username={user.username}
+                                    currentAvatar={user.avatar}
+                                    onFileSelect={setAvatarFile}
+                                />
+                            </div>
+
+                            {/* Form Fields */}
+                            <div className="grid gap-4 sm:grid-cols-2">
                                 <FormField
                                     control={form.control}
                                     name="username"
@@ -166,7 +360,9 @@ export default function ProfilePage() {
                                             <FormControl>
                                                 <Input {...field} disabled />
                                             </FormControl>
-                                            <FormDescription>Username cannot be changed.</FormDescription>
+                                            <FormDescription className="text-xs">
+                                                Username cannot be changed
+                                            </FormDescription>
                                         </FormItem>
                                     )}
                                 />
@@ -179,23 +375,34 @@ export default function ProfilePage() {
                                             <FormControl>
                                                 <Input {...field} disabled />
                                             </FormControl>
-                                            <FormDescription>Email cannot be changed.</FormDescription>
+                                            <FormDescription className="text-xs">
+                                                Email cannot be changed
+                                            </FormDescription>
                                         </FormItem>
                                     )}
                                 />
-                                <FormField
-                                    control={form.control}
-                                    name="bio"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Bio</FormLabel>
-                                            <FormControl>
-                                                <Textarea placeholder="Tell us about yourself" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                            </div>
+
+                            <FormField
+                                control={form.control}
+                                name="bio"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Bio</FormLabel>
+                                        <FormControl>
+                                            <Textarea
+                                                placeholder="Tell us about yourself"
+                                                className="resize-none"
+                                                rows={3}
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <div className="grid gap-4 sm:grid-cols-2">
                                 <FormField
                                     control={form.control}
                                     name="phone"
@@ -215,7 +422,11 @@ export default function ProfilePage() {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Institution</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                            <Select
+                                                onValueChange={field.onChange}
+                                                defaultValue={field.value}
+                                                value={field.value}
+                                            >
                                                 <FormControl>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="Select an institution" />
@@ -239,36 +450,28 @@ export default function ProfilePage() {
                                         </FormItem>
                                     )}
                                 />
+                            </div>
+
+                            <DialogFooter>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => {
+                                        setShowEditModal(false)
+                                        setAvatarFile(null)
+                                    }}
+                                    disabled={loading}
+                                >
+                                    Cancel
+                                </Button>
                                 <Button type="submit" disabled={loading}>
                                     {loading ? "Saving..." : "Save Changes"}
                                 </Button>
-                            </form>
-                        </Form>
-                    </CardContent>
-                </Card>
-
-                <div className="space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Change Password</CardTitle>
-                            <CardDescription>Update your account password</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <ChangePasswordForm />
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Subscription</CardTitle>
-                            <CardDescription>Your current plan</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <SubscriptionInfo />
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
+                            </DialogFooter>
+                        </form>
+                    </Form>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
@@ -309,7 +512,7 @@ function ChangePasswordForm() {
             console.error("Failed to change password", error)
             toast({
                 title: "Error",
-                description: "Failed to change password. Please check your current password.",
+                description: error.response?.data?.detail || "Failed to change password. Please check your current password.",
                 variant: "destructive",
             })
         } finally {
@@ -327,39 +530,41 @@ function ChangePasswordForm() {
                         <FormItem>
                             <FormLabel>Current Password</FormLabel>
                             <FormControl>
-                                <Input type="password" {...field} />
+                                <Input type="password" placeholder="••••••••" {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
                     )}
                 />
-                <FormField
-                    control={form.control}
-                    name="new_password"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>New Password</FormLabel>
-                            <FormControl>
-                                <Input type="password" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="confirm_password"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Confirm New Password</FormLabel>
-                            <FormControl>
-                                <Input type="password" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <Button type="submit" disabled={loading}>
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <FormField
+                        control={form.control}
+                        name="new_password"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>New Password</FormLabel>
+                                <FormControl>
+                                    <Input type="password" placeholder="••••••••" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="confirm_password"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Confirm New Password</FormLabel>
+                                <FormControl>
+                                    <Input type="password" placeholder="••••••••" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
+                <Button type="submit" disabled={loading} className="w-full sm:w-auto">
                     {loading ? "Updating..." : "Update Password"}
                 </Button>
             </form>
@@ -382,7 +587,7 @@ function SubscriptionInfo() {
             const response = await api.get('/subscriptions/my-subscription/')
             setSubscription(response.data)
         } catch (error) {
-            // Ignore 404
+            // Ignore 404 - user has no subscription
         } finally {
             setLoading(false)
         }
@@ -410,31 +615,74 @@ function SubscriptionInfo() {
         }
     }
 
-    if (loading) return <div>Loading...</div>
-    if (!subscription) return (
-        <div className="text-center space-y-4">
-            <p>No active subscription.</p>
-            <Button asChild>
-                <Link href="/plans">View Plans</Link>
-            </Button>
-        </div>
-    )
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center py-8">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent"></div>
+            </div>
+        )
+    }
+
+    if (!subscription) {
+        return (
+            <div className="text-center py-8 space-y-4">
+                <div className="mx-auto h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                    <CreditCard className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <div>
+                    <p className="font-medium text-gray-900 dark:text-white mb-1">No Active Subscription</p>
+                    <p className="text-sm text-muted-foreground mb-4">
+                        Subscribe to a plan to access premium features
+                    </p>
+                </div>
+                <Button asChild>
+                    <Link href="/plans">View Available Plans</Link>
+                </Button>
+            </div>
+        )
+    }
 
     return (
         <>
             <div className="space-y-4">
-                <div className="flex justify-between items-center bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
-                    <div>
-                        <p className="font-semibold text-lg">{subscription.plan_detail.name}</p>
-                        <p className="text-sm text-muted-foreground">Expires: {new Date(subscription.end_date).toLocaleDateString()}</p>
-                    </div>
-                    <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">
-                        Active
+                {/* Subscription Details */}
+                <div className="rounded-lg border border-border bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 p-6">
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                    {subscription.plan_detail.name}
+                                </h4>
+                                <span className="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:text-green-400">
+                                    Active
+                                </span>
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    <span className="font-medium">Expires:</span>{" "}
+                                    {new Date(subscription.end_date).toLocaleDateString('en-US', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric'
+                                    })}
+                                </p>
+                                {subscription.plan_detail.description && (
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        {subscription.plan_detail.description}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div className="flex gap-2">
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3">
                     <Button variant="outline" asChild className="flex-1">
-                        <Link href="/plans">Change Plan</Link>
+                        <Link href="/plans">
+                            <CreditCard className="h-4 w-4 mr-2" />
+                            Change Plan
+                        </Link>
                     </Button>
                     <Button
                         variant="destructive"
@@ -446,6 +694,7 @@ function SubscriptionInfo() {
                 </div>
             </div>
 
+            {/* Cancel Confirmation Dialog */}
             <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
                 <DialogContent>
                     <DialogHeader>
@@ -455,10 +704,18 @@ function SubscriptionInfo() {
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowCancelDialog(false)} disabled={canceling}>
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowCancelDialog(false)}
+                            disabled={canceling}
+                        >
                             Keep Subscription
                         </Button>
-                        <Button variant="destructive" onClick={handleCancelSubscription} disabled={canceling}>
+                        <Button
+                            variant="destructive"
+                            onClick={handleCancelSubscription}
+                            disabled={canceling}
+                        >
                             {canceling ? "Canceling..." : "Yes, Cancel"}
                         </Button>
                     </DialogFooter>

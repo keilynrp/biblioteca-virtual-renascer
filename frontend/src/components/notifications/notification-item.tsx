@@ -44,7 +44,7 @@ export function NotificationItem({ notification, onMarkAsRead }: NotificationIte
         <button
             onClick={handleClick}
             className={cn(
-                "w-full flex gap-3 p-3 text-left transition-colors hover:bg-muted",
+                "w-full flex gap-3 p-3 text-left transition-colors hover:bg-muted cursor-pointer",
                 !notification.is_read && "bg-primary/5"
             )}
         >

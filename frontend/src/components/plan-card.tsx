@@ -35,14 +35,16 @@ export function PlanCard({ plan, onSubscribe, isLoading, isCurrent, isAnnual }: 
                    plan.name.toLowerCase().includes("básico") ||
                    parseFloat(plan.price) === 0
 
-    // Calculate annual price with discount
+    // Calculate annual price with discount (17% off = pay for 10 months, get 12)
     const monthlyPrice = parseFloat(plan.price)
-    const displayPrice = isAnnual ? (monthlyPrice * 10).toFixed(2) : plan.price
-    const savedAmount = isAnnual ? (monthlyPrice * 2).toFixed(2) : null
+    const annualFullPrice = monthlyPrice * 12
+    const annualDiscountedPrice = monthlyPrice * 10 // 17% discount
+    const displayPrice = isAnnual ? annualDiscountedPrice.toFixed(2) : plan.price
+    const savedAmount = isAnnual ? (annualFullPrice - annualDiscountedPrice).toFixed(2) : null
 
     return (
         <div className={cn(
-            "group relative flex flex-col rounded-2xl transition-all duration-500",
+            "group relative flex flex-col rounded-2xl transition-all duration-500 cursor-pointer",
             "bg-card border border-border/50",
             "hover:border-primary/30 hover:-translate-y-2 hover:shadow-2xl",
             isPopular && !isCurrent && [
@@ -116,7 +118,7 @@ export function PlanCard({ plan, onSubscribe, isLoading, isCurrent, isAnnual }: 
                         ${displayPrice}
                     </span>
                     <span className="text-muted-foreground text-sm mb-2">
-                        {isAnnual ? "/año" : `/${plan.duration_days} días`}
+                        {isAnnual ? "/año" : "/mes"}
                     </span>
                 </div>
 

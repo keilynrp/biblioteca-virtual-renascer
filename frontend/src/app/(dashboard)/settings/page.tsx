@@ -85,7 +85,7 @@ export default function SettingsPage() {
     }).length
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-5">
             <PageHeader
                 title="Configuración"
                 description="Gestiona tu cuenta y preferencias"

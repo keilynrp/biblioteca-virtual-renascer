@@ -81,7 +81,7 @@ export function NotificationDropdown({
                 <div className="p-3 border-t border-border text-center">
                     <a
                         href="/notifications"
-                        className="text-sm text-primary hover:underline"
+                        className="text-sm text-primary hover:underline cursor-pointer"
                         onClick={onClose}
                     >
                         Ver todas las notificaciones

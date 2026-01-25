@@ -38,8 +38,8 @@ const ReadingItem = memo(({ reading }: { reading: Reading }) => {
   const readingTimeMinutes = Math.floor(reading.total_reading_time / 60);
 
   return (
-    <Link href={`/reader/${reading.book.id}`} className="group block">
-      <div className="flex items-start gap-4 p-4 rounded-lg hover:bg-muted transition-all duration-200 border border-transparent hover:border-primary/30">
+    <Link href={`/reader/${reading.book.id}`} className="group block cursor-pointer">
+      <div className="flex items-start gap-4 p-4 rounded-lg hover:bg-muted transition-all duration-200 border border-transparent hover:border-primary/30 cursor-pointer">
         {/* Book Cover */}
         <div className="relative h-24 w-16 flex-shrink-0 rounded overflow-hidden bg-gradient-to-br from-primary/10 to-primary-dark/10 shadow-sm group-hover:shadow-md transition-shadow">
           {reading.book.cover_image ? (

@@ -382,7 +382,7 @@ function AdminBooksPageContent() {
 
     return (
         <>
-            <div className="space-y-6">
+            <div className="py-5 space-y-6">
                 {/* Header */}
                 <div className="flex justify-between items-center">
                     <div>

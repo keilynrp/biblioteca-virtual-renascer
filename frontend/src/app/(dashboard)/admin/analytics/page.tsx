@@ -50,7 +50,7 @@ export default function InstitutionalAnalyticsPage() {
     }
 
     return (
-        <div className="p-6 space-y-8">
+        <div className="px-6 py-5 space-y-8">
             <PageHeader
                 title="Analíticas Institucionales"
                 description="Métricas de lectura y participación de tu institución"

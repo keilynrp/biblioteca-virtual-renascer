@@ -73,7 +73,7 @@ export default function MyLoansPage() {
 
     if (isLoading) {
         return (
-            <div className="container mx-auto px-4 py-8">
+            <div className="container mx-auto px-4 py-5">
                 <PageHeader
                     title="Mis Préstamos"
                     description="Gestiona tus libros prestados"
@@ -86,7 +86,7 @@ export default function MyLoansPage() {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-5">
             <PageHeader
                 title="Mis Préstamos"
                 description="Gestiona tus libros prestados"

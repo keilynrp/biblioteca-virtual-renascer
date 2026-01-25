@@ -72,7 +72,7 @@ export default function ClubsPage() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="py-5 space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <PageHeader
                     title="Clubes de Lectura"

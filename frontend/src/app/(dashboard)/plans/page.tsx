@@ -60,7 +60,7 @@ export default function PlansPage() {
     }
 
     return (
-        <div className="space-y-12">
+        <div className="py-5 space-y-12">
             {/* Hero Section */}
             <div className="text-center max-w-3xl mx-auto space-y-4">
                 <div className="inline-flex items-center gap-2 bg-primary/10 text-primary
@@ -77,31 +77,40 @@ export default function PlansPage() {
 
                 {/* Billing Toggle */}
                 <div className="flex items-center justify-center gap-4 pt-6">
-                    <span className={cn(
-                        "text-sm font-medium transition-colors",
-                        !isAnnual ? "text-foreground" : "text-muted-foreground"
-                    )}>
-                        Mensual
-                    </span>
-                    <button
-                        onClick={() => setIsAnnual(!isAnnual)}
-                        className={cn(
-                            "relative w-16 h-8 rounded-full transition-colors duration-300",
-                            "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
-                            isAnnual ? "bg-primary" : "bg-muted"
-                        )}
-                    >
-                        <span className={cn(
-                            "absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300",
-                            isAnnual ? "translate-x-9" : "translate-x-1"
-                        )} />
-                    </button>
-                    <span className={cn(
-                        "text-sm font-medium transition-colors",
-                        isAnnual ? "text-foreground" : "text-muted-foreground"
-                    )}>
-                        Anual
-                    </span>
+                    <div className="relative inline-flex rounded-full border border-border bg-muted/50 p-1">
+                        {/* Sliding background */}
+                        <span
+                            className={cn(
+                                "absolute top-1/2 z-0 flex h-11 w-[120px] -translate-y-1/2 rounded-full bg-background shadow-sm transition-transform duration-200 ease-linear",
+                                !isAnnual ? "translate-x-0" : "translate-x-full"
+                            )}
+                            aria-hidden="true"
+                        />
+                        {/* Monthly button */}
+                        <button
+                            onClick={() => setIsAnnual(false)}
+                            className={cn(
+                                "relative z-10 flex h-11 w-[120px] items-center justify-center rounded-full text-base font-medium transition-colors duration-200",
+                                !isAnnual
+                                    ? "text-foreground"
+                                    : "text-muted-foreground hover:text-foreground/80"
+                            )}
+                        >
+                            Mensual
+                        </button>
+                        {/* Annual button */}
+                        <button
+                            onClick={() => setIsAnnual(true)}
+                            className={cn(
+                                "relative z-10 flex h-11 w-[120px] items-center justify-center rounded-full text-base font-medium transition-colors duration-200",
+                                isAnnual
+                                    ? "text-foreground"
+                                    : "text-muted-foreground hover:text-foreground/80"
+                            )}
+                        >
+                            Anual
+                        </button>
+                    </div>
                     {isAnnual && (
                         <span className="bg-success/10 text-success text-xs font-bold px-3 py-1 rounded-full">
                             Ahorra 17%

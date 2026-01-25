@@ -42,7 +42,7 @@ export default function NotificationsPage() {
 
     if (isLoading) {
         return (
-            <div className="container mx-auto px-4 py-8 max-w-4xl">
+            <div className="container mx-auto px-4 py-5 max-w-4xl">
                 <PageHeader
                     title="Notificaciones"
                     description="Mantente al día con tu actividad"
@@ -57,7 +57,7 @@ export default function NotificationsPage() {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="container mx-auto px-4 py-5 max-w-4xl">
             <PageHeader
                 title="Notificaciones"
                 description="Mantente al día con tu actividad"

@@ -36,7 +36,7 @@ export function LoanCard({ loan, onReturn, onRenew }: LoanCardProps) {
 
     return (
         <Card className={cn(
-            "overflow-hidden transition-all hover:shadow-lg",
+            "overflow-hidden transition-all hover:shadow-lg cursor-pointer",
             loan.is_overdue && "border-destructive/50"
         )}>
             <CardHeader className="p-4 pb-2">

@@ -154,7 +154,7 @@ function SearchPageContent() {
   const hasActiveFilters = category || author || isPremium !== null
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen py-5">
       {/* Search Header */}
       <div className="bg-card border-b border-border">
         <div className="container mx-auto px-4 py-6">

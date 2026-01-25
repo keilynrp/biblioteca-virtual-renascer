@@ -149,7 +149,7 @@ export default function DashboardLayout({
                     {/* Mobile close button */}
                     <button
                         onClick={() => setIsSidebarOpen(false)}
-                        className="md:hidden hover:bg-muted/50 rounded-lg p-2 transition-all hover:scale-110"
+                        className="md:hidden hover:bg-muted/50 rounded-lg p-2 transition-all hover:scale-110 cursor-pointer"
                     >
                         <X className="h-5 w-5" />
                     </button>
@@ -173,7 +173,7 @@ export default function DashboardLayout({
                                 onClick={() => setIsSidebarOpen(false)}
                                 className={`
                                     flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 group relative
-                                    overflow-hidden
+                                    overflow-hidden cursor-pointer
                                     ${isActive
                                         ? "bg-gradient-to-r from-primary to-primary-dark text-white shadow-lg shadow-primary/30 scale-[1.02]"
                                         : "text-foreground hover:bg-gradient-to-r hover:from-muted/80 hover:to-muted/40 hover:text-primary hover:scale-[1.02]"
@@ -245,7 +245,7 @@ export default function DashboardLayout({
                     <Link
                         href="/settings"
                         className={`
-                            flex items-center space-x-3 px-4 py-3 rounded-lg text-foreground hover:bg-muted transition-all group relative
+                            flex items-center space-x-3 px-4 py-3 rounded-lg text-foreground hover:bg-muted transition-all group relative cursor-pointer
                             ${isSidebarCollapsed ? "md:justify-center md:px-2" : ""}
                         `}
                         title={isSidebarCollapsed ? "Configuración" : undefined}
@@ -267,7 +267,7 @@ export default function DashboardLayout({
                     <button
                         onClick={toggleSidebarCollapse}
                         className={`
-                            hidden md:flex items-center space-x-3 w-full px-4 py-3 rounded-lg text-foreground hover:bg-muted transition-all group
+                            hidden md:flex items-center space-x-3 w-full px-4 py-3 rounded-lg text-foreground hover:bg-muted transition-all group cursor-pointer
                             ${isSidebarCollapsed ? "justify-center px-2" : ""}
                         `}
                         title={isSidebarCollapsed ? "Expandir sidebar" : "Contraer sidebar"}
@@ -295,7 +295,7 @@ export default function DashboardLayout({
                         {/* Mobile Menu Button */}
                         <button
                             onClick={() => setIsSidebarOpen(true)}
-                            className="md:hidden hover:bg-muted/80 rounded-xl p-2.5 transition-all hover:scale-105 active:scale-95"
+                            className="md:hidden hover:bg-muted/80 rounded-xl p-2.5 transition-all hover:scale-105 active:scale-95 cursor-pointer"
                         >
                             <Menu className="h-6 w-6" />
                         </button>
@@ -423,7 +423,7 @@ export default function DashboardLayout({
             {/* Mobile Sidebar Overlay */}
             {isSidebarOpen && (
                 <div
-                    className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden cursor-pointer"
                     onClick={() => setIsSidebarOpen(false)}
                 />
             )}

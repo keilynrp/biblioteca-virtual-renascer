@@ -22,8 +22,8 @@ interface ClubCardProps {
 
 export function ClubCard({ club, onJoin }: ClubCardProps) {
     return (
-        <Card className="overflow-hidden flex flex-col h-full hover:shadow-md transition-shadow">
-            <div className="relative h-48 w-full bg-muted">
+        <Card className="overflow-hidden flex flex-col h-full hover:shadow-md transition-shadow cursor-pointer">
+            <div className="relative h-48 w-full bg-muted cursor-pointer">
                 {club.cover_image ? (
                     <Image
                         src={club.cover_image}

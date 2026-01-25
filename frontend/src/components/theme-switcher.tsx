@@ -125,12 +125,12 @@ export function ThemeSwitcher() {
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 z-40"
+            className="fixed inset-0 z-[9998]"
             onClick={() => setIsOpen(false)}
           />
 
           {/* Panel */}
-          <Card className="absolute right-0 top-12 z-50 w-96 card-frosted shadow-elevated-xl
+          <Card className="absolute right-0 top-12 z-[9999] w-96 card-frosted shadow-elevated-xl
                           animate-scaleIn border-2 border-[hsl(var(--border-strong))]">
             <CardHeader className="gradient-primary text-white relative overflow-hidden">
               {/* Decorative blur circles */}

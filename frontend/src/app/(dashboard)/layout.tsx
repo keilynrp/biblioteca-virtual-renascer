@@ -124,7 +124,11 @@ export default function DashboardLayout({
 
                 {/* Sidebar Header */}
                 <div className="relative flex h-16 items-center justify-between px-6 border-b border-border/50 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
-                    <div className={`flex items-center space-x-3 transition-all duration-300 ${isSidebarCollapsed ? "md:opacity-0 md:scale-90 md:hidden" : "opacity-100 scale-100"}`}>
+                    <Link
+                        href="/"
+                        className={`flex items-center space-x-3 transition-all duration-300 cursor-pointer group ${isSidebarCollapsed ? "md:opacity-0 md:scale-90 md:hidden" : "opacity-100 scale-100"}`}
+                        onClick={() => setIsSidebarOpen(false)}
+                    >
                         <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-primary via-primary-dark to-primary shadow-lg shadow-primary/30 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <BookOpen className="h-6 w-6 text-white" />
                             <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -137,14 +141,18 @@ export default function DashboardLayout({
                                 Biblioteca
                             </span>
                         </div>
-                    </div>
+                    </Link>
 
                     {/* Collapsed state logo */}
-                    <div className={`flex items-center justify-center w-full transition-all duration-300 ${isSidebarCollapsed ? "md:opacity-100 md:scale-100" : "md:opacity-0 md:scale-90 md:hidden"}`}>
+                    <Link
+                        href="/"
+                        className={`flex items-center justify-center w-full transition-all duration-300 cursor-pointer ${isSidebarCollapsed ? "md:opacity-100 md:scale-100" : "md:opacity-0 md:scale-90 md:hidden"}`}
+                        onClick={() => setIsSidebarOpen(false)}
+                    >
                         <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-primary via-primary-dark to-primary shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-110 transition-transform">
                             <BookOpen className="h-6 w-6 text-white" />
                         </div>
-                    </div>
+                    </Link>
 
                     {/* Mobile close button */}
                     <button

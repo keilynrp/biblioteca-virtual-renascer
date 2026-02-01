@@ -24,11 +24,13 @@ def user_data():
     Fixture for user registration data
     """
     return {
+        'username': 'testuser',
         'email': 'test@example.com',
-        'password': 'TestPass123!',
+        'password': 'Strong!Password123',
+        'confirm_password': 'Strong!Password123',
         'first_name': 'Test',
         'last_name': 'User',
-        'user_type': 'STUDENT',
+        'user_type': 'student',
     }
 
 

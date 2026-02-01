@@ -32,7 +32,7 @@ describe('StatsCard', () => {
       />
     )
 
-    expect(container.querySelector('[class*="text-green"]')).toBeInTheDocument()
+    expect(container.querySelector('[class*="text-emerald"]')).toBeInTheDocument()
   })
 
   it('should render with down trend', () => {

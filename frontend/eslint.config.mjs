@@ -18,6 +18,11 @@ const eslintConfig = defineConfig([
     "**/*.min.js",
     "**/*.min.mjs",
   ]),
+  {
+    rules: {
+      "@typescript-eslint/no-unused-vars": "warn",
+    },
+  },
 ]);
 
 export default eslintConfig;

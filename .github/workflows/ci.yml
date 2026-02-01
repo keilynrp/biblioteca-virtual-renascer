@@ -17,6 +17,12 @@ on:
       - main
       - develop
 
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+  checks: write
+
 env:
   PYTHON_VERSION: '3.11'
   NODE_VERSION: '20'
@@ -136,7 +142,7 @@ jobs:
 
       - name: Run tests
         working-directory: ./frontend
-        run: npm run test:ci || echo "No tests configured yet"
+        run: npm run test:ci
 
       - name: Build project
         working-directory: ./frontend
@@ -218,6 +224,7 @@ jobs:
         run: |
           if [[ "${{ needs.backend-tests.result }}" != "success" ]] || \
              [[ "${{ needs.frontend-tests.result }}" != "success" ]] || \
+             [[ "${{ needs.security.result }}" != "success" ]] || \
              [[ "${{ needs.docker-build.result }}" != "success" ]]; then
             echo "❌ CI failed"
             exit 1

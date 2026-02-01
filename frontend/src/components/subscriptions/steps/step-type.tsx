@@ -12,7 +12,7 @@ interface StepTypeProps {
 
 export function StepType({ value, onChange }: StepTypeProps) {
     return (
-        <RadioGroup value={value} onValueChange={(val) => onChange(val as any)} className="grid grid-cols-2 gap-4">
+        <RadioGroup value={value} onValueChange={(val) => onChange(val as 'INDIVIDUAL' | 'INSTITUTIONAL')} className="grid grid-cols-2 gap-4">
             <div className="relative">
                 <RadioGroupItem value="INDIVIDUAL" id="individual" className="peer sr-only" />
                 <Label

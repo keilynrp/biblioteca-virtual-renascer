@@ -5,7 +5,7 @@ interface SyncItem {
     id: string
     type: 'bookmark' | 'annotation' | 'highlight'
     action: 'create' | 'update' | 'delete'
-    data: any
+    data: Record<string, unknown>
     timestamp: number
 }
 
@@ -78,7 +78,7 @@ export function useOfflineSync() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pendingSyncs])
 
-    const saveOffline = (type: SyncItem['type'], action: SyncItem['action'], data: any) => {
+    const saveOffline = (type: SyncItem['type'], action: SyncItem['action'], data: Record<string, unknown>) => {
         const newItem: SyncItem = {
             id: crypto.randomUUID(),
             type,

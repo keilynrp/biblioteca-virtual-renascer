@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 import api from '@/lib/api';
 
+interface BookRef {
+    id: number;
+    title: string;
+    slug?: string;
+    [key: string]: unknown;
+}
+
 interface Review {
     id: number;
     user: { id: number; username: string; avatar?: string };
@@ -16,14 +23,14 @@ interface Review {
 
 interface Favorite {
     id: number;
-    book: any;
+    book: BookRef;
     notes: string;
     created_at: string;
 }
 
 interface ReadingHistory {
     id: number;
-    book: any;
+    book: BookRef;
     status: 'reading' | 'completed' | 'want_to_read' | 'abandoned';
     progress_percentage: number;
     started_at?: string;
@@ -34,7 +41,7 @@ interface ReadingHistory {
 
 interface Reading {
     id: number;
-    book: any;
+    book: BookRef;
     current_page: number;
     total_pages: number;
     progress_percentage: string;

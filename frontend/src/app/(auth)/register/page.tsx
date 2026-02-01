@@ -54,12 +54,13 @@ export default function RegisterPage() {
                 user_type: "student" // Default for now
             })
             router.push("/login")
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Registration error:", err)
 
             // Handle specific field errors from backend
-            if (err.response?.data) {
-                const errors = err.response.data
+            const error = err as { response?: { data?: Record<string, string[]> } }
+            if (error.response?.data) {
+                const errors = error.response.data
                 if (errors.username) {
                     setError(`Username: ${errors.username[0]}`)
                 } else if (errors.email) {

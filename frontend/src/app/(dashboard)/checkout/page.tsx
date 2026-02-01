@@ -49,8 +49,9 @@ function CheckoutForm({ planId }: { planId: string }) {
                 })
                 setClientSecret(response.data.client_secret)
                 setTransactionId(response.data.transaction_id)
-            } catch (err: any) {
-                setError(err.response?.data?.detail || "Failed to initialize payment")
+            } catch (err: unknown) {
+                const error = err as { response?: { data?: { detail?: string } } }
+                setError(error.response?.data?.detail || "Failed to initialize payment")
             }
         }
         
@@ -103,9 +104,10 @@ function CheckoutForm({ planId }: { planId: string }) {
             } else {
                 setError(`Payment status: ${paymentIntent.status}`)
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Payment error:", err)
-            setError(err.response?.data?.detail || err.message || "Payment failed. Please try again.")
+            const error = err as { response?: { data?: { detail?: string } }; message?: string }
+            setError(error.response?.data?.detail || error.message || "Payment failed. Please try again.")
         } finally {
             setLoading(false)
         }

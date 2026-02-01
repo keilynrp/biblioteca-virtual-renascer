@@ -67,7 +67,7 @@ export interface HighlightUpdate {
 export interface AnnotationPosition {
   x?: number;
   y?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface Annotation {

@@ -1,6 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import { loansApi } from '@/services/loansApi'
-import type { Loan, LoanQueue, CanBorrowResponse } from '@/types/loan'
+import type { Loan, CanBorrowResponse } from '@/types/loan'
+
+interface ApiError {
+    response?: {
+        data?: {
+            error?: string
+        }
+    }
+}
 
 export function useLoans() {
     const [loans, setLoans] = useState<Loan[]>([])
@@ -14,12 +22,13 @@ export function useLoans() {
             setIsLoading(true)
             const data = await loansApi.getActiveLoans()
             // Handle both paginated and non-paginated responses
-            const results = (data as any).results || data
+            const results = (data as { results?: Loan[] } & Loan[]).results || data
             setActiveLoans(Array.isArray(results) ? results : [])
             setError(null)
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Error fetching active loans:', err)
-            setError(err.response?.data?.error || 'Error al cargar préstamos activos')
+            const error = err as ApiError
+            setError(error.response?.data?.error || 'Error al cargar préstamos activos')
         } finally {
             setIsLoading(false)
         }
@@ -32,9 +41,10 @@ export function useLoans() {
             const data = await loansApi.getMyLoans()
             setLoans(data.results)
             setError(null)
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Error fetching loans:', err)
-            setError(err.response?.data?.error || 'Error al cargar préstamos')
+            const error = err as ApiError
+            setError(error.response?.data?.error || 'Error al cargar préstamos')
         } finally {
             setIsLoading(false)
         }
@@ -46,8 +56,9 @@ export function useLoans() {
             const newLoan = await loansApi.borrowBook(bookId)
             setActiveLoans(prev => [newLoan, ...prev])
             return { success: true, loan: newLoan }
-        } catch (err: any) {
-            const errorMsg = err.response?.data?.error || 'Error al solicitar préstamo'
+        } catch (err: unknown) {
+            const error = err as ApiError
+            const errorMsg = error.response?.data?.error || 'Error al solicitar préstamo'
             return { success: false, error: errorMsg }
         }
     }, [])
@@ -59,8 +70,9 @@ export function useLoans() {
             setActiveLoans(prev => prev.filter(loan => loan.id !== loanId))
             await fetchActiveLoans() // Refresh to get updated data
             return { success: true }
-        } catch (err: any) {
-            const errorMsg = err.response?.data?.error || 'Error al devolver libro'
+        } catch (err: unknown) {
+            const error = err as ApiError
+            const errorMsg = error.response?.data?.error || 'Error al devolver libro'
             return { success: false, error: errorMsg }
         }
     }, [fetchActiveLoans])
@@ -73,8 +85,9 @@ export function useLoans() {
                 prev.map(loan => loan.id === loanId ? renewedLoan : loan)
             )
             return { success: true, loan: renewedLoan }
-        } catch (err: any) {
-            const errorMsg = err.response?.data?.error || 'Error al renovar préstamo'
+        } catch (err: unknown) {
+            const error = err as ApiError
+            const errorMsg = error.response?.data?.error || 'Error al renovar préstamo'
             return { success: false, error: errorMsg }
         }
     }, [])
@@ -83,7 +96,7 @@ export function useLoans() {
     const checkCanBorrow = useCallback(async (bookId: number): Promise<CanBorrowResponse> => {
         try {
             return await loansApi.canBorrow(bookId)
-        } catch (err: any) {
+        } catch {
             return {
                 can_borrow: false,
                 reason: 'Error al verificar disponibilidad'
@@ -96,8 +109,9 @@ export function useLoans() {
         try {
             const queueEntry = await loansApi.joinQueue(bookId)
             return { success: true, queueEntry }
-        } catch (err: any) {
-            const errorMsg = err.response?.data?.error || 'Error al unirse a la cola'
+        } catch (err: unknown) {
+            const error = err as ApiError
+            const errorMsg = error.response?.data?.error || 'Error al unirse a la cola'
             return { success: false, error: errorMsg }
         }
     }, [])

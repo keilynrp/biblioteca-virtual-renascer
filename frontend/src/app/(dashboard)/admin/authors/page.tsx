@@ -148,9 +148,10 @@ export default function AuthorsAdminPage() {
             handleCloseDialog()
             alert(editingAuthor ? "Autor actualizado exitosamente" : "Autor creado exitosamente")
             fetchData()
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Error submitting author:", err)
-            const errorMessage = err.response?.data?.detail || err.response?.data?.name?.[0] || "Error al guardar el autor"
+            const error = err as { response?: { data?: { detail?: string; name?: string[] } } }
+            const errorMessage = error.response?.data?.detail || error.response?.data?.name?.[0] || "Error al guardar el autor"
             alert(errorMessage)
         } finally {
             setSubmitting(false)
@@ -166,7 +167,7 @@ export default function AuthorsAdminPage() {
             await api.delete(`/content/authors/${author.id}/`)
             setAuthors(authors.filter(a => a.id !== author.id))
             alert("Autor eliminado exitosamente")
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Error deleting author:", err)
             alert("Error al eliminar el autor. Puede que tenga libros asociados.")
         }

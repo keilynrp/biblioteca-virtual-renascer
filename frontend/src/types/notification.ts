@@ -7,7 +7,7 @@ export interface Notification {
     link: string | null
     is_read: boolean
     is_emailed: boolean
-    metadata: Record<string, any>
+    metadata: Record<string, unknown>
     created_at: string
     read_at: string | null
 }

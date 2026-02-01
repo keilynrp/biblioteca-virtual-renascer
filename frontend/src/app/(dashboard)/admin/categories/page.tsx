@@ -134,9 +134,10 @@ export default function CategoriesAdminPage() {
             handleCloseDialog()
             alert(editingCategory ? "Categoría actualizada exitosamente" : "Categoría creada exitosamente")
             fetchData()
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Error submitting category:", err)
-            const errorMessage = err.response?.data?.detail || err.response?.data?.name?.[0] || "Error al guardar la categoría"
+            const error = err as { response?: { data?: { detail?: string; name?: string[] } } }
+            const errorMessage = error.response?.data?.detail || error.response?.data?.name?.[0] || "Error al guardar la categoría"
             alert(errorMessage)
         } finally {
             setSubmitting(false)
@@ -152,7 +153,7 @@ export default function CategoriesAdminPage() {
             await api.delete(`/content/categories/${category.id}/`)
             setCategories(categories.filter(c => c.id !== category.id))
             alert("Categoría eliminada exitosamente")
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Error deleting category:", err)
             alert("Error al eliminar la categoría. Puede que tenga libros asociados.")
         }

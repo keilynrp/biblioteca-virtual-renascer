@@ -288,9 +288,10 @@ function AdminBooksPageContent() {
             alert(editingBook ? "Libro actualizado exitosamente" : "Libro creado exitosamente")
             // Refrescar todos los datos para asegurar estructura correcta
             await fetchData()
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Error submitting book:", err)
-            const errorMessage = err.response?.data?.detail || err.response?.data?.title?.[0] || "Error al guardar el libro"
+            const error = err as { response?: { data?: { detail?: string; title?: string[] } } }
+            const errorMessage = error.response?.data?.detail || error.response?.data?.title?.[0] || "Error al guardar el libro"
             alert(errorMessage)
         } finally {
             setSubmitting(false)

@@ -3,6 +3,7 @@
 // =============================================================================
 // import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
+import withPWAInit from '@ducanh2912/next-pwa';
 
 const nextConfig: NextConfig = {
   // typedRoutes disabled - requires full route typing across codebase
@@ -89,11 +90,10 @@ const nextConfig: NextConfig = {
 // Sentry has been removed due to dependency conflicts with Next.js 16
 // const shouldUseSentry = process.env.NODE_ENV === 'production';
 
-const withPWA = require('@ducanh2912/next-pwa').default({
+const withPWA = withPWAInit({
   dest: 'public',
   disable: process.env.NODE_ENV === 'development',
   register: true,
-  skipWaiting: true,
 });
 
 const configWithPWA = withPWA(nextConfig);

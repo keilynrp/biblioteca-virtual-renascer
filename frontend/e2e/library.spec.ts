@@ -66,7 +66,7 @@ test.describe('Library Page', () => {
 
     // Verify URL updated with search query
     const url = page.url();
-    expect(url).toContain('search=') || expect(url).toContain('q=');
+    expect(url.includes('search=') || url.includes('q=')).toBeTruthy();
   });
 
   test('should navigate to book details', async ({ page }) => {

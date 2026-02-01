@@ -50,7 +50,7 @@ test.describe('Subscriptions', () => {
     // Should navigate to checkout or show payment form
     await page.waitForTimeout(1000);
     const url = page.url();
-    expect(url).toContain('checkout') || expect(url).toContain('payment');
+    expect(url.includes('checkout') || url.includes('payment')).toBeTruthy();
   });
 
   test('should show current subscription if user has one', async ({ page }) => {
@@ -75,7 +75,8 @@ test.describe('Subscriptions', () => {
 
       // Should navigate to upgrade flow
       await page.waitForTimeout(1000);
-      expect(page.url()).toContain('upgrade') || expect(page.url()).toContain('checkout');
+      const upgradeUrl = page.url();
+      expect(upgradeUrl.includes('upgrade') || upgradeUrl.includes('checkout')).toBeTruthy();
     }
   });
 });
@@ -193,7 +194,8 @@ test.describe('Subscription Management', () => {
 
       // Should show payment form
       await page.waitForTimeout(1000);
-      expect(page.url()).toContain('payment') || expect(page.url()).toContain('billing');
+      const paymentUrl = page.url();
+      expect(paymentUrl.includes('payment') || paymentUrl.includes('billing')).toBeTruthy();
     }
   });
 

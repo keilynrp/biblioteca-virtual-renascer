@@ -128,7 +128,7 @@ jobs:
 
       - name: Run linting (ESLint)
         working-directory: ./frontend
-        run: npm run lint
+        run: npm run lint -- --max-warnings=100
 
       - name: Run type checking (TypeScript)
         working-directory: ./frontend

@@ -1,0 +1,22 @@
+{
+  "name": "bvs-docs",
+  "version": "1.0.0",
+  "description": "Documentación del proyecto Biblioteca Virtual Renascer do Saber",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview",
+    "serve": "vitepress serve"
+  },
+  "keywords": [
+    "documentation",
+    "biblioteca",
+    "virtual",
+    "docs"
+  ],
+  "author": "Renascer do Saber Team",
+  "license": "MIT",
+  "devDependencies": {
+    "vitepress": "^1.0.0"
+  }
+}

@@ -1,0 +1,144 @@
+name: 🐛 Bug Report
+description: Reportar un bug o comportamiento inesperado
+title: "[BUG]: "
+labels: ["bug", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por tomarte el tiempo de reportar este bug. Por favor completa la información debajo.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Descripción del Bug
+      description: Una descripción clara y concisa del bug.
+      placeholder: Describe qué está pasando...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pasos para Reproducir
+      description: Pasos detallados para reproducir el comportamiento.
+      placeholder: |
+        1. Ir a '...'
+        2. Click en '...'
+        3. Scroll hasta '...'
+        4. Ver error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportamiento Esperado
+      description: Describe qué esperabas que pasara.
+      placeholder: Qué debería pasar...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Comportamiento Actual
+      description: Describe qué está pasando realmente.
+      placeholder: Qué está pasando en realidad...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Componente Afectado
+      description: ¿Qué parte del sistema está afectada?
+      options:
+        - Frontend
+        - Backend
+        - Database
+        - API
+        - Authentication
+        - Reader PDF
+        - Search
+        - Payments
+        - Otro
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severidad
+      description: ¿Qué tan severo es este bug?
+      options:
+        - 🔴 Critical - La aplicación no funciona
+        - 🟠 High - Funcionalidad importante afectada
+        - 🟡 Medium - Funcionalidad menor afectada
+        - 🟢 Low - Inconveniente menor
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Si aplica, agrega screenshots para ayudar a explicar el problema.
+      placeholder: Arrastra imágenes aquí o pega URLs...
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Incluye cualquier log relevante.
+      placeholder: Pega logs aquí...
+      render: shell
+
+  - type: input
+    id: browser
+    attributes:
+      label: Navegador
+      description: ¿Qué navegador estás usando? (si aplica)
+      placeholder: Chrome 120, Firefox 115, Safari 17, etc.
+
+  - type: input
+    id: os
+    attributes:
+      label: Sistema Operativo
+      description: ¿Qué OS estás usando?
+      placeholder: Windows 11, macOS 14, Ubuntu 22.04, etc.
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Información del Ambiente
+      description: Información adicional sobre tu ambiente.
+      placeholder: |
+        - Docker version:
+        - Python version:
+        - Node version:
+        - Otros detalles relevantes:
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Contexto Adicional
+      description: Agrega cualquier otro contexto sobre el problema.
+      placeholder: Información adicional que pueda ayudar...
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Checklist
+      description: Por favor confirma lo siguiente.
+      options:
+        - label: He buscado en issues existentes y no encontré uno similar
+          required: true
+        - label: He probado esto en la última versión
+          required: false
+        - label: Estoy dispuesto a ayudar a solucionar esto
+          required: false

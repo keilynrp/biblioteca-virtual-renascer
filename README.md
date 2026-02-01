@@ -1,242 +1,570 @@
+<div align="center">
+
 # 📚 Biblioteca Virtual Renascer do Saber
 
+### Plataforma moderna de biblioteca virtual con gestión integral de suscripciones, lectura y comunidad
+
+<!-- Shields.io badges -->
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Django](https://img.shields.io/badge/django-5.0+-green.svg)](https://www.djangoproject.com/)
-[![Next.js](https://img.shields.io/badge/next.js-16.1.0-black.svg)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/react-19.2.3-blue.svg)](https://reactjs.org/)
+[![Version](https://img.shields.io/badge/version-0.10.0-blue.svg)](CHANGELOG.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/tu-usuario/bvs_framework/graphs/commit-activity)
 
-Una plataforma moderna de biblioteca virtual con gestión de suscripciones, pagos integrados y sistema de lectura en línea.
+<!-- Technology badges -->
+[![Python](https://img.shields.io/badge/python-3.13-blue.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
+[![Django](https://img.shields.io/badge/django-6.0-green.svg?logo=django&logoColor=white)](https://www.djangoproject.com/)
+[![Next.js](https://img.shields.io/badge/next.js-16.1-black.svg?logo=next.js&logoColor=white)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/react-19.2-blue.svg?logo=react&logoColor=white)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/typescript-5.9-blue.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![TailwindCSS](https://img.shields.io/badge/tailwindcss-4-38bdf8.svg?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 
-## 🌟 Características
+<!-- Database & Infrastructure -->
+[![PostgreSQL](https://img.shields.io/badge/postgresql-16-blue.svg?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Redis](https://img.shields.io/badge/redis-7-red.svg?logo=redis&logoColor=white)](https://redis.io/)
+[![Docker](https://img.shields.io/badge/docker-ready-blue.svg?logo=docker&logoColor=white)](https://www.docker.com/)
 
-### ✨ Core Features
-- 🔐 **Autenticación JWT** - Sistema seguro de login/registro con refresh tokens
-- 💳 **Pagos con Stripe** - Integración completa para suscripciones y pagos
-- 📖 **Catálogo de Libros** - Gestión completa de libros, autores y categorías
-- 🔍 **Búsqueda Avanzada** - Sistema de búsqueda con Elasticsearch y filtros
-- 👤 **Gestión de Usuarios** - Perfiles, avatares y preferencias
-- 📊 **Dashboard Interactivo** - Estadísticas en tiempo real
-- 🎨 **UI Moderna** - Diseño responsive con TailwindCSS y shadcn/ui
+<!-- Quality & Testing -->
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Tests](https://img.shields.io/badge/tests-jest%20%2B%20pytest-green.svg)](#-testing)
+[![Coverage](https://img.shields.io/badge/coverage-in%20progress-yellow.svg)](#-testing)
 
-### 🎯 Funcionalidades de Engagement
-- ⭐ **Sistema de Reseñas** - Los usuarios pueden calificar y comentar libros
-- ❤️ **Favoritos** - Marca libros como favoritos para acceso rápido
-- 📚 **Historial de Lectura** - Rastrea el progreso de lectura (leyendo, completado, en pausa, abandonado)
-- 👍 **Reseñas Útiles** - Sistema de votos para reseñas (helpful/not helpful)
-- 🔒 **Permisos Granulares** - Los usuarios solo pueden editar su propio contenido
+<!-- Build Status (uncomment when CI/CD is setup) -->
+<!-- [![Build Status](https://github.com/tu-usuario/bvs_framework/workflows/CI/badge.svg)](https://github.com/tu-usuario/bvs_framework/actions) -->
+<!-- [![Backend Tests](https://github.com/tu-usuario/bvs_framework/workflows/Backend%20Tests/badge.svg)](https://github.com/tu-usuario/bvs_framework/actions) -->
+<!-- [![Frontend Tests](https://github.com/tu-usuario/bvs_framework/workflows/Frontend%20Tests/badge.svg)](https://github.com/tu-usuario/bvs_framework/actions) -->
 
-### 🚀 Mejoras Técnicas Recientes
-- ✅ Toast notifications con 6 variantes
-- ✅ Skeleton loaders para mejor UX
-- ✅ Manejo estandarizado de errores
-- ✅ Paginación y filtros avanzados
-- ✅ Tests unitarios con Jest + RTL
-- ✅ Sistema de feedback visual consistente
-- ✅ Actualización a Python 3.13 y Node.js 22
-- ✅ Componentes UI reutilizables (Tabs, Favorite Button, Review Form)
+[Features](#-características-principales) • [Quick Start](#-quick-start) • [Documentación](#-documentación) • [Arquitectura](#-arquitectura) • [Contribuir](#-contribución)
 
-## 🏗️ Arquitectura
+</div>
 
-### Backend (Django REST Framework)
+---
+
+## 📖 Índice
+
+- [Acerca del Proyecto](#-acerca-del-proyecto)
+- [Características Principales](#-características-principales)
+- [Capturas de Pantalla](#-capturas-de-pantalla)
+- [Quick Start](#-quick-start)
+- [Stack Tecnológico](#-stack-tecnológico)
+- [Arquitectura](#-arquitectura)
+- [Instalación Completa](#-instalación-completa)
+- [Configuración](#-configuración)
+- [Uso](#-uso)
+- [Scripts Disponibles](#-scripts-disponibles)
+- [Testing](#-testing)
+- [Roadmap](#-roadmap)
+- [Documentación](#-documentación)
+- [Contribución](#-contribución)
+- [Licencia](#-licencia)
+
+---
+
+## 🎯 Acerca del Proyecto
+
+**Biblioteca Virtual Renascer do Saber** es una plataforma integral para la gestión y lectura de libros digitales, diseñada para instituciones educativas y bibliotecas modernas. Combina un sistema robusto de gestión de contenido con una experiencia de lectura excepcional y características sociales que fomentan el engagement de los usuarios.
+
+### ¿Por qué BVS Framework?
+
+- ✅ **Completa**: Desde catálogo hasta lectura, suscripciones, préstamos y comunidades
+- ✅ **Moderna**: Built with Next.js 16, React 19, Django 6 y tecnologías de vanguardia
+- ✅ **Escalable**: Arquitectura preparada para miles de usuarios y millones de libros
+- ✅ **Personalizable**: Temas, configuraciones y extensibilidad desde el código
+- ✅ **Open Source**: Licencia MIT, comunidad activa
+
+---
+
+## ✨ Características Principales
+
+### 🔐 Autenticación y Seguridad
+- Sistema JWT con refresh tokens automáticos
+- Registro y login seguros con validación
+- Tipos de usuario: Estudiante, Empleado, Profesor, Bibliotecario, Moderador
+- Soporte para autenticación 2FA (preparado)
+- Rate limiting en endpoints críticos
+
+### 📖 Gestión de Contenido
+- **Catálogo Completo**: Miles de libros organizados por categorías y autores
+- **Búsqueda Avanzada**: Powered by Meilisearch con autocompletado
+- **Filtros Inteligentes**: Por categoría, autor, premium status
+- **Importación Automática**: Integración con OpenLibrary API
+- **Gestión de Archivos**: PDFs hasta 50MB, portadas hasta 5MB
+
+### 📱 Lector PDF Avanzado
+- Visor nativo en navegador sin plugins
+- Control de zoom, navegación fluida
+- **Bookmarks**: Marcadores con títulos y notas personales
+- **Highlights**: Resaltado de texto con 5 colores disponibles
+- **Anotaciones**: Notas asociadas a posiciones específicas
+- Tracking automático de progreso y tiempo de lectura
+- Privacidad configurable para anotaciones
+
+### ⭐ Engagement de Usuario
+- **Reseñas**: Calificaciones 1-5 estrellas con comentarios
+- **Votación**: Sistema helpful/not helpful en reseñas
+- **Favoritos**: Marca libros con notas personales
+- **Historial de Lectura**: Estados (leyendo, completado, en pausa, abandonado)
+- **Continuar Leyendo**: Widget inteligente de libros en progreso
+
+### 💳 Suscripciones y Pagos
+- Múltiples planes configurables (individual e institucional)
+- Integración completa con Stripe
+- Auto-renovación de suscripciones
+- Webhooks para confirmación automática
+- Panel de gestión de suscripciones
+
+### 📚 Préstamos Físicos
+- Gestión de ejemplares físicos con códigos de barras
+- Estados de préstamo (activo, devuelto, vencido)
+- Renovación automática (límite configurable)
+- Cola de espera para libros no disponibles
+- Cálculo de multas por retrasos
+- Notificaciones cuando libro disponible
+
+### 👥 Comunidades
+- **Clubes de Lectura**: Públicos y privados
+- **Roles**: Admin, Moderador, Miembro
+- **Discusiones**: Hilos con pines y bloqueo
+- **Publicaciones**: Sistema de posts con likes
+- Enlace de discusiones a libros específicos
+
+### 🔔 Sistema de Notificaciones
+- 8 tipos de notificaciones (libro disponible, préstamo venciendo, nueva reseña, etc.)
+- Centro de notificaciones unificado
+- Envío opcional por email
+- Metadata personalizable
+- Marcado como leída con timestamp
+
+### 🎨 Personalización de Temas
+- **6 temas predefinidos**: Teal, Ocean Blue, Forest Green, Royal Purple, Sunset Orange, Rose Red
+- **Modo oscuro/claro** toggleable
+- Preview en vivo de colores
+- Persistencia en localStorage
+- Aplicación instantánea en toda la app
+
+### 📲 Progressive Web App (PWA)
+- Instalación en dispositivos móviles y escritorio
+- Funcionalidad offline
+- Shortcuts: Mi Biblioteca, Mis Préstamos
+- Manifest completo con iconos optimizados
+- Service Worker con caching strategy
+
+### 🚀 Performance
+- Cache strategy optimizada
+- Query optimization con annotations en Django
+- Compresión gzip
+- Image optimization con Next.js
+- Turbopack en desarrollo
+- Lazy loading de componentes
+- Skeleton loaders
+- Paginación eficiente
+
+---
+
+## 📸 Capturas de Pantalla
+
+### 🏠 Dashboard Principal
+
+<div align="center">
+
+![Dashboard Principal](docs/images/screenshots/dashboard/dashboard-home-placeholder.png)
+
+*Vista principal del dashboard con estadísticas de lectura y actividad reciente*
+
+</div>
+
+### 📚 Catálogo de Libros
+
+<div align="center">
+
+![Catálogo de Libros](docs/images/screenshots/library/library-catalog-placeholder.png)
+
+*Catálogo completo con búsqueda avanzada y filtros por categoría*
+
+</div>
+
+### 📖 Lector PDF con Anotaciones
+
+<div align="center">
+
+![Lector PDF](docs/images/screenshots/reader/reader-pdf-annotations-placeholder.png)
+
+*Lector PDF con sistema completo de bookmarks, highlights y anotaciones*
+
+</div>
+
+### ⭐ Favoritos y Historial
+
+<div align="center">
+
+![Favoritos](docs/images/screenshots/profile/favorites-placeholder.png)
+
+*Gestión de libros favoritos con notas personales*
+
+</div>
+
+### 💳 Planes de Suscripción
+
+<div align="center">
+
+![Planes](docs/images/screenshots/subscriptions/plans-placeholder.png)
+
+*Selección de planes con integración de Stripe para pagos*
+
+</div>
+
+### 🎨 Personalizador de Temas
+
+<div align="center">
+
+![Temas](docs/images/screenshots/settings/theme-customizer-placeholder.png)
+
+*6 temas predefinidos con modo oscuro/claro y preview en vivo*
+
+</div>
+
+### 👥 Clubes de Lectura
+
+<div align="center">
+
+![Clubes](docs/images/screenshots/library/reading-clubs-placeholder.png)
+
+*Comunidades de lectura con discusiones y roles de miembro*
+
+</div>
+
+### 📱 Responsive Design
+
+<div align="center">
+
+![Mobile](docs/images/screenshots/mobile/mobile-views-placeholder.png)
+
+*Diseño completamente responsive optimizado para dispositivos móviles*
+
+</div>
+
+> **Nota**: Los screenshots se agregarán en futuras actualizaciones. Mientras tanto, puedes iniciar la aplicación localmente para explorar todas las características.
+>
+> **Guía para contribuir screenshots**: Ver [docs/images/README.md](docs/images/README.md)
+
+---
+
+## 🚀 Quick Start
+
+Pon en marcha el proyecto en menos de 5 minutos:
+
+### Prerequisitos
+- [Docker](https://www.docker.com/get-started) y Docker Compose
+- Git
+
+### Instalación Rápida
+
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/tu-usuario/bvs_framework.git
+cd bvs_framework
+
+# 2. Copiar variables de entorno
+cp .env.example .env
+
+# 3. Iniciar con Docker
+./scripts/docker/start_containers.sh  # Linux/Mac/WSL
+# o
+scripts\docker\start_containers.ps1   # Windows PowerShell
+
+# 4. Acceder a la aplicación
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:8000/api
+# Admin Panel: http://localhost:8000/admin
 ```
-backend/
-├── apps/
-│   ├── authentication/    # Sistema de auth con JWT
-│   ├── content/          # Libros, categorías, autores
-│   │   ├── models/       # Review, Favorite, ReadingHistory
-│   │   ├── permissions.py # IsOwnerOrReadOnly
-│   │   └── management/   # Comandos (import_openlibrary)
-│   ├── core/             # Utilidades y excepciones
-│   ├── payments/         # Integración con Stripe
-│   └── users/            # Gestión de usuarios
-├── config/
-│   └── settings/         # Configuración por entornos
-│       ├── base.py
-│       ├── development.py
-│       ├── production.py
-│       └── staging.py
-└── manage.py
+
+### Crear Usuario Administrador
+
+```bash
+# Dentro del contenedor backend
+docker exec -it bvs-backend python manage.py createsuperuser
 ```
 
-### Frontend (Next.js 16 + React 19)
+### Importar Libros de Prueba
+
+```bash
+# Importar desde OpenLibrary
+docker exec -it bvs-backend python manage.py import_openlibrary --query "python programming" --limit 50
 ```
-frontend/
-├── src/
-│   ├── app/              # App Router de Next.js
-│   │   ├── (auth)/       # Páginas de autenticación
-│   │   └── (dashboard)/  # Páginas del dashboard
-│   │       ├── favorites/        # Libros favoritos
-│   │       ├── reading-history/  # Historial de lectura
-│   │       ├── library/          # Biblioteca
-│   │       └── profile/          # Perfil de usuario
-│   ├── components/       # Componentes reutilizables
-│   │   ├── ui/          # Componentes base (shadcn/ui + Tabs)
-│   │   ├── favorite-button.tsx    # Botón de favoritos
-│   │   ├── review-form.tsx        # Formulario de reseñas
-│   │   ├── review-list.tsx        # Lista de reseñas
-│   │   └── reading-status-selector.tsx
-│   ├── lib/             # Utilidades y configuración
-│   ├── store/           # Estado global (Zustand)
-│   │   └── bookStore.ts # Store con funciones de engagement
-│   └── __tests__/       # Tests unitarios
-└── package.json
-```
+
+¡Listo! 🎉 Ya tienes la biblioteca virtual funcionando.
+
+---
 
 ## 🛠️ Stack Tecnológico
 
 ### Backend
-- **Framework**: Django 5.0.1 + Django REST Framework 3.14.0
-- **Python**: 3.13 (actualizado desde 3.12)
-- **Base de Datos**: PostgreSQL 16
-- **Búsqueda**: Elasticsearch 8.x
-- **Cache**: Redis 7
-- **Autenticación**: JWT (djangorestframework-simplejwt)
-- **Pagos**: Stripe Python SDK
-- **CORS**: django-cors-headers
-- **Tareas Asíncronas**: Celery (planificado)
+| Tecnología | Versión | Propósito |
+|-----------|---------|-----------|
+| Python | 3.13 | Lenguaje base |
+| Django | 6.0.1 | Framework web |
+| Django REST Framework | 3.14.0 | API REST |
+| PostgreSQL | 16 | Base de datos principal |
+| Meilisearch | 0.31 | Motor de búsqueda |
+| Redis | 7 | Cache y sessions |
+| Celery | 5.3 | Tareas asíncronas |
+| Stripe | 7.0 | Procesamiento de pagos |
+| JWT | - | Autenticación |
 
 ### Frontend
-- **Framework**: Next.js 16.1.0 (App Router)
-- **Node.js**: 22 (actualizado desde 20)
-- **UI Library**: React 19.2.3
-- **Estilos**: TailwindCSS 4 + shadcn/ui
-- **Gestión de Estado**: Zustand 5.0.9
-- **Formularios**: React Hook Form 7.69.0 + Zod 4.2.1
-- **HTTP Client**: Axios 1.13.2
-- **Testing**: Jest 30.2.0 + React Testing Library 16.3.1
-- **Iconos**: Lucide React 0.562.0
-- **Utilidades**: date-fns 4.1.0 (manejo de fechas)
-- **Componentes UI**: @radix-ui/react-tabs (componente Tabs)
+| Tecnología | Versión | Propósito |
+|-----------|---------|-----------|
+| Node.js | 22 | Runtime |
+| Next.js | 16.1.4 | Framework React |
+| React | 19.2.3 | UI Library |
+| TypeScript | 5.9.3 | Type safety |
+| TailwindCSS | 4 | Estilos |
+| Radix UI | - | Componentes accesibles |
+| Zustand | 5.0.9 | Estado global |
+| React Hook Form | 7.69.0 | Formularios |
+| Zod | 4.2.1 | Validación |
+| Axios | 1.13.2 | HTTP Client |
+| Jest | 30.2.0 | Unit testing |
+| Playwright | 1.57.0 | E2E testing |
 
 ### DevOps
 - **Containerización**: Docker + Docker Compose
 - **CI/CD**: GitHub Actions (planificado)
-- **Monitoreo**: Sentry (planificado)
+- **Monitoreo**: Sentry
+- **Web Server**: Nginx
+- **SSL**: Let's Encrypt / Self-signed (desarrollo)
 
-## 🚀 Instalación y Configuración
+---
 
-### Prerrequisitos
-- Python 3.13 (recomendado 3.12+)
-- Node.js 22 (recomendado 20+)
-- PostgreSQL 16+
-- Elasticsearch 8.x
-- Redis 7+
-- Docker y Docker Compose (opcional)
+## 🏗️ Arquitectura
+
+### Diagrama de Alto Nivel
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                         Frontend (Next.js 16)                │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
+│  │   Auth   │  │  Reader  │  │  Library │  │  Clubs   │   │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
+│  │ Favorites│  │ History  │  │  Plans   │  │ Settings │   │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              │ REST API (HTTP/HTTPS)
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│                      Backend (Django 6)                      │
+│  ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐  │
+│  │   Auth    │ │  Content  │ │Subscrip.  │ │  Payments │  │
+│  └───────────┘ └───────────┘ └───────────┘ └───────────┘  │
+│  ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐  │
+│  │   Loans   │ │Communities│ │Notifications│ │   Core    │  │
+│  └───────────┘ └───────────┘ └───────────┘ └───────────┘  │
+└─────────────────────────────────────────────────────────────┘
+                              │
+            ┌─────────────────┼─────────────────┐
+            │                 │                 │
+    ┌───────▼───────┐ ┌───────▼───────┐ ┌──────▼──────┐
+    │  PostgreSQL   │ │  Meilisearch  │ │    Redis    │
+    │      16       │ │      0.31     │ │      7      │
+    └───────────────┘ └───────────────┘ └─────────────┘
+```
+
+### Estructura Backend
+
+```
+backend/
+├── apps/
+│   ├── authentication/      # JWT auth, user management
+│   ├── content/            # Books, authors, categories, reviews
+│   ├── subscriptions/      # Plans, user/institution subscriptions
+│   ├── payments/           # Stripe integration, transactions
+│   ├── loans/              # Physical book lending system
+│   ├── communities/        # Reading clubs, discussions
+│   ├── notifications/      # Notification system
+│   ├── institutions/       # Institution management
+│   └── core/               # Shared utilities, health checks
+├── config/
+│   ├── settings.py         # Django settings
+│   └── urls.py             # URL routing
+└── manage.py
+```
+
+### Estructura Frontend
+
+```
+frontend/src/
+├── app/
+│   ├── (auth)/             # Login, Register
+│   └── (dashboard)/        # Protected routes
+│       ├── home/           # Dashboard
+│       ├── library/        # Book catalog
+│       ├── reader/         # PDF viewer
+│       ├── favorites/      # Favorite books
+│       ├── reading-history/ # Reading tracking
+│       ├── my-loans/       # Loan management
+│       ├── clubs/          # Reading clubs
+│       ├── notifications/  # Notification center
+│       ├── plans/          # Subscription plans
+│       ├── checkout/       # Stripe checkout
+│       ├── profile/        # User profile
+│       └── settings/       # Theme customization
+├── components/
+│   ├── ui/                 # Base components (shadcn/ui)
+│   ├── reader/             # PDF reader components
+│   ├── subscriptions/      # Subscription components
+│   ├── loans/              # Loan components
+│   └── [feature-components]
+├── hooks/                  # Custom React hooks
+├── store/                  # Zustand stores
+├── services/               # API services
+├── lib/                    # Utilities
+└── types/                  # TypeScript types
+```
+
+---
+
+## 📦 Instalación Completa
 
 ### Opción 1: Con Docker (Recomendado)
 
+#### Prerequisitos
+- Docker 20.10+
+- Docker Compose 2.0+
+
+#### Pasos
+
 ```bash
-# Clonar el repositorio
+# 1. Clonar repositorio
 git clone https://github.com/tu-usuario/bvs_framework.git
 cd bvs_framework
 
-# Copiar variables de entorno
+# 2. Copiar variables de entorno
 cp .env.example .env
+# Editar .env con tus configuraciones
 
-# Usar el script de inicio rápido
+# 3. Iniciar contenedores
 ./scripts/docker/start_containers.sh  # Linux/Mac/WSL
 # o
-scripts\docker\start_containers.ps1   # Windows
+scripts\docker\start_containers.ps1   # Windows PowerShell
 
-# La aplicación estará disponible en:
-# Frontend: http://localhost:3000
-# Backend API: http://localhost:8000/api
-# Django Admin: http://localhost:8000/admin
+# 4. Ejecutar migraciones
+docker exec -it bvs-backend python manage.py migrate
+
+# 5. Crear superusuario
+docker exec -it bvs-backend python manage.py createsuperuser
+
+# 6. Importar datos de prueba (opcional)
+docker exec -it bvs-backend python manage.py import_openlibrary --query "programming" --limit 50
 ```
 
-**Ver [docs/setup/](docs/setup/) para guías detalladas de instalación.**
+#### Con SSL/HTTPS (Opcional)
 
-#### 🔒 Con SSL/HTTPS (Opcional)
-
-Para desarrollo local con HTTPS:
+Para desarrollo local con certificados auto-firmados:
 
 ```bash
-# Usar el script de setup SSL
 ./scripts/setup/setup-ssl.sh  # Linux/Mac/WSL
 # o
 scripts\setup\setup-ssl.bat   # Windows
 
-# La aplicación estará disponible en:
+# Acceso con HTTPS:
 # Frontend: https://localhost
-# Backend API: https://localhost/api
-# Django Admin: https://localhost/admin
+# Backend: https://localhost/api
+# Admin: https://localhost/admin
 ```
 
-**Ver [docs/setup/](docs/setup/) para instrucciones detalladas de configuración SSL.**
+### Opción 2: Instalación Local (Sin Docker)
 
-### Opción 2: Instalación Local
+#### Prerequisitos Backend
+- Python 3.13+
+- PostgreSQL 16+
+- Meilisearch 0.31+
+- Redis 7+
 
-#### Backend
+#### Prerequisitos Frontend
+- Node.js 22+
+- npm 10+
+
+#### Backend Setup
 
 ```bash
-# Navegar al directorio del backend
+# 1. Navegar al backend
 cd backend
 
-# Crear y activar entorno virtual
+# 2. Crear entorno virtual
 python -m venv .venv
 
+# 3. Activar entorno virtual
 # Windows
 .venv\Scripts\activate
-
 # Linux/Mac
 source .venv/bin/activate
 
-# Instalar dependencias
+# 4. Instalar dependencias
 pip install -r requirements.txt
 
-# Copiar y configurar .env
+# 5. Configurar variables de entorno
 cp .env.example .env
+# Editar .env con tus configuraciones
 
-# Ejecutar migraciones
+# 6. Ejecutar migraciones
 python manage.py migrate
 
-# Crear superusuario
+# 7. Crear superusuario
 python manage.py createsuperuser
 
-# Iniciar servidor de desarrollo
+# 8. Iniciar servidor
 python manage.py runserver
 ```
 
-#### Frontend
+#### Frontend Setup
 
 ```bash
-# Navegar al directorio del frontend
+# 1. Navegar al frontend
 cd frontend
 
-# Instalar dependencias
+# 2. Instalar dependencias
 npm install
 
-# Copiar y configurar .env.local
+# 3. Configurar variables de entorno
 cp .env.example .env.local
+# Editar .env.local con tu configuración
 
-# Iniciar servidor de desarrollo
+# 4. Iniciar servidor de desarrollo
 npm run dev
 ```
 
-## 🔧 Configuración
+---
+
+## ⚙️ Configuración
 
 ### Variables de Entorno Backend
+
+Crea un archivo `.env` en la raíz del proyecto:
 
 ```env
 # Django
 DJANGO_ENV=development
-SECRET_KEY=your-secret-key-here
+SECRET_KEY=your-secret-key-here-change-in-production
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
 
 # Database
 DB_NAME=biblioteca_db
 DB_USER=postgres
-DB_PASSWORD=your-password
+DB_PASSWORD=your-secure-password
 DB_HOST=localhost
 DB_PORT=5432
 
 # Redis
 REDIS_URL=redis://localhost:6379/0
 
+# Meilisearch
+MEILISEARCH_HOST=http://localhost:7700
+MEILISEARCH_API_KEY=your-meilisearch-key
+
 # CORS
-CORS_ALLOWED_ORIGINS=http://localhost:3000
+CORS_ALLOWED_ORIGINS=http://localhost:3000,https://localhost
 
 # Stripe
 STRIPE_SECRET_KEY=sk_test_...
@@ -249,174 +577,344 @@ EMAIL_PORT=587
 EMAIL_USE_TLS=True
 EMAIL_HOST_USER=your-email@gmail.com
 EMAIL_HOST_PASSWORD=your-app-password
+
+# JWT
+JWT_ACCESS_TOKEN_LIFETIME=60  # minutos
+JWT_REFRESH_TOKEN_LIFETIME=1440  # minutos (24 horas)
+
+# File Upload
+MAX_UPLOAD_SIZE=52428800  # 50MB en bytes
 ```
 
 ### Variables de Entorno Frontend
 
+Crea un archivo `.env.local` en `frontend/`:
+
 ```env
+# API Configuration
 NEXT_PUBLIC_API_URL=http://localhost:8000/api
+
+# Stripe
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+
+# App Configuration
+NEXT_PUBLIC_APP_NAME=Biblioteca Virtual
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Features Flags (opcional)
+NEXT_PUBLIC_ENABLE_PWA=true
+NEXT_PUBLIC_ENABLE_OFFLINE=true
 ```
+
+---
+
+## 💻 Uso
+
+### Acceder a la Aplicación
+
+Una vez iniciado el proyecto:
+
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000/api
+- **Admin Panel**: http://localhost:8000/admin
+- **API Docs** (Swagger): http://localhost:8000/api/docs/
+- **Meilisearch Dashboard**: http://localhost:7700
+
+### Credenciales Iniciales
+
+Usa el superusuario creado durante la instalación para acceder al panel de administración.
+
+### Flujo de Usuario
+
+1. **Registro**: Crea una cuenta en `/register`
+2. **Login**: Inicia sesión en `/login`
+3. **Explorar**: Navega el catálogo en `/library`
+4. **Leer**: Abre un libro en el lector `/reader/[bookId]`
+5. **Suscribirse**: Selecciona un plan en `/plans` y completa el pago
+6. **Participar**: Únete a clubes en `/clubs`
+
+### API Endpoints Principales
+
+#### Autenticación
+```
+POST /api/auth/login/              # Login con JWT
+POST /api/auth/register/           # Registro de usuario
+POST /api/auth/refresh/            # Refresh token
+GET  /api/auth/user/               # Obtener perfil
+PUT  /api/auth/user/update/        # Actualizar perfil
+```
+
+#### Contenido
+```
+GET  /api/content/books/                    # Listar libros
+GET  /api/content/books/{slug}/             # Detalle del libro
+GET  /api/content/books/{slug}/reviews/     # Reseñas del libro
+POST /api/content/books/{slug}/reviews/     # Crear reseña
+GET  /api/content/user/favorites/           # Favoritos del usuario
+POST /api/content/user/favorites/{book_id}/ # Toggle favorito
+GET  /api/content/user/reading-history/     # Historial de lectura
+GET  /api/content/search/                   # Búsqueda avanzada
+```
+
+#### Suscripciones y Pagos
+```
+GET  /api/subscriptions/plans/         # Listar planes
+GET  /api/subscriptions/subscription/  # Suscripción actual
+POST /api/payments/checkout/           # Crear checkout
+POST /api/payments/webhook/            # Webhook de Stripe
+```
+
+**Ver [docs/api/](docs/api/) para documentación completa de la API.**
+
+---
 
 ## 📝 Scripts Disponibles
 
-El proyecto incluye una colección completa de scripts automatizados organizados en la carpeta [scripts/](scripts/).
+El proyecto incluye scripts automatizados en la carpeta `scripts/`:
 
-### Scripts Principales
+### Docker
 
 ```bash
-# Docker
-./scripts/docker/start_containers.sh    # Iniciar todos los contenedores
-./scripts/docker/check_docker.sh        # Verificar estado de Docker
+# Iniciar contenedores
+./scripts/docker/start_containers.sh    # Linux/Mac/WSL
+scripts\docker\start_containers.ps1     # Windows
 
-# Mantenimiento
-./scripts/maintenance/crear-superusuario.sh     # Crear usuario admin
-./scripts/maintenance/importar-libros-custom.sh # Importar libros
+# Verificar estado de Docker
+./scripts/docker/check_docker.sh
 
-# Utilidades
-./scripts/utils/diagnostico-completo.sh # Diagnóstico del sistema
-./scripts/utils/verificar-acceso.sh     # Verificar acceso
+# Detener contenedores
+docker compose down
 ```
 
-**Ver [scripts/README.md](scripts/README.md) para la lista completa de scripts disponibles.**
-
-### Comandos Backend
+### Mantenimiento
 
 ```bash
-python manage.py runserver              # Iniciar servidor de desarrollo
-python manage.py migrate                # Ejecutar migraciones
-python manage.py createsuperuser        # Crear superusuario
-python manage.py test                   # Ejecutar tests
-python manage.py import_openlibrary     # Importar libros desde OpenLibrary
+# Crear superusuario
+./scripts/maintenance/crear-superusuario.sh
+
+# Importar libros desde OpenLibrary
+./scripts/maintenance/importar-libros-custom.sh
+
+# Backup de base de datos
+./scripts/maintenance/backup-db.sh
+```
+
+### Utilidades
+
+```bash
+# Diagnóstico completo del sistema
+./scripts/utils/diagnostico-completo.sh
+
+# Verificar acceso a servicios
+./scripts/utils/verificar-acceso.sh
+```
+
+### Comandos Django
+
+```bash
+# Backend
+cd backend
+
+# Migraciones
+python manage.py makemigrations
+python manage.py migrate
+
+# Shell interactivo
+python manage.py shell
+
+# Tests
+python manage.py test
+
+# Importar libros
+python manage.py import_openlibrary --query "python" --limit 50
+
+# Reconstruir índice de búsqueda
+python manage.py rebuild_search_index
 ```
 
 ### Comandos Frontend
 
 ```bash
-npm run dev              # Desarrollo
-npm run build            # Build de producción
-npm run test             # Tests en modo watch
-npm run test:coverage    # Tests con reporte de coverage
+# Frontend
+cd frontend
+
+# Desarrollo
+npm run dev
+
+# Build de producción
+npm run build
+npm run start
+
+# Tests
+npm run test              # Modo watch
+npm run test:ci           # CI mode
+npm run test:coverage     # Con coverage
+
+# E2E Tests
+npm run test:e2e          # Headless
+npm run test:e2e:ui       # UI mode
+npm run test:e2e:headed   # Headed mode
 ```
+
+**Ver [scripts/README.md](scripts/README.md) para la lista completa de scripts.**
+
+---
 
 ## 🧪 Testing
 
-### Backend
+### Backend Testing
+
 ```bash
+cd backend
+
 # Ejecutar todos los tests
 python manage.py test
 
-# Ejecutar tests de una app específica
+# Test de una app específica
 python manage.py test apps.authentication
 
 # Con coverage
 coverage run --source='.' manage.py test
 coverage report
+coverage html  # Genera reporte HTML en htmlcov/
 ```
 
-### Frontend
+### Frontend Testing
+
 ```bash
-# Modo watch (desarrollo)
-npm run test
+cd frontend
 
-# Single run con coverage
-npm run test:coverage
+# Unit Tests (Jest + React Testing Library)
+npm run test              # Modo watch
+npm run test:ci           # Single run para CI
+npm run test:coverage     # Con reporte de coverage
 
-# CI mode
-npm run test:ci
+# E2E Tests (Playwright)
+npm run test:e2e          # Headless
+npm run test:e2e:ui       # Con UI de Playwright
+npm run test:e2e:headed   # Modo headed
+npm run test:e2e:debug    # Modo debug
 ```
 
-## 📊 Estado del Proyecto
+### Coverage Objetivo
 
-### Sprints Completados
-- ✅ **Sprint 0**: Setup y Preparación
-- ✅ **Sprint 1**: Autenticación Básica
-- ✅ **Sprint 2**: Perfiles de Usuario
-- ✅ **Sprint 3**: Sistema de Suscripciones
-- ✅ **Sprint 4**: Testing Frontend y Mejoras UX
-- ✅ **Sprint 5**: Sistema de Búsqueda Avanzada (Elasticsearch)
-- ✅ **Engagement Features**: Reseñas, Favoritos e Historial de Lectura
+- **Backend**: 80%+ para lógica de negocio
+- **Frontend**: 70%+ para componentes críticos
+- **E2E**: Flujos principales de usuario
 
-### Próximos Sprints
-- ⏳ **Sprint 6**: Lector de Documentos - Fase 1
-- ⏳ **Sprint 7**: Lector de Documentos - Fase 2
-- ⏳ **Sprint 8**: Sistema de Recomendaciones
+---
 
-Ver [PLANNING_SPRINTS_DETALLADO.md](PLANNING_SPRINTS_DETALLADO.md) para más detalles.
+## 🗺️ Roadmap
 
-### 🆕 Últimas Actualizaciones (Diciembre 2024)
+### Estado Actual (Enero 2026)
 
-#### Funcionalidades de Usuario
-- Sistema completo de reseñas con calificaciones por estrellas
-- Botón de favoritos con animaciones y feedback visual
-- Historial de lectura con estados (leyendo, completado, en pausa, abandonado)
-- Votación en reseñas (helpful/not helpful)
-- Páginas dedicadas para favoritos y historial de lectura
+#### ✅ Completado
+- Sprint 0-5: Setup, Auth, Perfiles, Suscripciones, Búsqueda
+- Sistema de Engagement (Reseñas, Favoritos, Historial)
+- Lector PDF con anotaciones completas
+- Préstamos físicos
+- Clubes de lectura
+- Sistema de notificaciones
+- Personalización de temas (6 temas + modo oscuro)
+- PWA completa
 
-#### Mejoras Técnicas
-- Actualización a Python 3.13 y Node.js 22
-- Migración completa de datos con nuevos modelos
-- Componente Tabs reutilizable (@radix-ui/react-tabs)
-- Sistema de permisos granulares (IsOwnerOrReadOnly)
-- Integración de date-fns para manejo de fechas
-- Store de Zustand extendido con funciones de engagement
+#### 🚧 En Progreso
+- Mejoras de UX/UI
+- Optimización de performance
+- Más tests E2E
 
-#### Importación de Datos
-- Comando de management para importar libros desde OpenLibrary API
-- Scripts de automatización para setup y verificación
-- Datos de prueba disponibles para desarrollo
+#### 📋 Próximos Sprints
 
-## 📈 Progreso
+**Sprint 11: Sistema de Recomendaciones** (Febrero 2026)
+- Algoritmo de recomendaciones basado en:
+  - Historial de lectura
+  - Reseñas y calificaciones
+  - Favoritos
+  - Categorías preferidas
+- Widget "Recomendado para ti"
+- API de recomendaciones
 
-```
-Backend:   ██████████████░░░░░░  70% completado
-Frontend:  ████████████░░░░░░░░  60% completado
-Tests:     ██████░░░░░░░░░░░░░░  30% completado
-Docs:      ██████████░░░░░░░░░░  50% completado
-Search:    ████████████████░░░░  80% completado (Elasticsearch)
-Engagement: ████████████████████  100% completado (Reviews, Favorites, History)
-```
+**Sprint 12: Analytics y Reporting** (Marzo 2026)
+- Dashboard de estadísticas avanzadas
+- Reportes de lectura para usuarios
+- Analytics para administradores
+- Exportación de reportes (PDF, CSV)
 
-## 🤝 Contribución
+**Sprint 13: Mejoras de Búsqueda** (Marzo 2026)
+- Búsqueda por contenido dentro de PDFs
+- Filtros avanzados adicionales
+- Búsqueda por similitud
+- Historial de búsquedas
 
-Las contribuciones son bienvenidas. Por favor:
+**Sprint 14: Gamificación** (Abril 2026)
+- Sistema de logros y badges
+- Puntos por actividades
+- Leaderboards
+- Desafíos de lectura
 
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
+**Sprint 15: Mobile App** (Mayo 2026)
+- Aplicación nativa para iOS y Android
+- Sincronización con web
+- Descarga de libros para lectura offline
 
-## 📄 Licencia
+### Características Planeadas a Largo Plazo
 
-Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+- 🔔 Notificaciones push
+- 🌐 Internacionalización (i18n)
+- 📊 Machine Learning para recomendaciones avanzadas
+- 🎙️ Audiolibros
+- 📝 Soporte para ePub y otros formatos
+- 🤝 Integración con bibliotecas externas
+- 📱 App móvil nativa
+- 🔍 OCR para digitalización de libros físicos
 
-## 👥 Equipo
+**Ver [docs/roadmap/](docs/roadmap/) para detalles completos.**
 
-- **Desarrollo**: Claude AI + Equipo Renascer do Saber
-- **Arquitectura**: Basada en mejores prácticas de Django y Next.js
-- **Diseño**: TailAdmin + shadcn/ui
+---
 
 ## 📚 Documentación
 
-Toda la documentación está organizada en la carpeta [docs/](docs/).
+Toda la documentación está organizada en la carpeta `docs/`:
 
-### 📂 Categorías de Documentación
+### Categorías
 
 - **[🚀 Setup](docs/setup/)** - Guías de instalación y configuración
 - **[📖 Guides](docs/guides/)** - Tutoriales y guías de uso
-- **[🔧 Fixes](docs/fixes/)** - Soluciones y correcciones
+- **[🏗️ Architecture](docs/architecture/)** - Diseño y arquitectura técnica
+- **[🔧 API](docs/api/)** - Documentación de endpoints
+- **[🔍 Troubleshooting](docs/troubleshooting/)** - Solución de problemas
 - **[📋 Sprint Docs](docs/sprint-docs/)** - Documentación de sprints
-- **[🏗️ Architecture](docs/architecture/)** - Arquitectura técnica
-- **[🔍 Troubleshooting](docs/troubleshooting/)** - Diagnóstico y soluciones
 
-### 🔗 Enlaces Rápidos
+### Enlaces Rápidos
 
-- **[📖 Índice de Documentación](docs/README.md)** - Punto de entrada a toda la documentación
-- **[🔧 Scripts Disponibles](scripts/README.md)** - Guía completa de scripts
-- **[🤝 Guía de Contribución](CONTRIBUTING.md)** - Cómo contribuir al proyecto
+- **[📖 Índice de Documentación](docs/README.md)** - Punto de entrada
+- **[🔧 Scripts Disponibles](scripts/README.md)** - Guía de scripts
+- **[🤝 Guía de Contribución](CONTRIBUTING.md)** - Cómo contribuir
+- **[🐳 Docker Setup](DOCKER-SETUP.md)** - Configuración de Docker
+- **[📋 Planning de Sprints](docs/sprint-docs/)** - Planificación detallada
 
-## 🐛 Reporte de Bugs
+---
+
+## 🤝 Contribución
+
+Las contribuciones son bienvenidas y apreciadas. Por favor lee nuestra [Guía de Contribución](CONTRIBUTING.md) antes de empezar.
+
+### Proceso de Contribución
+
+1. **Fork** el repositorio
+2. Crea una **rama** para tu feature (`git checkout -b feature/AmazingFeature`)
+3. **Commit** tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. **Push** a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un **Pull Request**
+
+### Guías de Estilo
+
+- **Python**: Seguir PEP 8
+- **JavaScript/TypeScript**: Seguir ESLint config del proyecto
+- **Commits**: Usar [Conventional Commits](https://www.conventionalcommits.org/)
+- **Documentación**: Escribir en español, ser claro y conciso
+
+### Reportar Bugs
 
 Si encuentras un bug, por favor abre un issue con:
 - Descripción detallada del problema
@@ -425,10 +923,83 @@ Si encuentras un bug, por favor abre un issue con:
 - Screenshots (si aplica)
 - Información del ambiente (OS, versión de navegador, etc.)
 
-## 💬 Soporte
+### Solicitar Features
 
-Para soporte, por favor abre un issue en GitHub o contacta al equipo de desarrollo.
+Para solicitar nuevas características:
+- Abre un issue con la etiqueta `enhancement`
+- Describe el problema que resuelve
+- Propón una solución (opcional)
+- Discute con la comunidad
 
 ---
 
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT. Ver el archivo [LICENSE](LICENSE) para más detalles.
+
+```
+MIT License
+
+Copyright (c) 2025 Renascer do Saber
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction...
+```
+
+---
+
+## 👥 Equipo y Créditos
+
+### Desarrollo
+- **Arquitectura**: Basada en mejores prácticas de Django REST Framework y Next.js
+- **Desarrollo**: Claude AI + Equipo Renascer do Saber
+- **Diseño UI**: TailAdmin + shadcn/ui + Radix UI
+
+### Tecnologías de Terceros
+- [Django](https://www.djangoproject.com/)
+- [Next.js](https://nextjs.org/)
+- [React](https://reactjs.org/)
+- [TailwindCSS](https://tailwindcss.com/)
+- [Stripe](https://stripe.com/)
+- [Meilisearch](https://www.meilisearch.com/)
+
+### Agradecimientos
+- OpenLibrary por la API de libros
+- shadcn/ui por los componentes
+- Radix UI por componentes accesibles
+- Comunidad open source
+
+---
+
+## 💬 Soporte
+
+Para obtener ayuda:
+
+- 📖 Lee la [Documentación](docs/README.md)
+- 🐛 Abre un [Issue](https://github.com/tu-usuario/bvs_framework/issues)
+- 💬 Participa en [Discussions](https://github.com/tu-usuario/bvs_framework/discussions)
+- 📧 Contacta al equipo: [email@example.com](mailto:email@example.com)
+
+---
+
+## 🌟 Apoya el Proyecto
+
+Si este proyecto te resulta útil:
+
+- ⭐ Dale una estrella en GitHub
+- 🐛 Reporta bugs
+- 💡 Sugiere features
+- 🤝 Contribuye con código
+- 📖 Mejora la documentación
+- 🗣️ Comparte con otros
+
+---
+
+<div align="center">
+
 **Desarrollado con ❤️ para la comunidad de Renascer do Saber**
+
+[⬆ Volver arriba](#-biblioteca-virtual-renascer-do-saber)
+
+</div>

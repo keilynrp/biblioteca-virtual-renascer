@@ -1,0 +1,59 @@
+name: ❓ Question
+description: Hacer una pregunta sobre el proyecto
+title: "[QUESTION]: "
+labels: ["question"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ¿Tienes una pregunta? Estamos aquí para ayudar!
+
+        **Nota**: Para preguntas generales, considera usar [GitHub Discussions](https://github.com/tu-usuario/bvs_framework/discussions) en su lugar.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Tu Pregunta
+      description: Haz tu pregunta de forma clara y concisa.
+      placeholder: ¿Cuál es tu pregunta?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto Adicional
+      description: Proporciona contexto que pueda ayudar a responder tu pregunta.
+      placeholder: Contexto relevante...
+
+  - type: dropdown
+    id: topic
+    attributes:
+      label: Tema
+      description: ¿Sobre qué es tu pregunta?
+      options:
+        - Installation/Setup
+        - Configuration
+        - Usage
+        - Development
+        - API
+        - Deployment
+        - Performance
+        - Security
+        - Contributing
+        - Otro
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Checklist
+      description: Por favor confirma lo siguiente.
+      options:
+        - label: He buscado en la documentación existente
+          required: true
+        - label: He buscado en issues y discussions previas
+          required: true

@@ -1,0 +1,72 @@
+name: 📚 Documentation
+description: Mejorar o agregar documentación
+title: "[DOCS]: "
+labels: ["documentation"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por ayudar a mejorar la documentación!
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Tipo de Documentación
+      description: ¿Qué tipo de documentación es?
+      options:
+        - README
+        - API Documentation
+        - Code Comments
+        - Setup Guide
+        - User Guide
+        - Architecture Docs
+        - Contributing Guide
+        - Troubleshooting
+        - Otro
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue
+    attributes:
+      label: ¿Qué está mal o falta?
+      description: Describe qué documentación falta o necesita mejora.
+      placeholder: Describe el problema con la documentación actual...
+    validations:
+      required: true
+
+  - type: textarea
+    id: improvement
+    attributes:
+      label: Mejora Propuesta
+      description: Describe cómo mejorarías la documentación.
+      placeholder: Cómo debería ser la documentación...
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Ubicación
+      description: ¿Dónde está o debería estar esta documentación?
+      placeholder: "Ej: docs/setup/DOCKER_SETUP.md línea 45"
+
+  - type: textarea
+    id: example
+    attributes:
+      label: Ejemplo o Contenido Propuesto
+      description: Si ya tienes el contenido, inclúyelo aquí.
+      placeholder: Puedes escribir el contenido propuesto...
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Checklist
+      description: Por favor confirma lo siguiente.
+      options:
+        - label: He revisado la documentación existente
+          required: true
+        - label: Estoy dispuesto a escribir esta documentación
+          required: false

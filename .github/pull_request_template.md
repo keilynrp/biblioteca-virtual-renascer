@@ -1,78 +1,222 @@
+# Pull Request
+
 ## 📝 Descripción
 
-<!-- Describe los cambios que introduces en este PR -->
+<!-- Proporciona una descripción clara y concisa de los cambios realizados -->
+
+## 🔗 Issue Relacionado
+
+<!-- Enlaza al issue que este PR resuelve. Si no hay issue, crea uno primero. -->
+Closes #(issue number)
 
 ## 🎯 Tipo de Cambio
 
-<!-- Marca con una X los que apliquen -->
+<!-- Marca con una X las opciones que apliquen -->
 
 - [ ] 🐛 Bug fix (cambio que corrige un issue)
 - [ ] ✨ Nueva funcionalidad (cambio que agrega funcionalidad)
-- [ ] 💥 Breaking change (fix o feature que causaría que funcionalidad existente no funcione como se esperaba)
-- [ ] 📚 Documentación (cambios solo en documentación)
-- [ ] 🎨 Estilo (formateo, punto y coma faltantes, etc; sin cambios en código)
-- [ ] ♻️ Refactoring (cambio de código que ni corrige un bug ni agrega funcionalidad)
+- [ ] 💥 Breaking change (cambio que rompe compatibilidad con versiones anteriores)
+- [ ] 🎨 Mejora de UI/UX
+- [ ] ♻️ Refactorización (mejora de código sin cambiar funcionalidad)
 - [ ] ⚡ Mejora de performance
-- [ ] ✅ Tests (agregar tests faltantes o corregir tests existentes)
-- [ ] 🔧 Chore (cambios al proceso de build o herramientas auxiliares)
+- [ ] 📚 Documentación
+- [ ] 🧪 Tests
+- [ ] 🔧 Configuración/DevOps
+- [ ] 🔒 Seguridad
 
-## 📋 Issue Relacionado
+## ✅ ¿Cómo se ha probado?
 
-<!-- Si este PR cierra un issue, enlázalo aquí -->
-Closes #(issue number)
+<!-- Describe las pruebas realizadas para verificar los cambios -->
 
-## 🧪 Tests
+- [ ] Test unitarios
+- [ ] Test de integración
+- [ ] Test E2E
+- [ ] Prueba manual
+- [ ] No requiere testing (solo docs, etc.)
 
-<!-- Describe los tests que agregaste o modificaste -->
+### Detalles de Testing
 
-- [ ] Los tests existentes pasan
-- [ ] Agregué nuevos tests para cubrir los cambios
-- [ ] Todos los tests nuevos pasan
+<!-- Describe los tests específicos realizados -->
+
+```
+# Comandos ejecutados:
+
+```
 
 ## 📸 Screenshots
 
-<!-- Si aplica, agrega screenshots de los cambios visuales -->
+<!-- Si aplica, agrega screenshots del before/after o de la nueva funcionalidad -->
 
-## ✅ Checklist
+<details>
+<summary>Ver screenshots</summary>
 
-<!-- Marca con una X cuando completes cada item -->
+**Antes:**
 
-- [ ] Mi código sigue las guías de estilo del proyecto
-- [ ] He realizado una auto-revisión de mi código
-- [ ] He comentado mi código, particularmente en áreas difíciles de entender
-- [ ] He actualizado la documentación correspondiente
-- [ ] Mis cambios no generan nuevas advertencias
-- [ ] He agregado tests que prueban que mi fix es efectivo o que mi feature funciona
-- [ ] Los tests unitarios nuevos y existentes pasan localmente
-- [ ] Cualquier cambio dependiente ha sido mergeado y publicado
 
-## 🔍 Cambios Técnicos
+**Después:**
+
+
+</details>
+
+## ✨ Cambios Realizados
+
+<!-- Lista detallada de los cambios -->
 
 ### Backend
-<!-- Lista los cambios en el backend -->
+-
 -
 
 ### Frontend
-<!-- Lista los cambios en el frontend -->
+-
 -
 
-### Base de Datos
-<!-- Si hay cambios en el esquema de BD -->
-- [ ] Requiere migraciones
-- [ ] Incluye rollback plan
+### Database
+-
+-
 
-## 📊 Impacto en Performance
+### Otros
+-
+-
 
-<!-- Describe cualquier impacto en performance, positivo o negativo -->
+## 📋 Checklist
 
-## 🚀 Deployment Notes
+<!-- Marca con una X las opciones completadas -->
 
-<!-- Notas especiales para deployment -->
+### Código
+- [ ] Mi código sigue los estándares del proyecto
+- [ ] He realizado auto-revisión del código
+- [ ] He comentado el código en áreas complejas
+- [ ] Mis cambios no generan warnings
+- [ ] El código pasa el linter (ESLint/Flake8)
 
-## 📝 Notas Adicionales
+### Tests
+- [ ] He agregado tests que prueban mi fix/feature
+- [ ] Tests nuevos y existentes pasan localmente
+- [ ] Coverage cumple con los objetivos (Backend: 80%, Frontend: 70%)
 
-<!-- Cualquier información adicional que los revisores deban saber -->
+### Documentación
+- [ ] He actualizado la documentación relevante
+- [ ] He actualizado el CHANGELOG.md
+- [ ] He agregado comentarios JSDoc/Docstrings donde corresponde
+- [ ] He actualizado README si es necesario
+
+### Database
+- [ ] He creado migraciones necesarias
+- [ ] Las migraciones son reversibles
+- [ ] He probado las migraciones en ambiente limpio
+
+### Commits
+- [ ] Mis commits siguen Conventional Commits
+- [ ] Los commits son atómicos y tienen mensajes descriptivos
+
+### Review
+- [ ] He revisado mi PR yo mismo primero
+- [ ] He probado los cambios localmente
+- [ ] He verificado que no hay conflictos con main
+- [ ] He verificado que CI/CD pasa exitosamente
+
+## 🔄 Cambios Dependientes
+
+<!-- ¿Este PR depende de otros PRs o issues? -->
+
+- Depende de: #
+- Bloquea: #
+- Relacionado con: #
+
+## 🚀 Deployment
+
+<!-- ¿Hay consideraciones especiales para el deployment? -->
+
+- [ ] Requiere actualizar variables de entorno
+- [ ] Requiere ejecutar migraciones
+- [ ] Requiere actualizar dependencias
+- [ ] Requiere cambios en configuración de servidor
+- [ ] No requiere acciones especiales
+
+### Notas de Deployment
+
+<!-- Instrucciones especiales para deployment -->
+
+```bash
+# Comandos necesarios:
+
+```
+
+## 📝 Notas para Revisores
+
+<!-- Información adicional para los revisores -->
+
+### Áreas de Foco
+
+<!-- En qué deberían enfocarse los revisores -->
+
+-
+-
+
+### Decisiones de Diseño
+
+<!-- Explica decisiones de diseño importantes -->
+
+-
+-
+
+### Posibles Riesgos
+
+<!-- Identifica posibles riesgos o efectos secundarios -->
+
+-
+-
+
+## 🎓 Aprendizajes
+
+<!-- (Opcional) ¿Qué aprendiste haciendo este cambio? -->
+
+-
+-
+
+## 📊 Métricas
+
+<!-- Si aplica, incluye métricas relevantes -->
+
+### Performance
+
+- **Tiempo de carga**: antes X ms → después Y ms
+- **Tamaño del bundle**: antes X KB → después Y KB
+- **Queries DB**: optimización de N+1, etc.
+
+### Coverage
+
+- **Backend**: X% → Y%
+- **Frontend**: X% → Y%
 
 ---
 
-**Por favor revisa la guía de contribución antes de abrir el PR**
+<details>
+<summary>📌 Plantilla de Revisión para Reviewers</summary>
+
+### Checklist de Revisión
+
+- [ ] El código es claro y fácil de entender
+- [ ] Los cambios cumplen el propósito del PR
+- [ ] No hay código duplicado innecesariamente
+- [ ] Las funciones son pequeñas y enfocadas
+- [ ] Los nombres de variables/funciones son descriptivos
+- [ ] No hay lógica innecesariamente compleja
+- [ ] Se manejan apropiadamente los errores
+- [ ] No hay vulnerabilidades de seguridad obvias
+- [ ] Los tests cubren los casos edge
+- [ ] La documentación es clara y completa
+
+</details>
+
+---
+
+## 📝 Comentarios del Autor
+
+<!-- Cualquier comentario adicional para los revisores -->
+
+
+---
+
+**¡Gracias por tu contribución!** 🎉
+

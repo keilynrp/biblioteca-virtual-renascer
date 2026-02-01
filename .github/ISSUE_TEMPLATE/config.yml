@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 GitHub Discussions
+    url: https://github.com/tu-usuario/bvs_framework/discussions
+    about: Para preguntas generales, ideas y discusiones
+  - name: 📖 Documentation
+    url: https://github.com/tu-usuario/bvs_framework/tree/main/docs
+    about: Lee la documentación completa del proyecto
+  - name: 🚀 Quick Start Guide
+    url: https://github.com/tu-usuario/bvs_framework/blob/main/docs/guides/START_HERE.md
+    about: Guía rápida para comenzar con el proyecto

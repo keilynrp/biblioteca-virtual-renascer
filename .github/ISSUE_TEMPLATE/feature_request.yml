@@ -1,0 +1,108 @@
+name: ✨ Feature Request
+description: Sugerir una nueva característica o mejora
+title: "[FEATURE]: "
+labels: ["enhancement", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por sugerir una nueva característica. Por favor completa la información debajo.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: ¿Qué Problema Resuelve?
+      description: Describe el problema o necesidad que esta feature resolvería.
+      placeholder: Describe el problema...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solución Propuesta
+      description: Describe la solución que te gustaría ver implementada.
+      placeholder: Describe cómo crees que debería funcionar...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas Consideradas
+      description: Describe alternativas que hayas considerado.
+      placeholder: Otras formas de resolver esto...
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Componente
+      description: ¿A qué parte del sistema aplica?
+      options:
+        - Frontend - UI/UX
+        - Backend - API
+        - Database - Models
+        - Authentication
+        - Reader PDF
+        - Search
+        - Payments
+        - Subscriptions
+        - Communities
+        - Documentation
+        - DevOps
+        - Otro
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Prioridad Sugerida
+      description: ¿Qué tan importante crees que es esto?
+      options:
+        - 🔴 Critical - Necesario para funcionalidad básica
+        - 🟠 High - Mejora significativa
+        - 🟡 Medium - Bueno tener
+        - 🟢 Low - Mejora menor
+    validations:
+      required: true
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: Mockups/Screenshots
+      description: Si tienes mockups o ejemplos visuales, compártelos aquí.
+      placeholder: Arrastra imágenes o pega URLs...
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Contexto Adicional
+      description: Agrega cualquier otro contexto sobre la feature.
+      placeholder: Información adicional...
+
+  - type: dropdown
+    id: willingness
+    attributes:
+      label: ¿Estarías dispuesto a contribuir?
+      description: ¿Te gustaría ayudar a implementar esta feature?
+      options:
+        - Sí, puedo implementarlo
+        - Sí, puedo ayudar parcialmente
+        - No, solo sugiriendo
+        - No estoy seguro
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Checklist
+      description: Por favor confirma lo siguiente.
+      options:
+        - label: He buscado en issues existentes y no encontré una feature similar
+          required: true
+        - label: Esta feature beneficiaría a múltiples usuarios
+          required: false
+        - label: He revisado el roadmap del proyecto
+          required: false

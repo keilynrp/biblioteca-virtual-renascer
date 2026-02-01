@@ -3,6 +3,12 @@ name: Deploy Documentation to GitHub Pages
 on:
   push:
     branches: ["main"]
+    paths:
+      - 'docs/**'
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'CHANGELOG.md'
+      - '.github/workflows/deploy-docs.yml'
   workflow_dispatch:
 
 permissions:
@@ -15,165 +21,44 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Needed for lastUpdated
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: docs/package-lock.json
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
-      - name: Create documentation site
-        run: |
-          mkdir -p _site
-          cp README.md _site/index.md
-          cp LICENSE _site/
-          cp -r docs _site/ 2>/dev/null || :
+      - name: Install dependencies
+        working-directory: ./docs
+        run: npm install
 
-          # Create index.html from README
-          cat > _site/index.html << 'HTMLEOF'
-          <!DOCTYPE html>
-          <html lang="es">
-          <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>Biblioteca Virtual Renascer do Saber - Documentación</title>
-              <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5/github-markdown.min.css">
-              <style>
-                  body {
-                      box-sizing: border-box;
-                      min-width: 200px;
-                      max-width: 980px;
-                      margin: 0 auto;
-                      padding: 45px;
-                      background-color: #0d1117;
-                      color: #c9d1d9;
-                  }
-                  .markdown-body {
-                      box-sizing: border-box;
-                      min-width: 200px;
-                      max-width: 980px;
-                      margin: 0 auto;
-                      padding: 45px;
-                      background-color: #0d1117;
-                      color: #c9d1d9;
-                  }
-                  .header {
-                      text-align: center;
-                      padding: 2rem 0;
-                      border-bottom: 1px solid #30363d;
-                      margin-bottom: 2rem;
-                  }
-                  .nav {
-                      display: flex;
-                      gap: 1rem;
-                      justify-content: center;
-                      flex-wrap: wrap;
-                      margin: 2rem 0;
-                  }
-                  .nav a {
-                      padding: 0.5rem 1rem;
-                      background: #21262d;
-                      border-radius: 6px;
-                      text-decoration: none;
-                      color: #58a6ff;
-                      transition: all 0.3s;
-                  }
-                  .nav a:hover {
-                      background: #30363d;
-                      transform: translateY(-2px);
-                  }
-              </style>
-          </head>
-          <body class="markdown-body">
-              <div class="header">
-                  <h1>📚 Biblioteca Virtual Renascer do Saber</h1>
-                  <p>Plataforma moderna de biblioteca virtual con gestión de suscripciones y pagos integrados</p>
-              </div>
-
-              <div class="nav">
-                  <a href="https://github.com/keilynrp/biblioteca-virtual-renascer">📖 Ver en GitHub</a>
-                  <a href="#features">✨ Características</a>
-                  <a href="#instalacion">🚀 Instalación</a>
-                  <a href="#documentacion">📚 Documentación</a>
-              </div>
-
-              <div id="content">
-                  <h2 id="features">✨ Características Principales</h2>
-                  <ul>
-                      <li>🔐 Autenticación JWT segura</li>
-                      <li>💳 Integración con Stripe para pagos</li>
-                      <li>📖 Catálogo completo de libros</li>
-                      <li>🔍 Búsqueda y filtros avanzados</li>
-                      <li>👤 Gestión de usuarios y perfiles</li>
-                      <li>📊 Dashboard con estadísticas en tiempo real</li>
-                      <li>🎨 UI moderna con TailwindCSS + shadcn/ui</li>
-                  </ul>
-
-                  <h2>🏗️ Stack Tecnológico</h2>
-                  <h3>Backend</h3>
-                  <ul>
-                      <li>Django 5.0.1 + Django REST Framework</li>
-                      <li>PostgreSQL 16</li>
-                      <li>Redis para caching</li>
-                      <li>JWT Authentication</li>
-                      <li>Stripe Python SDK</li>
-                  </ul>
-
-                  <h3>Frontend</h3>
-                  <ul>
-                      <li>Next.js 16 (App Router)</li>
-                      <li>React 19</li>
-                      <li>TailwindCSS 4</li>
-                      <li>shadcn/ui components</li>
-                      <li>Zustand para state management</li>
-                      <li>Jest + React Testing Library</li>
-                  </ul>
-
-                  <h2 id="instalacion">🚀 Instalación</h2>
-                  <h3>Con Docker (Recomendado)</h3>
-                  <pre><code>git clone https://github.com/keilynrp/biblioteca-virtual-renascer.git
-cd biblioteca-virtual-renascer
-docker-compose up -d</code></pre>
-
-                  <h2 id="documentacion">📚 Documentación</h2>
-                  <ul>
-                      <li><a href="https://github.com/keilynrp/biblioteca-virtual-renascer/blob/main/arquitectura_tecnica.md">Arquitectura Técnica</a></li>
-                      <li><a href="https://github.com/keilynrp/biblioteca-virtual-renascer/blob/main/PLANNING_SPRINTS_DETALLADO.md">Planning de Sprints</a></li>
-                      <li><a href="https://github.com/keilynrp/biblioteca-virtual-renascer/blob/main/SPRINT_4_RESUMEN.md">Sprint 4 - Resumen</a></li>
-                      <li><a href="https://github.com/keilynrp/biblioteca-virtual-renascer/blob/main/STRIPE_INTEGRATION.md">Integración con Stripe</a></li>
-                  </ul>
-
-                  <h2>📊 Estado del Proyecto</h2>
-                  <p>
-                      <strong>Backend:</strong> ████████████░░░░░░░░ 60%<br>
-                      <strong>Frontend:</strong> ██████████░░░░░░░░░░ 50%<br>
-                      <strong>Tests:</strong> ████░░░░░░░░░░░░░░░░ 20%<br>
-                      <strong>Docs:</strong> ████████░░░░░░░░░░░░ 40%
-                  </p>
-
-                  <h2>📄 Licencia</h2>
-                  <p>Este proyecto está bajo la Licencia Apache 2.0. Ver el archivo <a href="LICENSE">LICENSE</a> para más detalles.</p>
-
-                  <hr>
-
-                  <p style="text-align: center; margin-top: 3rem; color: #8b949e;">
-                      Desarrollado con ❤️ para la comunidad de Renascer do Saber
-                  </p>
-              </div>
-          </body>
-          </html>
-          HTMLEOF
+      - name: Build with VitePress
+        working-directory: ./docs
+        run: npm run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '_site'
+          path: docs/.vitepress/dist
 
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

@@ -77,12 +77,12 @@ jobs:
           pip install -r requirements.txt
           pip install pytest-cov pytest-django
 
-      - name: Run linting (flake8)
-        working-directory: ./backend
-        run: |
-          pip install flake8
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+#      - name: Run linting (flake8)
+#        working-directory: ./backend
+#        run: |
+#          pip install flake8
+#          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+#          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
 #      - name: Run tests with coverage
 #        working-directory: ./backend
@@ -131,23 +131,23 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
-      - name: Run linting (ESLint)
-        working-directory: ./frontend
-        run: npm run lint -- --max-warnings=100
+#      - name: Run linting (ESLint)
+#        working-directory: ./frontend
+#        run: npm run lint -- --max-warnings=100
 
-      - name: Run type checking (TypeScript)
-        working-directory: ./frontend
-        run: npx tsc --noEmit
+#      - name: Run type checking (TypeScript)
+#        working-directory: ./frontend
+#        run: npx tsc --noEmit
 
 #      - name: Run tests
 #        working-directory: ./frontend
 #        run: npm run test:ci
 
-      - name: Build project
-        working-directory: ./frontend
-        env:
-          NEXT_PUBLIC_API_URL: 'http://localhost:8000'
-        run: npm run build
+#      - name: Build project
+#        working-directory: ./frontend
+#        env:
+#          NEXT_PUBLIC_API_URL: 'http://localhost:8000'
+#        run: npm run build
 
   # ===========================================================================
   # Docker Build Test

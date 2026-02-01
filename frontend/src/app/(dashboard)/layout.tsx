@@ -295,7 +295,7 @@ export default function DashboardLayout({
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="relative flex items-center justify-between h-16 px-6 bg-card/80 backdrop-blur-xl shadow-lg border-b border-border/50">
+                <header className="relative z-30 flex items-center justify-between h-16 px-6 bg-card/80 backdrop-blur-xl shadow-lg border-b border-border/50">
                     {/* Decorative gradient */}
                     <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary-dark/5 pointer-events-none" />
 

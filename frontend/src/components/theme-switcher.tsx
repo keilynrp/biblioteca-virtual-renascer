@@ -109,7 +109,7 @@ export function ThemeSwitcher() {
   }
 
   return (
-    <div className="relative">
+    <div className="relative z-50">
       {/* Toggle Button */}
       <Button
         onClick={() => setIsOpen(!isOpen)}
@@ -130,8 +130,8 @@ export function ThemeSwitcher() {
           />
 
           {/* Panel */}
-          <Card className="absolute right-0 top-12 z-[9999] w-96 card-frosted shadow-elevated-xl
-                          animate-scaleIn border-2 border-[hsl(var(--border-strong))]">
+          <Card className="absolute right-0 top-12 z-[9999] w-96 bg-white dark:bg-card shadow-elevated-xl
+                          animate-scaleIn border-2 border-[hsl(var(--border-strong))] transition-none">
             <CardHeader className="gradient-primary text-white relative overflow-hidden">
               {/* Decorative blur circles */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
@@ -148,7 +148,7 @@ export function ThemeSwitcher() {
 
             <CardContent className="pt-6 space-y-6">
               {/* Dark Mode Toggle */}
-              <div className="glass p-4 rounded-xl">
+              <div className="bg-muted/40 p-4 rounded-xl border border-border">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     {darkMode ? (
@@ -164,17 +164,15 @@ export function ThemeSwitcher() {
                   {/* Toggle Switch */}
                   <button
                     onClick={toggleDarkMode}
-                    className={`relative w-14 h-8 rounded-full transition-colors duration-300 ${
-                      darkMode
-                        ? 'bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--primary-dark))]'
-                        : 'bg-[hsl(var(--muted))]'
-                    }`}
+                    className={`relative w-14 h-8 rounded-full transition-colors duration-300 ${darkMode
+                      ? 'bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--primary-dark))]'
+                      : 'bg-[hsl(var(--muted))]'
+                      }`}
                   >
                     <div
                       className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-md
-                                 transform transition-transform duration-300 ${
-                        darkMode ? 'translate-x-7' : 'translate-x-1'
-                      }`}
+                                 transform transition-transform duration-300 ${darkMode ? 'translate-x-7' : 'translate-x-1'
+                        }`}
                     />
                   </button>
                 </div>
@@ -202,11 +200,10 @@ export function ThemeSwitcher() {
                         key={theme.name}
                         onClick={() => applyTheme(theme.class)}
                         className={`group relative p-4 rounded-xl border-2 transition-all duration-300
-                                   hover:shadow-elevated-md ${
-                          isActive
+                                   hover:shadow-elevated-md ${isActive
                             ? 'border-[hsl(var(--primary))] shadow-primary bg-[hsl(var(--primary-soft))]'
                             : 'border-[hsl(var(--border))] hover:border-[hsl(var(--border-strong))]'
-                        }`}
+                          }`}
                       >
                         {/* Color Circle */}
                         <div className="relative mb-3">
@@ -248,7 +245,7 @@ export function ThemeSwitcher() {
               </div>
 
               {/* Preview Section */}
-              <div className="glass p-4 rounded-xl space-y-3">
+              <div className="bg-muted/40 p-4 rounded-xl border border-border space-y-3">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="h-1 w-1 rounded-full bg-[hsl(var(--primary))]" />
                   <h4 className="font-semibold text-sm">Vista Previa</h4>

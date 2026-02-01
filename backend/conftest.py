@@ -48,7 +48,7 @@ def create_user(db):
             kwargs['user_type'] = 'student'
             
         if 'password' not in kwargs:
-            password = 'TestPass123!'
+            password = 'Strong!Password123'
         else:
             password = kwargs.pop('password')
 
@@ -67,10 +67,10 @@ def user(create_user):
     """
     return create_user(
         email='user@example.com',
-        password='TestPass123!',
+        password='Strong!Password123',
         first_name='Regular',
         last_name='User',
-        user_type='STUDENT'
+        user_type='student'
     )
 
 

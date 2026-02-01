@@ -63,6 +63,9 @@ class ChangePasswordView(generics.UpdateAPIView):
     serializer_class = ChangePasswordSerializer
 
     def update(self, request, *args, **kwargs):
+        from django.contrib.auth.password_validation import validate_password
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = request.user
@@ -72,7 +75,17 @@ class ChangePasswordView(generics.UpdateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        user.set_password(serializer.data.get("new_password"))
+        # Validate new password
+        new_password = serializer.data.get("new_password")
+        try:
+            validate_password(new_password, user)
+        except DjangoValidationError as e:
+            return Response(
+                {"new_password": list(e.messages)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.set_password(new_password)
         user.save()
         return Response(
             {"status": "Password updated successfully"},

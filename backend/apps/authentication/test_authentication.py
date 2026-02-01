@@ -81,7 +81,7 @@ class TestUserLogin:
         """Test successful login with correct credentials"""
         login_data = {
             'email': user.email,
-            'password': 'TestPass123!'
+            'password': 'Strong!Password123'
         }
 
         response = api_client.post('/api/auth/login/', login_data, format='json')
@@ -230,7 +230,7 @@ class TestPasswordChange:
     def test_change_password_success(self, authenticated_client, user):
         """Test user can change password with correct old password"""
         password_data = {
-            'old_password': 'TestPass123!',
+            'old_password': 'Strong!Password123',
             'new_password': 'NewTestPass123!'
         }
 
@@ -264,7 +264,7 @@ class TestPasswordChange:
     def test_change_password_weak_new_password(self, authenticated_client, user):
         """Test password change fails with weak new password"""
         password_data = {
-            'old_password': 'TestPass123!',
+            'old_password': 'Strong!Password123',
             'new_password': '123'  # Too weak
         }
 
@@ -279,7 +279,7 @@ class TestPasswordChange:
     def test_change_password_unauthenticated(self, api_client):
         """Test unauthenticated user cannot change password"""
         password_data = {
-            'old_password': 'TestPass123!',
+            'old_password': 'Strong!Password123',
             'new_password': 'NewTestPass123!'
         }
 

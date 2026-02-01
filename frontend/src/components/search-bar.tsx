@@ -235,7 +235,7 @@ export function SearchBar({
                 onClick={handleSearch}
                 className="text-sm text-primary hover:underline font-medium"
               >
-                Ver todos los resultados para "{query}"
+                Ver todos los resultados para &quot;{query}&quot;
               </button>
             </div>
           )}

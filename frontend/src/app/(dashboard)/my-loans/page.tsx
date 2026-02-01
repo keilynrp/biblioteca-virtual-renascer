@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { PageHeader } from '@/components/page-header'
 import { LoanCard } from '@/components/loans/loan-card'
 import { useLoans } from '@/hooks/use-loans'
@@ -101,12 +102,12 @@ export default function MyLoansPage() {
                     <p className="text-muted-foreground mb-4">
                         Explora nuestra biblioteca y solicita libros prestados
                     </p>
-                    <a
+                    <Link
                         href="/library"
                         className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                     >
                         Ir a la Biblioteca
-                    </a>
+                    </Link>
                 </div>
             ) : (
                 <Tabs defaultValue="all" className="w-full">

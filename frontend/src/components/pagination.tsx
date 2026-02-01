@@ -37,7 +37,7 @@ export const Pagination = memo(function Pagination({
       // Calcular rango de páginas a mostrar
       const halfMax = Math.floor(maxPages / 2)
       let start = Math.max(1, currentPage - halfMax)
-      let end = Math.min(totalPages, start + maxPages - 1)
+      const end = Math.min(totalPages, start + maxPages - 1)
 
       // Ajustar start si end está en el límite
       if (end === totalPages) {

@@ -190,7 +190,7 @@ function SearchPageContent() {
                 <h2 className="text-xl font-semibold">
                   {query ? (
                     <>
-                      Resultados para "<span className="text-primary">{query}</span>"
+                      Resultados para &quot;<span className="text-primary">{query}</span>&quot;
                     </>
                   ) : (
                     'Todos los libros'
@@ -310,7 +310,7 @@ function SearchPageContent() {
                 <p className="text-muted-foreground mb-6">
                   {query ? (
                     <>
-                      No encontramos libros que coincidan con "<span className="font-medium">{query}</span>"
+                      No encontramos libros que coincidan con &quot;<span className="font-medium">{query}</span>&quot;
                     </>
                   ) : (
                     'Intenta ajustar los filtros de búsqueda'

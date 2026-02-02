@@ -36,7 +36,8 @@ import {
     Heart,
     BookMarked,
     Shield,
-    BookUp, // Icon for Loans
+    BookUp,
+    Building2, // Icon for Institutions
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { SearchBar } from "@/components/search-bar"
@@ -104,6 +105,8 @@ export default function DashboardLayout({
         { href: "/admin/authors", label: "Administrar Autores", icon: Users },
         { href: "/admin/categories", label: "Administrar Categorías", icon: FolderOpen },
         { href: "/plans", label: "Planes", icon: CreditCard },
+        { href: "/institutions", label: "Instituciones", icon: Building2, adminOnly: true },
+        { href: "/users", label: "Usuarios", icon: Users, adminOnly: true },
         { href: "/profile", label: "Perfil", icon: User },
     ]
 

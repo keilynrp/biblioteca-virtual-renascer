@@ -1,9 +1,10 @@
 # =============================================================================
 # Authentication Views - BVS Backend
 # =============================================================================
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, viewsets, filters
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
+from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth import get_user_model
 from django.utils.decorators import method_decorator
 from .serializers import RegisterSerializer, UserSerializer, ChangePasswordSerializer
@@ -104,3 +105,17 @@ def get_user_profile(request):
     """
     serializer = UserSerializer(request.user)
     return Response(serializer.data)
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    Admin viewset for managing users.
+    Supports filtering by institution and searching by username/email.
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = (permissions.IsAdminUser,)
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['institution']
+    search_fields = ['username', 'email', 'first_name', 'last_name']
+

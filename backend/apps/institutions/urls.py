@@ -1,7 +1,11 @@
 
-from django.urls import path
-from .views import InstitutionListView
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import InstitutionViewSet
+
+router = DefaultRouter()
+router.register(r'', InstitutionViewSet)
 
 urlpatterns = [
-    path('', InstitutionListView.as_view(), name='institution_list'),
+    path('', include(router.urls)),
 ]

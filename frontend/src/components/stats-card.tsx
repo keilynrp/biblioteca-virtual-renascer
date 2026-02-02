@@ -40,15 +40,15 @@ export const StatsCard = memo(function StatsCard({ title, value, change, icon: I
     }, [value])
 
     const trendColor = trend === "up"
-        ? "text-emerald-800 dark:text-emerald-300"
+        ? "text-emerald-900 dark:text-emerald-300"
         : trend === "down"
-        ? "text-red-800 dark:text-red-300"
-        : "text-muted-foreground"
+            ? "text-red-900 dark:text-red-300"
+            : "text-muted-foreground"
     const trendBg = trend === "up"
-        ? "bg-emerald-100 dark:bg-emerald-900/30"
+        ? "bg-emerald-200/80 dark:bg-emerald-900/40"
         : trend === "down"
-        ? "bg-red-100 dark:bg-red-900/30"
-        : "bg-muted"
+            ? "bg-red-200/80 dark:bg-red-900/40"
+            : "bg-muted"
 
     const displayedValue = typeof value === 'number' ? displayValue : value
 

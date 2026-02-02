@@ -1,15 +1,19 @@
 name: Deploy Documentation to GitHub Pages
 
+# Disabled: GitHub Pages not configured in repository settings
+# To enable: Go to Settings → Pages → Source: GitHub Actions
+# Then uncomment the push trigger below
+
 on:
-  push:
-    branches: ["main"]
-    paths:
-      - 'docs/**'
-      - 'README.md'
-      - 'CONTRIBUTING.md'
-      - 'CHANGELOG.md'
-      - '.github/workflows/deploy-docs.yml'
-  workflow_dispatch:
+  # push:
+  #   branches: ["main"]
+  #   paths:
+  #     - 'docs/**'
+  #     - 'README.md'
+  #     - 'CONTRIBUTING.md'
+  #     - 'CHANGELOG.md'
+  #     - '.github/workflows/deploy-docs.yml'
+  workflow_dispatch:  # Manual trigger only
 
 permissions:
   contents: read

@@ -33,6 +33,7 @@ import { AvatarUpload } from "@/components/ui/avatar-upload"
 import { toast } from "@/hooks/use-toast"
 import { Camera, Mail, Phone, Building2, Edit2, Lock, CreditCard, User2 } from "lucide-react"
 import Image from "next/image"
+import { getAvatarUrl } from "@/lib/utils"
 
 const profileSchema = z.object({
     username: z.string().min(2),
@@ -78,6 +79,13 @@ export default function ProfilePage() {
                 setInstitutions(Array.isArray(institutionsData) ? institutionsData : [])
 
                 const userData = userResponse.data
+
+                // Synchronize authStore with latest data from backend
+                const { accessToken, refreshToken } = useAuthStore.getState()
+                if (accessToken && refreshToken) {
+                    login(userData, accessToken, refreshToken)
+                }
+
                 form.reset({
                     username: userData.username,
                     email: userData.email,
@@ -169,7 +177,7 @@ export default function ProfilePage() {
                                 <div className="h-24 w-24 rounded-full border-2 border-border overflow-hidden bg-muted">
                                     {user.avatar ? (
                                         <Image
-                                            src={user.avatar}
+                                            src={getAvatarUrl(user.avatar)}
                                             alt={user.username}
                                             width={96}
                                             height={96}
@@ -344,7 +352,7 @@ export default function ProfilePage() {
                             <div className="flex justify-center pb-4 border-b">
                                 <AvatarUpload
                                     username={user.username}
-                                    currentAvatar={user.avatar}
+                                    currentAvatar={getAvatarUrl(user.avatar)}
                                     onFileSelect={setAvatarFile}
                                 />
                             </div>

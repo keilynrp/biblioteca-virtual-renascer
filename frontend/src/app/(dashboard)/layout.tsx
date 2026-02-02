@@ -43,6 +43,7 @@ import { useState, useEffect } from "react"
 import { SearchBar } from "@/components/search-bar"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import { NotificationBellComponent } from "@/components/notifications/notification-bell-component"
+import { getAvatarUrl } from "@/lib/utils"
 
 export default function DashboardLayout({
     children,
@@ -360,7 +361,7 @@ export default function DashboardLayout({
                                     "
                                     >
                                         <Avatar className="h-9 w-9 ring-2 ring-primary/30 group-hover:ring-primary/50 transition-all">
-                                            <AvatarImage src={user?.avatar} alt={user?.username} />
+                                            <AvatarImage src={getAvatarUrl(user?.avatar)} alt={user?.username} />
                                             <AvatarFallback className="bg-gradient-to-br from-primary via-primary-dark to-primary text-white font-bold text-sm">
                                                 {user?.username?.charAt(0).toUpperCase()}
                                             </AvatarFallback>
@@ -380,7 +381,7 @@ export default function DashboardLayout({
                                     <DropdownMenuLabel className="font-normal p-4">
                                         <div className="flex items-center gap-3">
                                             <Avatar className="h-12 w-12 ring-2 ring-primary/30">
-                                                <AvatarImage src={user?.avatar} alt={user?.username} />
+                                                <AvatarImage src={getAvatarUrl(user?.avatar)} alt={user?.username} />
                                                 <AvatarFallback className="bg-gradient-to-br from-primary via-primary-dark to-primary text-white font-bold">
                                                     {user?.username?.charAt(0).toUpperCase()}
                                                 </AvatarFallback>

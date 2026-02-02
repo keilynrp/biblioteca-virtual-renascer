@@ -116,7 +116,7 @@ def get_user_profile(request):
 
     Rate limit: 100 requests per minute
     """
-    serializer = UserSerializer(request.user)
+    serializer = UserSerializer(request.user, context={'request': request})
     return Response(serializer.data)
 
 

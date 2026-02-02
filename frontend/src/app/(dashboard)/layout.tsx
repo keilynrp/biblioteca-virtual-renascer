@@ -121,6 +121,7 @@ export default function DashboardLayout({
                 w-72
                 border-r border-border/50
                 backdrop-blur-xl bg-card/95
+                flex flex-col h-full
             `}>
                 {/* Decorative gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-primary-dark/5 pointer-events-none" />
@@ -251,7 +252,7 @@ export default function DashboardLayout({
                 </nav>
 
                 {/* Sidebar Footer */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border bg-gradient-to-t from-muted/50 space-y-2">
+                <div className="p-4 border-t border-border bg-gradient-to-t from-muted/50 space-y-2">
                     {/* Settings Link */}
                     <Link
                         href="/settings"

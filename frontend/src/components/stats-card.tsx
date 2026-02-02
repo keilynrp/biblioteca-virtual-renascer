@@ -1,6 +1,6 @@
 import { LucideIcon } from "lucide-react"
 import { memo, useState, useEffect } from "react"
-import { TrendingUp, TrendingDown } from "lucide-react"
+import { ArrowUpRight, ArrowDownRight } from "lucide-react"
 
 interface StatsCardProps {
     title: string
@@ -39,17 +39,6 @@ export const StatsCard = memo(function StatsCard({ title, value, change, icon: I
         }
     }, [value])
 
-    const trendColor = trend === "up"
-        ? "text-emerald-900 dark:text-emerald-300"
-        : trend === "down"
-            ? "text-red-900 dark:text-red-300"
-            : "text-muted-foreground"
-    const trendBg = trend === "up"
-        ? "bg-emerald-200/80 dark:bg-emerald-900/40"
-        : trend === "down"
-            ? "bg-red-200/80 dark:bg-red-900/40"
-            : "bg-muted"
-
     const displayedValue = typeof value === 'number' ? displayValue : value
 
     return (
@@ -67,44 +56,50 @@ export const StatsCard = memo(function StatsCard({ title, value, change, icon: I
 
             <div className="relative flex items-start justify-between">
                 <div className="flex-1">
-                    <p className="text-sm font-medium text-muted-foreground mb-2 transition-colors group-hover:text-primary">
-                        {title}
-                    </p>
-                    <h3 className="text-3xl font-bold text-foreground mb-2 transition-all duration-300 group-hover:scale-105">
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="
+                            h-11 w-11 rounded-full
+                            bg-primary/10 dark:bg-primary/20
+                            flex items-center justify-center
+                            transition-all duration-300
+                            group-hover:bg-primary/20 dark:group-hover:bg-primary/30
+                        ">
+                            <Icon className="h-5 w-5 text-primary" />
+                        </div>
+                    </div>
+
+                    <h3 className="text-3xl font-bold text-foreground mb-1 transition-all duration-300 group-hover:scale-105 origin-left">
                         {displayedValue.toLocaleString()}
                     </h3>
+
+                    <p className="text-sm font-medium text-muted-foreground mb-3 transition-colors group-hover:text-foreground/70">
+                        {title}
+                    </p>
+
                     {change !== undefined && (
                         <div className="flex items-center gap-2">
+                            {/* TailAdmin-style trend badge */}
                             <span className={`
-                                text-xs font-semibold px-2 py-1 rounded-full
-                                ${trendBg} ${trendColor}
-                                flex items-center gap-1
-                                transition-all duration-300
-                                group-hover:scale-105
+                                inline-flex items-center gap-0.5 text-sm font-medium
+                                ${trend === "up"
+                                    ? "text-emerald-600 dark:text-emerald-400"
+                                    : trend === "down"
+                                        ? "text-rose-600 dark:text-rose-400"
+                                        : "text-muted-foreground"
+                                }
                             `}>
                                 {trend === "up" ? (
-                                    <TrendingUp className="h-3 w-3" />
+                                    <ArrowUpRight className="h-4 w-4" strokeWidth={2.5} />
                                 ) : trend === "down" ? (
-                                    <TrendingDown className="h-3 w-3" />
+                                    <ArrowDownRight className="h-4 w-4" strokeWidth={2.5} />
                                 ) : null}
-                                {change > 0 ? "+" : ""}{change}%
+                                {Math.abs(change)}%
                             </span>
                             {description && (
-                                <span className="text-xs text-muted-foreground">{description}</span>
+                                <span className="text-sm text-muted-foreground">{description}</span>
                             )}
                         </div>
                     )}
-                </div>
-                <div className="
-                    h-14 w-14 rounded-xl
-                    bg-gradient-to-br from-primary to-primary-dark
-                    flex items-center justify-center
-                    shadow-lg shadow-primary/30
-                    transition-all duration-300
-                    group-hover:shadow-2xl group-hover:shadow-primary/40
-                    group-hover:scale-110 group-hover:rotate-3
-                ">
-                    <Icon className="h-7 w-7 text-white transition-transform duration-300 group-hover:scale-110" />
                 </div>
             </div>
 
@@ -113,3 +108,4 @@ export const StatsCard = memo(function StatsCard({ title, value, change, icon: I
         </div>
     )
 })
+

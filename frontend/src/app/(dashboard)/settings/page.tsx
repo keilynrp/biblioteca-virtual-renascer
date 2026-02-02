@@ -19,12 +19,14 @@ import {
 import { LoanCard } from '@/components/loans/loan-card'
 import api from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
+import { PasswordPolicySection } from '@/components/settings/password-policy-section'
 
 export default function SettingsPage() {
     const { activeLoans, isLoading, returnBook, renewLoan } = useLoans()
     const { toast } = useToast()
     const [userStats, setUserStats] = useState<any>(null)
     const [subscription, setSubscription] = useState<any>(null)
+    const [isAdmin, setIsAdmin] = useState(false)
 
     useEffect(() => {
         // Fetch user subscription
@@ -32,7 +34,12 @@ export default function SettingsPage() {
             .then(res => setSubscription(res.data))
             .catch(() => setSubscription(null))
 
-        // Could fetch reading stats here
+        // Fetch user profile to check if admin
+        api.get('/auth/user/')
+            .then(res => {
+                setIsAdmin(res.data.is_staff || res.data.is_superuser)
+            })
+            .catch(() => setIsAdmin(false))
     }, [])
 
     const handleReturn = async (loanId: number) => {
@@ -251,6 +258,14 @@ export default function SettingsPage() {
                     </div>
                 )}
             </div>
+
+            {/* Password Policy Section - Admin Only */}
+            {isAdmin && (
+                <>
+                    <Separator className="my-8" />
+                    <PasswordPolicySection isAdmin={isAdmin} />
+                </>
+            )}
         </div>
     )
 }

@@ -148,6 +148,12 @@
 - Manifest completo con iconos optimizados
 - Service Worker con caching strategy
 
+### 📣 Marketing y Landing Pages
+- **Landing Page Rediseñada**: Hero section dinámico con efectos parallax y optimización de visualización.
+- **Páginas Públicas**: Secciones completas de "Acerca de", "Precios" y "Contacto".
+- **UX Optimizada**: Botón "Back to Top" inteligente y navegación fluida orientada a la conversión.
+- **Accesibilidad**: Componentes validados bajo normas WCAG 2.1 para alto contraste y legibilidad.
+
 ### 🚀 Performance
 - Cache strategy optimizada
 - Query optimization con annotations en Django
@@ -396,6 +402,7 @@ backend/
 frontend/src/
 ├── app/
 │   ├── (auth)/             # Login, Register
+│   ├── (marketing)/        # Public pages (Home, About, Pricing, Contact)
 │   └── (dashboard)/        # Protected routes
 │       ├── home/           # Dashboard
 │       ├── library/        # Book catalog

@@ -24,88 +24,72 @@ export default function LandingPage() {
     }, [])
 
     return (
-        <div className="bg-gradient-to-b from-white to-cyan-50/30">
+        <div className="bg-white">
             {/* Hero Section */}
-            <section className="pt-32 pb-20 px-4 overflow-hidden">
-                <div className="container mx-auto max-w-6xl">
-                    <div className="grid lg:grid-cols-2 gap-12 items-center">
-                        <div className="space-y-6">
-                            <div className="inline-block">
-                                <span className="bg-cyan-100 text-[#00576F] px-4 py-2 rounded-full text-sm font-medium">
-                                    ✨ Plataforma de Conocimiento Digital
-                                </span>
-                            </div>
-                            <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                                Aumenta tu
-                                <span className="text-[#00576F]"> desempeño educacional</span>
-                            </h1>
-                            <p className="text-xl text-gray-600 leading-relaxed">
-                                Accede a miles de libros digitales, recursos académicos y contenido premium.
-                                Disponible 24/7 para tu institución educativa.
-                            </p>
-                            <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                                <Link href="/register">
-                                    <Button size="lg" className="bg-[#00576F] hover:bg-[#004558] text-white px-8 py-6 text-lg rounded-full">
-                                        Comenzar Ahora
-                                        <Sparkles className="ml-2 h-5 w-5" />
-                                    </Button>
-                                </Link>
-                                <Link href="/library">
-                                    <Button size="lg" variant="outline" className="px-8 py-6 text-lg rounded-full border-2 text-gray-900 hover:text-gray-900">
-                                        Explorar Biblioteca
-                                        <Search className="ml-2 h-5 w-5" />
-                                    </Button>
-                                </Link>
-                            </div>
+            <section className="relative min-h-[90vh] flex items-center pt-32 pb-20 px-4 overflow-hidden">
+                {/* Background Image with Parallax */}
+                <div
+                    className="absolute inset-0 z-0 transition-transform duration-75 ease-out scale-110"
+                    style={{ transform: `translateY(${offsetY}px)` }}
+                >
+                    <Image
+                        src="/hero-image.jpg"
+                        alt="Background"
+                        fill
+                        priority
+                        className="object-cover"
+                    />
+                    {/* Dark Overlay for Readability */}
+                    <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-[2px]"></div>
+                </div>
+
+                <div className="container mx-auto max-w-6xl relative z-10 flex justify-end">
+                    <div className="max-w-3xl space-y-8 text-right">
+                        <div className="inline-block ml-auto">
+                            <span className="bg-cyan-500/20 text-cyan-100 border border-cyan-400/30 px-4 py-2 rounded-full text-sm font-medium backdrop-blur-md">
+                                ✨ Plataforma de Conocimiento Digital
+                            </span>
                         </div>
-                        <div className="relative h-[400px] lg:h-[500px]">
-                            {/* Parallax Container */}
-                            <div
-                                className="absolute inset-0 transition-transform duration-75 ease-out"
-                                style={{ transform: `translateY(${offsetY}px)` }}
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-br from-[#00576F]/20 to-purple-500/20 rounded-3xl blur-3xl -z-10"></div>
-                                <div className="relative h-full w-full rounded-3xl overflow-hidden shadow-2xl border-0">
-                                    <Image
-                                        src="/hero-image.jpg"
-                                        alt="Estudiante en biblioteca"
-                                        fill
-                                        priority
-                                        className="object-cover"
-                                    />
-                                    {/* Overlay Card - Floating Style */}
-                                    <div className="absolute bottom-6 left-6 right-6 lg:bottom-10 lg:left-10 lg:right-10">
-                                        <div className="bg-gradient-to-br from-[#00576F]/90 to-[#003d4d]/90 backdrop-blur-md rounded-2xl p-6 text-white shadow-xl">
-                                            <div className="flex items-center gap-4 mb-4">
-                                                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                                                    <GraduationCap className="h-6 w-6 text-white" />
-                                                </div>
-                                                <div>
-                                                    <h3 className="text-xl font-bold">Educación sin límites</h3>
-                                                    <p className="text-cyan-100 text-sm">Biblioteca Digital Inteligente</p>
-                                                </div>
-                                            </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                                <div className="flex items-center gap-2 bg-white/10 rounded-lg p-2 text-xs">
-                                                    <BookOpen className="h-3 w-3" />
-                                                    <span>Libros ilimitados</span>
-                                                </div>
-                                                <div className="flex items-center gap-2 bg-white/10 rounded-lg p-2 text-xs">
-                                                    <Users className="h-3 w-3" />
-                                                    <span>Colaborativo</span>
-                                                </div>
-                                                <div className="flex items-center gap-2 bg-white/10 rounded-lg p-2 text-xs">
-                                                    <Shield className="h-3 w-3" />
-                                                    <span>Contenido verificado</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                        <h1 className="text-[3.85rem] font-bold text-white leading-tight">
+                            Aumenta tu
+                            <span className="text-cyan-400"> desempeño educacional</span>
+                        </h1>
+                        <p className="text-[1.55rem] text-gray-200 leading-relaxed max-w-2xl ml-auto">
+                            Accede a miles de libros digitales, recursos académicos y contenido premium.
+                            Disponible 24/7 para tu institución educativa.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-4 pt-4 justify-end">
+                            <Link href="/register">
+                                <Button size="lg" className="bg-[#00576F] hover:bg-[#004558] text-white px-8 py-7 text-xl rounded-full shadow-xl shadow-cyan-900/20">
+                                    Comenzar Ahora
+                                    <Sparkles className="ml-2 h-6 w-6" />
+                                </Button>
+                            </Link>
+                            <Link href="/library">
+                                <Button size="lg" variant="outline" className="px-8 py-7 text-xl rounded-full border-2 border-white bg-white text-[#000000] hover:bg-[#00576F] hover:text-[#ffffff] hover:border-[#00576F] transition-all">
+                                    Explorar Biblioteca
+                                    <Search className="ml-2 h-6 w-6" />
+                                </Button>
+                            </Link>
+                        </div>
+
+                        <div className="flex items-center gap-12 pt-8 justify-end">
+                            <div className="text-white text-right">
+                                <p className="text-4xl font-bold text-cyan-400">10,000+</p>
+                                <p className="text-sm text-gray-300">Libros Digitales</p>
+                            </div>
+                            <div className="text-white text-right">
+                                <p className="text-4xl font-bold text-cyan-400">500+</p>
+                                <p className="text-sm text-gray-300">Instituciones</p>
+                            </div>
+                            <div className="text-white text-right">
+                                <p className="text-4xl font-bold text-cyan-400">24/7</p>
+                                <p className="text-sm text-gray-300">Acceso Total</p>
                             </div>
                         </div>
                     </div>
                 </div>
+
             </section>
 
             {/* Features Section */}

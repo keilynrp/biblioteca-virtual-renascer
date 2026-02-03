@@ -182,7 +182,7 @@
 
 <div align="center">
 
-![Dashboard Principal](docs/images/screenshots/dashboard/dashboard-home-placeholder.png)
+![Dashboard Principal](docs/images/screenshots/dashboard/dashboard-home.png)
 
 *Vista principal del dashboard con estadísticas de lectura y actividad reciente*
 

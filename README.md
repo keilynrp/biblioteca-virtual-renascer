@@ -168,6 +168,16 @@
 
 ## 📸 Capturas de Pantalla
 
+### 🌐 Homepage (Landing Page)
+
+<div align="center">
+
+![Homepage](docs/images/screenshots/marketing/landing-page.png)
+
+*Nueva página de inicio con hero dinámico, parallax y diseño optimizado*
+
+</div>
+
 ### 🏠 Dashboard Principal
 
 <div align="center">

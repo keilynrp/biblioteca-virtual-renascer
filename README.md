@@ -192,7 +192,7 @@
 
 <div align="center">
 
-![Catálogo de Libros](docs/images/screenshots/library/library-catalog-placeholder.png)
+![Catálogo de Libros](docs/images/screenshots/library/library-catalog.png)
 
 *Catálogo completo con búsqueda avanzada y filtros por categoría*
 
@@ -208,11 +208,11 @@
 
 </div>
 
-### ⭐ Favoritos y Historial
+### ⭐ Favoritos e Historial
 
 <div align="center">
 
-![Favoritos](docs/images/screenshots/profile/favorites-placeholder.png)
+![Favoritos](docs/images/screenshots/profile/favorites-history.png)
 
 *Gestión de libros favoritos con notas personales*
 

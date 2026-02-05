@@ -51,7 +51,7 @@ export default function PricingPage() {
                     <Sparkles className="h-4 w-4" />
                     Planes de Suscripción
                 </div>
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight">
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight mt-5">
                     Elige el plan perfecto para ti
                 </h1>
                 <p className="text-lg text-gray-600 leading-relaxed">

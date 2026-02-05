@@ -4,6 +4,11 @@
 // import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 import withPWAInit from '@ducanh2912/next-pwa';
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin(
+  './src/i18n/request.ts'
+);
 
 const nextConfig: NextConfig = {
   // typedRoutes disabled - requires full route typing across codebase
@@ -96,7 +101,5 @@ const withPWA = withPWAInit({
   register: true,
 });
 
-const configWithPWA = withPWA(nextConfig);
-
-export default configWithPWA;
+export default withNextIntl(withPWA(nextConfig));
 

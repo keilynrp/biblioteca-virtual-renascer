@@ -41,6 +41,8 @@ import {
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { SearchBar } from "@/components/search-bar"
+import { useTranslations } from "next-intl"
+import { LanguageSwitcher } from "@/components/language-switcher"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import { NotificationBellComponent } from "@/components/notifications/notification-bell-component"
 import { getAvatarUrl } from "@/lib/utils"
@@ -53,6 +55,7 @@ export default function DashboardLayout({
     const pathname = usePathname()
     const router = useRouter()
     // Usar el hook hidratado para prevenir errores de hidratación
+    const t = useTranslations("Navigation")
     const { user, logout, isAuthenticated, _hasHydrated } = useAuthStoreHydrated()
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
@@ -95,13 +98,13 @@ export default function DashboardLayout({
     }
 
     const navItems = [
-        { href: "/home", label: "Dashboard", icon: LayoutDashboard },
-        { href: "/library", label: "Biblioteca", icon: Library },
-        { href: "/my-loans", label: "Mis Préstamos", icon: BookUp },
-        { href: "/notifications", label: "Notificaciones", icon: Bell },
-        { href: "/favorites", label: "Mis Favoritos", icon: Heart },
-        { href: "/reading-history", label: "Historial de Lectura", icon: BookMarked },
-        { href: "/admin", label: "Panel Admin", icon: Shield, adminOnly: true },
+        { href: "/home", label: t("dashboard"), icon: LayoutDashboard },
+        { href: "/library", label: t("library"), icon: Library },
+        { href: "/my-loans", label: t("loans"), icon: BookUp },
+        { href: "/notifications", label: t("notifications"), icon: Bell },
+        { href: "/favorites", label: t("favorites"), icon: Heart },
+        { href: "/reading-history", label: t("history"), icon: BookMarked },
+        { href: "/admin", label: t("admin"), icon: Shield, adminOnly: true },
         { href: "/admin/books", label: "Administrar Libros", icon: FileEdit },
         { href: "/admin/authors", label: "Administrar Autores", icon: Users },
         { href: "/admin/categories", label: "Administrar Categorías", icon: FolderOpen },
@@ -265,7 +268,7 @@ export default function DashboardLayout({
                     >
                         <Settings className="h-5 w-5 flex-shrink-0 group-hover:rotate-90 transition-transform duration-300" />
                         <span className={`font-medium whitespace-nowrap transition-opacity duration-200 ${isSidebarCollapsed ? "md:opacity-0 md:absolute md:invisible" : "opacity-100"}`}>
-                            Configuración
+                            {t("settings")}
                         </span>
 
                         {/* Tooltip for collapsed state */}
@@ -320,6 +323,9 @@ export default function DashboardLayout({
 
                         {/* Header Actions */}
                         <div className="ml-auto flex items-center gap-2">
+                            {/* Language Switcher */}
+                            <LanguageSwitcher />
+
                             {/* Theme Switcher */}
                             <ThemeSwitcher />
 

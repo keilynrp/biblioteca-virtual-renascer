@@ -1,0 +1,25 @@
+{
+    "HomePage": {
+        "title": "Biblioteca Virtual Renascer do Saber",
+        "description": "Explore nossa vasta coleção de conhecimento.",
+        "welcome": "Bem-vindo de volta!"
+    },
+    "Navigation": {
+        "dashboard": "Dashboard",
+        "library": "Biblioteca",
+        "favorites": "Favoritos",
+        "history": "Histórico",
+        "loans": "Meus Empréstimos",
+        "notifications": "Notificações",
+        "admin": "Admin",
+        "settings": "Configurações"
+    },
+    "Common": {
+        "loading": "Carregando...",
+        "error": "Ocorreu um erro",
+        "save": "Salvar",
+        "cancel": "Cancelar",
+        "delete": "Excluir",
+        "search": "Buscar livros, autores..."
+    }
+}

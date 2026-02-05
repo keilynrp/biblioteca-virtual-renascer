@@ -222,7 +222,7 @@
 
 <div align="center">
 
-![Planes](docs/images/screenshots/subscriptions/plans-placeholder.png)
+![Planes](docs/images/screenshots/subscriptions/subscription-plans.png)
 
 *Selección de planes con integración de Stripe para pagos*
 

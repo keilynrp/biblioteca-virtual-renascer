@@ -4,6 +4,10 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import Script from "next/script";
 import { PwaManager } from "@/components/pwa-manager";
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
+import { notFound } from 'next/navigation';
+import { routing } from '@/i18n/routing';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,13 +39,26 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
-}: Readonly<{
+  params
+}: {
   children: React.ReactNode;
-}>) {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+
+  // Ensure that the incoming `locale` is valid
+  if (!routing.locales.includes(locale as any)) {
+    notFound();
+  }
+
+  // Providing all messages to the client
+  // side is the easiest way to get started
+  const messages = await getMessages();
+
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <head>
         <Script
           id="grammarly-disable"
@@ -64,9 +81,11 @@ export default function RootLayout({
         data-new-gr-c-s-check-loaded="0"
         data-gr-ext-installed="0"
       >
-        <PwaManager />
-        {children}
-        <Toaster />
+        <NextIntlClientProvider messages={messages}>
+          <PwaManager />
+          {children}
+          <Toaster />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

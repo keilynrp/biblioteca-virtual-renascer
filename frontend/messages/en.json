@@ -1,0 +1,25 @@
+{
+    "HomePage": {
+        "title": "Renascer do Saber Virtual Library",
+        "description": "Explore our vast collection of knowledge.",
+        "welcome": "Welcome back!"
+    },
+    "Navigation": {
+        "dashboard": "Dashboard",
+        "library": "Library",
+        "favorites": "Favorites",
+        "history": "History",
+        "loans": "My Loans",
+        "notifications": "Notifications",
+        "admin": "Admin",
+        "settings": "Settings"
+    },
+    "Common": {
+        "loading": "Loading...",
+        "error": "An error occurred",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "search": "Search books, authors..."
+    }
+}

@@ -11,6 +11,7 @@ import { DashboardSkeleton } from "@/components/dashboard-skeleton"
 import Image from "next/image"
 import { contentApi, Book } from "@/services/contentApi"
 import { BookCard } from "@/components/book-card"
+import { useTranslations } from "next-intl"
 
 interface DashboardStats {
     total_books: number
@@ -83,6 +84,8 @@ const BookItem = memo(({ book }: { book: DashboardStats['recent_books'][0] }) =>
 BookItem.displayName = 'BookItem'
 
 export default function DashboardPage() {
+    const t = useTranslations("HomePage")
+    const commonT = useTranslations("Common")
     const [stats, setStats] = useState<DashboardStats | null>(null)
     const [recommendations, setRecommendations] = useState<Book[]>([])
     const [loading, setLoading] = useState(true)
@@ -175,8 +178,8 @@ export default function DashboardPage() {
     return (
         <div className="px-6 py-5 space-y-8">
             <PageHeader
-                title="Dashboard"
-                description="Bienvenido a tu biblioteca virtual"
+                title={t("title")}
+                description={t("description")}
                 actions={
                     <Link href="/library">
                         <Button className="bg-gradient-to-r from-primary to-primary-dark hover:shadow-lg hover:shadow-primary/30 transition-all">

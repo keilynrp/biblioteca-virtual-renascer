@@ -32,13 +32,13 @@ export function Navbar() {
                     <Image src="/Logo_renascerdosaber.png" alt="Logo Renascer Saber" width={172} height={62} className="object-contain" priority />
                 </Link>
                 <div className="hidden md:flex items-center space-x-8">
-                    <Link href="/about" className="text-sm font-medium text-gray-600 hover:text-[#00576F] transition-colors">
+                    <Link href="/about" className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors">
                         Acerca de
                     </Link>
-                    <Link href="/pricing" className="text-sm font-medium text-gray-600 hover:text-[#00576F] transition-colors">
+                    <Link href="/pricing" className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors">
                         Precios
                     </Link>
-                    <Link href="/contact" className="text-sm font-medium text-gray-600 hover:text-[#00576F] transition-colors">
+                    <Link href="/contact" className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors">
                         Contacto
                     </Link>
                 </div>

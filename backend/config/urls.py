@@ -30,6 +30,7 @@ urlpatterns = [
     path('api/loans/', include('apps.loans.urls')),
     path('api/communities/', include('apps.communities.urls')),
     path('api/notifications/', include('apps.notifications.urls')),
+    path('api/analytics/', include('apps.analytics.urls')),
 ]
 
 # Development-only URLs

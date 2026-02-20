@@ -288,11 +288,9 @@ export default function BookDetailPage() {
                                     <CardContent className="flex items-center gap-2">
                                         <Calendar className="h-4 w-4 text-muted-foreground" />
                                         <span className="font-semibold">
-                                            {new Date(book.publication_date).toLocaleDateString('es-ES', {
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric'
-                                            })}
+                                            {book.publication_date
+                                                ? book.publication_date.substring(0, 4)
+                                                : 'N/A'}
                                         </span>
                                     </CardContent>
                                 </Card>

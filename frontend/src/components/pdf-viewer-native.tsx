@@ -23,6 +23,7 @@ interface PDFViewerNativeProps {
   pdfUrl: string;
   initialPage?: number;
   initialZoom?: number;
+  totalPages?: number;
   accessToken?: string;
   onProgressUpdate?: (progress: {
     currentPage: number;
@@ -38,6 +39,7 @@ export function PDFViewerNative({
   pdfUrl,
   initialPage = 1,
   initialZoom = 1.0,
+  totalPages: totalPagesProp,
   accessToken,
   onProgressUpdate,
 }: PDFViewerNativeProps) {
@@ -145,12 +147,15 @@ export function PDFViewerNative({
     };
   }, [currentPage, numPages, zoomLevel, readingTime, onProgressUpdate]);
 
-  // Estimate number of pages (we can't get exact count from iframe, so use a reasonable estimate)
-  // In production, you'd want to get this from your backend
+  // Use totalPages from prop if available, otherwise use a fallback
   useEffect(() => {
-    // Set a default or fetch from backend
-    setNumPages(100); // Placeholder - should come from backend
-  }, []);
+    if (totalPagesProp && totalPagesProp > 0) {
+      setNumPages(totalPagesProp);
+    } else {
+      // Fallback: use a reasonable estimate until backend provides the value
+      setNumPages(100);
+    }
+  }, [totalPagesProp]);
 
   const handleLoad = () => {
     console.log('[PDF Viewer] iframe loaded successfully');
@@ -435,6 +440,7 @@ export function PDFViewerNative({
       {/* Annotations Sidebar */}
       <AnnotationsSidebar
         bookId={bookId}
+        bookTitle={bookTitle}
         currentPage={currentPage}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}

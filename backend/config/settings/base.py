@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'apps.loans',
     'apps.core',
     'apps.communities', # Sprint 7
+    'apps.analytics',
 ]
 
 AUTH_USER_MODEL = 'authentication.User'

@@ -1,6 +1,6 @@
 'use client';
 
-import { FileText, Trash2, Lock, Globe } from 'lucide-react';
+import { FileText, Trash2, Lock, Globe, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import type { Annotation } from '@/types/annotations';
@@ -12,6 +12,7 @@ interface AnnotationsListProps {
     currentPage: number;
     onNavigate: (page: number) => void;
     onDelete: (id: number) => void;
+    onEdit?: (annotation: Annotation) => void;
     isLoading: boolean;
 }
 
@@ -20,6 +21,7 @@ export function AnnotationsList({
     currentPage,
     onNavigate,
     onDelete,
+    onEdit,
     isLoading,
 }: AnnotationsListProps) {
     if (isLoading) {
@@ -86,19 +88,37 @@ export function AnnotationsList({
                                     </p>
                                 </div>
 
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 dark:hover:text-red-400 flex-shrink-0"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (confirm('¿Eliminar esta anotación?')) {
-                                            onDelete(annotation.id);
-                                        }
-                                    }}
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </Button>
+                                {/* Action buttons */}
+                                <div className="flex flex-col gap-1 flex-shrink-0">
+                                    {onEdit && (
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-8 w-8 p-0 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onEdit(annotation);
+                                            }}
+                                            title="Editar nota"
+                                        >
+                                            <Pencil className="w-4 h-4" />
+                                        </Button>
+                                    )}
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 dark:hover:text-red-400"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (confirm('¿Eliminar esta anotación?')) {
+                                                onDelete(annotation.id);
+                                            }
+                                        }}
+                                        title="Eliminar nota"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>

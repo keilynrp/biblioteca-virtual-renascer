@@ -24,6 +24,7 @@ from .views import (
     BookmarkListCreateView, BookmarkDetailView,
     HighlightListCreateView, HighlightDetailView,
     AnnotationListCreateView, AnnotationDetailView,
+    export_book_notes,
     institutional_analytics
 )
 
@@ -83,5 +84,6 @@ urlpatterns = [
     path('user/highlights/<int:pk>/', HighlightDetailView.as_view(), name='highlight_detail'),
     path('user/annotations/', AnnotationListCreateView.as_view(), name='annotation_list'),
     path('user/annotations/<int:pk>/', AnnotationDetailView.as_view(), name='annotation_detail'),
+    path('books/<int:book_id>/export-notes/', export_book_notes, name='export_book_notes'),
     path('institutions/analytics/', institutional_analytics, name='institutional_analytics'),
 ]

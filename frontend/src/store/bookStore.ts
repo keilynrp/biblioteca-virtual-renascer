@@ -4,7 +4,16 @@ import api from '@/lib/api';
 interface BookRef {
     id: number;
     title: string;
-    slug?: string;
+    slug: string;
+    description: string;
+    author: { name: string };
+    category: { name: string };
+    cover_image: string | null;
+    file?: string | null;
+    is_premium: boolean;
+    average_rating?: number;
+    review_count?: number;
+    user_has_favorited?: boolean;
     [key: string]: unknown;
 }
 

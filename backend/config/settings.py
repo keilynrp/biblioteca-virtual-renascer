@@ -54,6 +54,9 @@ INSTALLED_APPS = [
     'apps.content',
     'apps.communities',
     'apps.core',
+    'apps.loans',
+    'apps.notifications',
+    'apps.analytics',
 ]
 
 # Django Debug Toolbar (only in DEBUG mode)

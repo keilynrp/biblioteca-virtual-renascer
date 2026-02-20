@@ -169,9 +169,10 @@ function AdminBooksPageContent() {
 
             if (book.publication_date) {
                 try {
-                    const yearNum = new Date(book.publication_date).getFullYear();
+                    const yearStr = book.publication_date.substring(0, 4);
+                    const yearNum = parseInt(yearStr, 10);
                     if (!isNaN(yearNum) && yearNum > 0) {
-                        year = yearNum.toString();
+                        year = yearStr;
                     }
                 } catch (error) {
                     console.warn("❌ [DEBUG] Error parsing publication_date:", error);
@@ -516,7 +517,7 @@ function AdminBooksPageContent() {
                                                     )}
                                                 </TableCell>
                                                 <TableCell>
-                                                    {book.publication_date ? new Date(book.publication_date).getFullYear() : 'N/A'}
+                                                    {book.publication_date ? book.publication_date.substring(0, 4) : 'N/A'}
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     <DropdownMenu>

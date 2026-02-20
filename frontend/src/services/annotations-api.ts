@@ -221,3 +221,45 @@ export const annotationsApi = {
     await api.delete(`/content/user/annotations/${id}/`);
   },
 };
+
+// =============================================================================
+// Notes Export API
+// =============================================================================
+
+export const notesExportApi = {
+  /**
+   * Export all notes (bookmarks, highlights, annotations) for a book as TXT
+   * Returns a Blob that can be downloaded
+   */
+  exportBookNotes: async (bookId: number): Promise<Blob> => {
+    const response = await api.get(`/content/books/${bookId}/export-notes/`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  /**
+   * Download notes as a TXT file
+   */
+  downloadBookNotes: async (bookId: number, bookTitle: string) => {
+    const blob = await notesExportApi.exportBookNotes(bookId);
+
+    // Create download link
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+
+    // Generate filename
+    const date = new Date().toISOString().split('T')[0];
+    const safeTitle = bookTitle.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30);
+    link.download = `notas_${safeTitle}_${date}.txt`;
+
+    // Trigger download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Cleanup
+    window.URL.revokeObjectURL(url);
+  },
+};

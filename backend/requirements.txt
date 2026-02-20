@@ -17,6 +17,9 @@ python-magic>=0.4.27
 # elasticsearch-dsl>=8.11
 meilisearch>=0.31
 
+# PDF Processing
+PyPDF2>=3.0
+
 # Monitoring
 sentry-sdk[django]>=1.40
 python-json-logger>=2.0.7

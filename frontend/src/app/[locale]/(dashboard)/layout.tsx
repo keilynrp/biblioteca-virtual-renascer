@@ -60,6 +60,12 @@ export default function DashboardLayout({
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
     const [isDarkMode, setIsDarkMode] = useState(false)
+    const [mounted, setMounted] = useState(false)
+
+    // Mark as mounted to prevent SSR/CSR hydration mismatches with Radix UI IDs
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
     // Redirect if not authenticated (solo después de hidratar)
     useEffect(() => {
@@ -323,112 +329,118 @@ export default function DashboardLayout({
 
                         {/* Header Actions */}
                         <div className="ml-auto flex items-center gap-2">
-                            {/* Language Switcher */}
-                            <LanguageSwitcher />
+                            {mounted ? (
+                                <>
+                                    {/* Language Switcher */}
+                                    <LanguageSwitcher />
 
-                            {/* Theme Switcher */}
-                            <ThemeSwitcher />
+                                    {/* Theme Switcher */}
+                                    <ThemeSwitcher />
 
-                            {/* Dark Mode Toggle */}
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={toggleDarkMode}
-                                className="
-                                    relative rounded-xl hover:bg-muted/80
-                                    transition-all duration-300
-                                    hover:scale-110 active:scale-95
-                                    group overflow-hidden
-                                "
-                            >
-                                <div className="relative z-10">
-                                    {isDarkMode ? (
-                                        <Sun className="h-5 w-5 text-amber-500 group-hover:rotate-90 transition-transform duration-300" />
-                                    ) : (
-                                        <Moon className="h-5 w-5 text-primary group-hover:-rotate-12 transition-transform duration-300" />
-                                    )}
-                                </div>
-                                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-amber-600/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </Button>
-
-                            {/* Notifications */}
-                            <NotificationBellComponent />
-
-                            {/* User Menu */}
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
+                                    {/* Dark Mode Toggle */}
                                     <Button
                                         variant="ghost"
+                                        size="icon"
+                                        onClick={toggleDarkMode}
                                         className="
-                                        flex items-center gap-3 rounded-xl hover:bg-muted/80 px-3 py-2
-                                        transition-all duration-300
-                                        hover:scale-105 active:scale-95
-                                        group border border-transparent hover:border-border/50
-                                    "
+                                            relative rounded-xl hover:bg-muted/80
+                                            transition-all duration-300
+                                            hover:scale-110 active:scale-95
+                                            group overflow-hidden
+                                        "
                                     >
-                                        <Avatar className="h-9 w-9 ring-2 ring-primary/30 group-hover:ring-primary/50 transition-all">
-                                            <AvatarImage src={getAvatarUrl(user?.avatar)} alt={user?.username} />
-                                            <AvatarFallback className="bg-gradient-to-br from-primary via-primary-dark to-primary text-white font-bold text-sm">
-                                                {user?.username?.charAt(0).toUpperCase()}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <div className="hidden md:block text-left">
-                                            <p className="text-sm font-semibold leading-none mb-1">{user?.username}</p>
-                                            <p className="text-[10px] text-muted-foreground leading-none uppercase tracking-wide">Usuario</p>
+                                        <div className="relative z-10">
+                                            {isDarkMode ? (
+                                                <Sun className="h-5 w-5 text-amber-500 group-hover:rotate-90 transition-transform duration-300" />
+                                            ) : (
+                                                <Moon className="h-5 w-5 text-primary group-hover:-rotate-12 transition-transform duration-300" />
+                                            )}
                                         </div>
-                                        <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-all group-hover:translate-y-0.5" />
+                                        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-amber-600/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                                     </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                    className="w-64 border-border/50 shadow-xl backdrop-blur-xl bg-card/95"
-                                    align="end"
-                                    forceMount
-                                >
-                                    <DropdownMenuLabel className="font-normal p-4">
-                                        <div className="flex items-center gap-3">
-                                            <Avatar className="h-12 w-12 ring-2 ring-primary/30">
-                                                <AvatarImage src={getAvatarUrl(user?.avatar)} alt={user?.username} />
-                                                <AvatarFallback className="bg-gradient-to-br from-primary via-primary-dark to-primary text-white font-bold">
-                                                    {user?.username?.charAt(0).toUpperCase()}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                            <div className="flex flex-col">
-                                                <p className="text-sm font-semibold leading-none mb-1.5">{user?.username}</p>
-                                                <p className="text-xs leading-none text-muted-foreground truncate max-w-[150px]">
-                                                    {user?.email || 'usuario@biblioteca.com'}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </DropdownMenuLabel>
-                                    <DropdownMenuSeparator className="bg-border/50" />
-                                    <DropdownMenuItem asChild className="cursor-pointer hover:bg-muted/80 transition-colors">
-                                        <Link href="/profile" className="flex items-center px-3 py-2.5">
-                                            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center mr-3">
-                                                <User className="h-4 w-4 text-primary" />
-                                            </div>
-                                            <span className="font-medium">Mi Perfil</span>
-                                        </Link>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem asChild className="cursor-pointer hover:bg-muted/80 transition-colors">
-                                        <Link href="/settings" className="flex items-center px-3 py-2.5">
-                                            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center mr-3">
-                                                <Settings className="h-4 w-4 text-primary" />
-                                            </div>
-                                            <span className="font-medium">Configuración</span>
-                                        </Link>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator className="bg-border/50" />
-                                    <DropdownMenuItem
-                                        onClick={handleLogout}
-                                        className="cursor-pointer hover:bg-red-50 dark:hover:bg-red-950/20 text-red-600 dark:text-red-400 transition-colors"
-                                    >
-                                        <div className="h-8 w-8 rounded-lg bg-red-100 dark:bg-red-950/30 flex items-center justify-center mr-3">
-                                            <LogOut className="h-4 w-4" />
-                                        </div>
-                                        <span className="font-medium">Cerrar Sesión</span>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+
+                                    {/* Notifications */}
+                                    <NotificationBellComponent />
+
+                                    {/* User Menu */}
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                className="
+                                                flex items-center gap-3 rounded-xl hover:bg-muted/80 px-3 py-2
+                                                transition-all duration-300
+                                                hover:scale-105 active:scale-95
+                                                group border border-transparent hover:border-border/50
+                                            "
+                                            >
+                                                <Avatar className="h-9 w-9 ring-2 ring-primary/30 group-hover:ring-primary/50 transition-all">
+                                                    <AvatarImage src={getAvatarUrl(user?.avatar)} alt={user?.username} />
+                                                    <AvatarFallback className="bg-gradient-to-br from-primary via-primary-dark to-primary text-white font-bold text-sm">
+                                                        {user?.username?.charAt(0).toUpperCase()}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                <div className="hidden md:block text-left">
+                                                    <p className="text-sm font-semibold leading-none mb-1">{user?.username}</p>
+                                                    <p className="text-[10px] text-muted-foreground leading-none uppercase tracking-wide">Usuario</p>
+                                                </div>
+                                                <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-all group-hover:translate-y-0.5" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent
+                                            className="w-64 border-border/50 shadow-xl backdrop-blur-xl bg-card/95"
+                                            align="end"
+                                            forceMount
+                                        >
+                                            <DropdownMenuLabel className="font-normal p-4">
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar className="h-12 w-12 ring-2 ring-primary/30">
+                                                        <AvatarImage src={getAvatarUrl(user?.avatar)} alt={user?.username} />
+                                                        <AvatarFallback className="bg-gradient-to-br from-primary via-primary-dark to-primary text-white font-bold">
+                                                            {user?.username?.charAt(0).toUpperCase()}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="flex flex-col">
+                                                        <p className="text-sm font-semibold leading-none mb-1.5">{user?.username}</p>
+                                                        <p className="text-xs leading-none text-muted-foreground truncate max-w-[150px]">
+                                                            {user?.email || 'usuario@biblioteca.com'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </DropdownMenuLabel>
+                                            <DropdownMenuSeparator className="bg-border/50" />
+                                            <DropdownMenuItem asChild className="cursor-pointer hover:bg-muted/80 transition-colors">
+                                                <Link href="/profile" className="flex items-center px-3 py-2.5">
+                                                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center mr-3">
+                                                        <User className="h-4 w-4 text-primary" />
+                                                    </div>
+                                                    <span className="font-medium">Mi Perfil</span>
+                                                </Link>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem asChild className="cursor-pointer hover:bg-muted/80 transition-colors">
+                                                <Link href="/settings" className="flex items-center px-3 py-2.5">
+                                                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center mr-3">
+                                                        <Settings className="h-4 w-4 text-primary" />
+                                                    </div>
+                                                    <span className="font-medium">Configuración</span>
+                                                </Link>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator className="bg-border/50" />
+                                            <DropdownMenuItem
+                                                onClick={handleLogout}
+                                                className="cursor-pointer hover:bg-red-50 dark:hover:bg-red-950/20 text-red-600 dark:text-red-400 transition-colors"
+                                            >
+                                                <div className="h-8 w-8 rounded-lg bg-red-100 dark:bg-red-950/30 flex items-center justify-center mr-3">
+                                                    <LogOut className="h-4 w-4" />
+                                                </div>
+                                                <span className="font-medium">Cerrar Sesión</span>
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </>
+                            ) : (
+                                <div className="h-10 w-40" />
+                            )}
                         </div>
                     </div>
                 </header>

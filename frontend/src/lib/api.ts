@@ -89,7 +89,7 @@ api.interceptors.response.use(
 // Utility function to extract error message
 export function getErrorMessage(error: unknown): string {
     if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<{ error?: { message?: string }; detail?: string; [key: string]: unknown }>;
+        const axiosError = error as AxiosError<{ error?: { message?: string }; detail?: string; message?: string; [key: string]: unknown }>;
 
         // Check for standardized error format from backend
         if (axiosError.response?.data?.error) {

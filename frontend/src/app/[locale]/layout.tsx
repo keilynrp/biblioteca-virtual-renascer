@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import Script from "next/script";
 import { PwaManager } from "@/components/pwa-manager";
 import { NextIntlClientProvider } from 'next-intl';
@@ -85,6 +86,7 @@ export default async function RootLayout({
           <PwaManager />
           {children}
           <Toaster />
+          <SonnerToaster />
         </NextIntlClientProvider>
       </body>
     </html>

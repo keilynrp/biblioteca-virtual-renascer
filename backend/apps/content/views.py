@@ -47,6 +47,7 @@ from apps.core.cache_utils import (
     get_or_set_cache,
 )
 from .recommendations import get_similar_books, get_recommended_for_user
+from .utils import get_pdf_page_count
 import logging
 
 logger = logging.getLogger(__name__)
@@ -1077,6 +1078,17 @@ class StartReadingView(APIView):
             }
         )
 
+        # Extract total_pages from PDF if not already set
+        if not reading.total_pages and book.file:
+            try:
+                total_pages = get_pdf_page_count(book.file.path)
+                if total_pages:
+                    reading.total_pages = total_pages
+                    reading.save(update_fields=['total_pages'])
+                    logger.info(f"Set total_pages={total_pages} for reading session {reading.id}")
+            except Exception as e:
+                logger.error(f"Failed to extract page count for book {book_id}: {str(e)}")
+
         serializer = ReadingSerializer(reading, context={'request': request})
 
         return Response({
@@ -1365,6 +1377,119 @@ class AnnotationDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         """Return only annotations for the current user"""
         return Annotation.objects.filter(user=self.request.user).select_related('book', 'highlight')
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def export_book_notes(request, book_id):
+    """
+    Export all user notes (bookmarks, highlights, annotations) for a book as TXT.
+
+    GET /api/content/books/{book_id}/export-notes/
+
+    Returns a downloadable text file with all notes ordered by page number.
+    """
+    from django.http import HttpResponse
+    from datetime import datetime
+
+    book = get_object_or_404(Book, id=book_id)
+    user = request.user
+
+    # Fetch all user data for this book
+    bookmarks = Bookmark.objects.filter(user=user, book=book).order_by('page_number')
+    highlights = Highlight.objects.filter(user=user, book=book).order_by('page_number')
+    annotations = Annotation.objects.filter(user=user, book=book).order_by('page_number')
+
+    # Build the text content
+    lines = []
+    lines.append("=" * 60)
+    lines.append(f"NOTAS DE LECTURA: {book.title}")
+    lines.append(f"Autor: {book.author.name if book.author else 'Desconocido'}")
+    lines.append(f"Exportado: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    lines.append(f"Usuario: {user.username}")
+    lines.append("=" * 60)
+    lines.append("")
+
+    # Group all items by page
+    all_items = []
+
+    for bookmark in bookmarks:
+        all_items.append({
+            'page': bookmark.page_number,
+            'type': 'bookmark',
+            'title': bookmark.title,
+            'notes': bookmark.notes,
+            'created_at': bookmark.created_at,
+        })
+
+    for highlight in highlights:
+        all_items.append({
+            'page': highlight.page_number,
+            'type': 'highlight',
+            'text': highlight.selected_text,
+            'color': highlight.get_color_display(),
+            'created_at': highlight.created_at,
+        })
+
+    for annotation in annotations:
+        all_items.append({
+            'page': annotation.page_number,
+            'type': 'annotation',
+            'content': annotation.content,
+            'is_private': annotation.is_private,
+            'created_at': annotation.created_at,
+        })
+
+    # Sort by page, then by created_at
+    all_items.sort(key=lambda x: (x['page'], x['created_at']))
+
+    if not all_items:
+        lines.append("No hay notas guardadas para este libro.")
+    else:
+        current_page = None
+
+        for item in all_items:
+            # Add page header if new page
+            if item['page'] != current_page:
+                current_page = item['page']
+                lines.append("")
+                lines.append("-" * 40)
+                lines.append(f"PAGINA {current_page}")
+                lines.append("-" * 40)
+
+            lines.append("")
+
+            if item['type'] == 'bookmark':
+                lines.append("[MARCADOR]")
+                if item['title']:
+                    lines.append(f"  Titulo: {item['title']}")
+                if item['notes']:
+                    lines.append(f"  Notas: {item['notes']}")
+
+            elif item['type'] == 'highlight':
+                lines.append(f"[RESALTADO - {item['color']}]")
+                lines.append(f"  \"{item['text']}\"")
+
+            elif item['type'] == 'annotation':
+                privacy = "Privada" if item['is_private'] else "Publica"
+                lines.append(f"[NOTA - {privacy}]")
+                lines.append(f"  {item['content']}")
+
+    lines.append("")
+    lines.append("=" * 60)
+    lines.append("Fin del documento")
+    lines.append("=" * 60)
+
+    # Create response
+    content = "\n".join(lines)
+    filename = f"notas_{book.slug}_{datetime.now().strftime('%Y%m%d')}.txt"
+
+    response = HttpResponse(content, content_type='text/plain; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    return response
+
+
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def institutional_analytics(request):

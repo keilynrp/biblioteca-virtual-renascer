@@ -1,6 +1,6 @@
 'use client';
 
-import { Bookmark, Trash2, FileText } from 'lucide-react';
+import { Bookmark, Trash2, FileText, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import type { Bookmark as BookmarkType } from '@/types/annotations';
@@ -12,6 +12,7 @@ interface BookmarksListProps {
   currentPage: number;
   onNavigate: (page: number) => void;
   onDelete: (id: number) => void;
+  onEdit?: (bookmark: BookmarkType) => void;
   isLoading: boolean;
 }
 
@@ -20,6 +21,7 @@ export function BookmarksList({
   currentPage,
   onNavigate,
   onDelete,
+  onEdit,
   isLoading,
 }: BookmarksListProps) {
   if (isLoading) {
@@ -103,20 +105,37 @@ export function BookmarksList({
                   </p>
                 </div>
 
-                {/* Delete button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 dark:hover:text-red-400 flex-shrink-0"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (confirm('¿Eliminar este marcador?')) {
-                      onDelete(bookmark.id);
-                    }
-                  }}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+                {/* Action buttons */}
+                <div className="flex flex-col gap-1 flex-shrink-0">
+                  {onEdit && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(bookmark);
+                      }}
+                      title="Editar marcador"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 dark:hover:text-red-400"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm('¿Eliminar este marcador?')) {
+                        onDelete(bookmark.id);
+                      }
+                    }}
+                    title="Eliminar marcador"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

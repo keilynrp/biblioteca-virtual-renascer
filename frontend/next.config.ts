@@ -87,6 +87,13 @@ const nextConfig: NextConfig = {
 
   // Production optimizations
   output: process.env.NODE_ENV === 'production' ? 'standalone' : undefined,
+
+  // Prevent pdfjs-dist from trying to import the native `canvas` module during
+  // webpack builds (production). The PDF viewer runs client-side only.
+  webpack: (config) => {
+    config.resolve.alias.canvas = false;
+    return config;
+  },
 };
 
 // =============================================================================

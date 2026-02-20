@@ -672,3 +672,10 @@ button:not(:disabled):hover,
 .cursor-default {
   cursor: default;
 }
+
+/* Prevent printing — protects subscription content */
+@media print {
+  body {
+    display: none !important;
+  }
+}

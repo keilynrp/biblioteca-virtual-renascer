@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useAuthStore } from '@/store/authStore';
-import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Loader2, AlertCircle, ArrowLeft, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import api, { getErrorMessage } from '@/lib/api';
@@ -48,13 +48,14 @@ interface Reading {
 export default function ReaderPage() {
   const params = useParams();
   const router = useRouter();
-  const { accessToken, isAuthenticated } = useAuthStore();
+  const { accessToken, isAuthenticated, user } = useAuthStore();
   const bookId = parseInt(params.bookId as string);
 
   const [reading, setReading] = useState<Reading | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isPaywalled, setIsPaywalled] = useState(false);
 
   const initializeReading = async () => {
     try {
@@ -76,10 +77,15 @@ export default function ReaderPage() {
       setPdfUrl(pdfUrl);
 
       setLoading(false);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('[Reader] Error initializing reading:', err);
-      const errorMessage = getErrorMessage(err);
-      setError(`Error al iniciar la sesión de lectura: ${errorMessage}`);
+      const axiosErr = err as { response?: { status?: number; data?: { error_code?: string } } };
+      if (axiosErr?.response?.status === 403 && axiosErr?.response?.data?.error_code === 'SUBSCRIPTION_REQUIRED') {
+        setIsPaywalled(true);
+      } else {
+        const errorMessage = getErrorMessage(err);
+        setError(`Error al iniciar la sesión de lectura: ${errorMessage}`);
+      }
       setLoading(false);
     }
   };
@@ -125,6 +131,33 @@ export default function ReaderPage() {
     );
   }
 
+  if (isPaywalled) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-gray-50 px-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-10 max-w-md w-full text-center">
+          <div className="flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mx-auto mb-6">
+            <Lock className="w-8 h-8 text-amber-600" />
+          </div>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-3">Contenido exclusivo</h2>
+          <p className="text-gray-500 mb-8">
+            Este libro forma parte de nuestro catálogo premium. Activa una suscripción para acceder a él y a todo el contenido de la biblioteca.
+          </p>
+          <div className="flex flex-col gap-3">
+            <Link href="/pricing">
+              <Button className="w-full">Ver planes de suscripción</Button>
+            </Link>
+            <Link href="/dashboard">
+              <Button variant="outline" className="w-full">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Volver a la biblioteca
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (error || !reading || !reading.book) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
@@ -150,6 +183,7 @@ export default function ReaderPage() {
         initialPage={reading.current_page || 1}
         initialZoom={parseFloat(reading.zoom_level || '1.0')}
         accessToken={accessToken || undefined}
+        userRole={user?.user_type}
         onProgressUpdate={handleProgressUpdate}
       />
     </div>

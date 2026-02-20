@@ -1064,9 +1064,18 @@ class StartReadingView(APIView):
 
         # Check if user has access (premium books require subscription)
         if book.is_premium:
-            # TODO: Check if user has active subscription
-            # For now, we'll allow it
-            pass
+            from apps.subscriptions.models import UserSubscription
+            from django.utils import timezone
+            has_active_subscription = UserSubscription.objects.filter(
+                user=request.user,
+                is_active=True,
+                end_date__gte=timezone.now()
+            ).exists()
+            if not has_active_subscription and not request.user.is_staff:
+                return Response({
+                    'error_code': 'SUBSCRIPTION_REQUIRED',
+                    'error': 'Este contenido es exclusivo para suscriptores.',
+                }, status=403)
 
         # Get or create reading session
         reading, created = Reading.objects.get_or_create(
@@ -1191,7 +1200,8 @@ class ServeBookFileView(APIView):
             if not has_active_subscription and not user.is_staff:
                 from django.http import JsonResponse
                 return JsonResponse({
-                    'error': 'Se requiere suscripción activa para acceder a este contenido premium'
+                    'error_code': 'SUBSCRIPTION_REQUIRED',
+                    'error': 'Este contenido es exclusivo para suscriptores.',
                 }, status=403)
 
         # Check if file exists
@@ -1279,8 +1289,8 @@ class ServeBookFileView(APIView):
         response['Content-Disposition'] = f'inline; filename="{book.title}.pdf"'
         response['X-Content-Type-Options'] = 'nosniff'
         response['Accept-Ranges'] = 'bytes'  # Enable range requests
-        # Cache for 1 hour
-        response['Cache-Control'] = 'private, max-age=3600'
+        response['Cache-Control'] = 'no-store'  # Prevent browser from caching PDF to disk
+        response['X-Download-Options'] = 'noopen'  # Prevent IE/Edge from offering local open
 
         return response
 

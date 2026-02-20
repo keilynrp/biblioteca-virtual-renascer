@@ -14,7 +14,6 @@ import {
     ArrowLeft,
     BookOpen,
     Calendar,
-    Download,
     Eye,
     Heart,
     Share2,
@@ -196,12 +195,6 @@ export default function BookDetailPage() {
                                             <Eye className="mr-2 h-5 w-5" />
                                             Leer Libro Completo
                                         </Link>
-                                    </Button>
-                                    <Button variant="outline" className="w-full" size="lg" asChild>
-                                        <a href={book.file} download>
-                                            <Download className="mr-2 h-5 w-5" />
-                                            Descargar PDF
-                                        </a>
                                     </Button>
                                 </>
                             )}

@@ -95,9 +95,40 @@ class CancelSubscriptionView(APIView):
         subscription = UserSubscription.objects.filter(user=request.user, is_active=True).first()
         if not subscription:
             return Response({"detail": "No active subscription found"}, status=status.HTTP_404_NOT_FOUND)
-        
+
         subscription.is_active = False
         subscription.auto_renew = False # Also turn off auto-renew
         subscription.save()
-        
+
         return Response({"detail": "Subscription cancelled successfully"}, status=status.HTTP_200_OK)
+
+
+class TrialStatusView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request):
+        user = request.user
+        has_active_subscription = UserSubscription.objects.filter(
+            user=user, is_active=True, end_date__gte=timezone.now()
+        ).exists()
+
+        trial_end_date = getattr(user, 'trial_end_date', None)
+        now = timezone.now()
+
+        if trial_end_date is None:
+            days_remaining = 0
+            is_on_trial = False
+            trial_expired = True
+        else:
+            delta = trial_end_date - now
+            days_remaining = max(0, delta.days)
+            trial_expired = delta.total_seconds() <= 0
+            is_on_trial = not has_active_subscription and not trial_expired
+
+        return Response({
+            'is_on_trial': is_on_trial,
+            'days_remaining': days_remaining,
+            'trial_end_date': trial_end_date,
+            'has_active_subscription': has_active_subscription,
+            'trial_expired': trial_expired,
+        })

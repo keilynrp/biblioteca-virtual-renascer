@@ -46,6 +46,8 @@ import { LanguageSwitcher } from "@/components/language-switcher"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import { NotificationBellComponent } from "@/components/notifications/notification-bell-component"
 import { getAvatarUrl } from "@/lib/utils"
+import { CurrencyProvider } from "@/context/currency-context"
+import { TrialBanner } from "@/components/notifications/trial-banner"
 
 export default function DashboardLayout({
     children,
@@ -445,9 +447,14 @@ export default function DashboardLayout({
                     </div>
                 </header>
 
+                {/* Trial Period Banner */}
+                <TrialBanner />
+
                 {/* Page Content */}
                 <main className="flex-1 overflow-y-auto overflow-x-hidden bg-muted/30">
-                    {children}
+                    <CurrencyProvider>
+                        {children}
+                    </CurrencyProvider>
                 </main>
             </div>
 

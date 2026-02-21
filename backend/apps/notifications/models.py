@@ -18,6 +18,7 @@ class Notification(models.Model):
         WELCOME = 'welcome', _('Bienvenida')
         BOOK_RECOMMENDATION = 'book_recommendation', _('Recomendación de Libro')
         COMMUNITY_ACTIVITY = 'community_activity', _('Actividad en Club')
+        TRIAL_EXPIRING = 'trial_expiring', _('Trial por Vencer')
     
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

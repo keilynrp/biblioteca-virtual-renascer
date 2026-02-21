@@ -2,7 +2,7 @@
 
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Bell, BookOpen, Star, Package, Megaphone, Sparkles } from 'lucide-react'
+import { Bell, BookOpen, Star, Package, Megaphone, Sparkles, Timer } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Notification } from '@/types/notification'
 
@@ -35,6 +35,8 @@ export function NotificationItem({ notification, onMarkAsRead }: NotificationIte
                 return <Megaphone className="h-5 w-5 text-blue-500" />
             case 'book_recommendation':
                 return <Sparkles className="h-5 w-5 text-purple-500" />
+            case 'trial_expiring':
+                return <Timer className="h-5 w-5 text-amber-500" />
             default:
                 return <Bell className="h-5 w-5 text-gray-500" />
         }

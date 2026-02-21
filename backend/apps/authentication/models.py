@@ -28,6 +28,7 @@ class User(AbstractUser):
     preferences = models.JSONField(default=dict)
     is_verified = models.BooleanField(default=False)
     two_factor_enabled = models.BooleanField(default=False)
+    trial_end_date = models.DateTimeField(null=True, blank=True, verbose_name=_('Fin del período de prueba'))
     
     # Password expiration fields
     password_changed_at = models.DateTimeField(null=True, blank=True)

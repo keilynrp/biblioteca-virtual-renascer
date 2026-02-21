@@ -38,6 +38,7 @@ import {
     Shield,
     BookUp,
     Building2, // Icon for Institutions
+    BellDot,
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { SearchBar } from "@/components/search-bar"
@@ -118,6 +119,7 @@ export default function DashboardLayout({
         { href: "/admin/categories", label: "Administrar Categorías", icon: FolderOpen },
         { href: "/plans", label: "Planes", icon: CreditCard },
         { href: "/institutions", label: "Instituciones", icon: Building2, adminOnly: true },
+        { href: "/admin/notifications", label: "Notificaciones Admin", icon: BellDot, adminOnly: true },
         { href: "/users", label: "Usuarios", icon: Users, adminOnly: true },
         { href: "/profile", label: "Perfil", icon: User },
     ]
@@ -377,7 +379,7 @@ export default function DashboardLayout({
                                             "
                                             >
                                                 <Avatar className="h-9 w-9 ring-2 ring-primary/30 group-hover:ring-primary/50 transition-all">
-                                                    <AvatarImage src={getAvatarUrl(user?.avatar)} alt={user?.username} />
+                                                    {getAvatarUrl(user?.avatar) && <AvatarImage src={getAvatarUrl(user?.avatar)} alt={user?.username} />}
                                                     <AvatarFallback className="bg-gradient-to-br from-primary via-primary-dark to-primary text-white font-bold text-sm">
                                                         {user?.username?.charAt(0).toUpperCase()}
                                                     </AvatarFallback>
@@ -397,7 +399,7 @@ export default function DashboardLayout({
                                             <DropdownMenuLabel className="font-normal p-4">
                                                 <div className="flex items-center gap-3">
                                                     <Avatar className="h-12 w-12 ring-2 ring-primary/30">
-                                                        <AvatarImage src={getAvatarUrl(user?.avatar)} alt={user?.username} />
+                                                        {getAvatarUrl(user?.avatar) && <AvatarImage src={getAvatarUrl(user?.avatar)} alt={user?.username} />}
                                                         <AvatarFallback className="bg-gradient-to-br from-primary via-primary-dark to-primary text-white font-bold">
                                                             {user?.username?.charAt(0).toUpperCase()}
                                                         </AvatarFallback>

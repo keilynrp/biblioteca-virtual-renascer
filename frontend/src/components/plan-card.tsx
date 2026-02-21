@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Check, Crown, Sparkles, Zap, Star, Plus, X, Save, Trash2, RotateCcw, User, Building2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useCurrency } from "@/context/currency-context"
 
 interface Plan {
     id: number
@@ -133,6 +134,8 @@ export function PlanCard({
             features: prev.features.filter((_, i) => i !== index),
         }))
     }
+
+    const { symbol } = useCurrency()
 
     const editingCardPrice = isEditing ? draft.price : displayPrice
 
@@ -269,28 +272,38 @@ export function PlanCard({
                 <div className="flex items-end gap-2 mb-1">
                     {isEditing ? (
                         <div className="flex items-end gap-2">
-                            <span className="text-2xl font-bold text-foreground mb-1">$</span>
-                            <input
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                value={draft.price}
-                                onChange={e => setDraft(prev => ({ ...prev, price: e.target.value }))}
-                                onClick={e => e.stopPropagation()}
-                                className="w-32 text-3xl font-bold text-foreground bg-muted/50
-                                           border border-border rounded-lg px-3 py-1 focus:outline-none
-                                           focus:ring-2 focus:ring-primary/40"
-                            />
+                            <div className="flex items-end gap-1">
+                                <span className="text-4xl font-bold text-foreground">{symbol}</span>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={draft.price}
+                                    onChange={e => setDraft(prev => ({ ...prev, price: e.target.value }))}
+                                    onClick={e => e.stopPropagation()}
+                                    className="w-32 text-3xl font-bold text-foreground bg-muted/50
+                                               border border-border rounded-lg px-3 py-1 focus:outline-none
+                                               focus:ring-2 focus:ring-primary/40"
+                                />
+                            </div>
                             <span className="text-muted-foreground text-sm mb-2">/mes</span>
                         </div>
                     ) : (
                         <>
-                            <span className={cn(
-                                "text-5xl font-bold tracking-tight",
-                                isPopular ? "text-primary" : "text-foreground"
-                            )}>
-                                ${editingCardPrice}
-                            </span>
+                            <div className="flex items-end gap-1">
+                                <span className={cn(
+                                    "text-4xl font-bold",
+                                    isPopular ? "text-primary" : "text-foreground"
+                                )}>
+                                    {symbol}
+                                </span>
+                                <span className={cn(
+                                    "text-5xl font-bold tracking-tight",
+                                    isPopular ? "text-primary" : "text-foreground"
+                                )}>
+                                    {editingCardPrice}
+                                </span>
+                            </div>
                             <span className="text-muted-foreground text-sm mb-2">
                                 {isAnnual ? "/año" : "/mes"}
                             </span>
@@ -319,7 +332,7 @@ export function PlanCard({
                     <div className="inline-flex items-center gap-1 text-xs font-medium text-success
                                     bg-success/10 px-2.5 py-1 rounded-full mt-2">
                         <Zap className="h-3 w-3" />
-                        Ahorras ${savedAmount}
+                        Ahorras {symbol}{savedAmount}
                     </div>
                 )}
 

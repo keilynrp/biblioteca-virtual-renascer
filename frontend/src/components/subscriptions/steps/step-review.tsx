@@ -3,12 +3,14 @@
 import { PlanData } from "../types"
 import { Card, CardContent } from "@/components/ui/card"
 import { Check, User, Building2 } from "lucide-react"
+import { useCurrency } from "@/context/currency-context"
 
 interface StepReviewProps {
     data: PlanData
 }
 
 export function StepReview({ data }: StepReviewProps) {
+    const { symbol } = useCurrency()
     return (
         <div className="space-y-6">
             <div className="bg-muted p-4 rounded-lg flex items-start gap-4">
@@ -23,7 +25,7 @@ export function StepReview({ data }: StepReviewProps) {
                     <h3 className="font-semibold text-lg">{data.name}</h3>
                     <p className="text-muted-foreground text-sm">{data.description}</p>
                     <div className="mt-2 flex items-baseline gap-1">
-                        <span className="text-2xl font-bold">${data.price}</span>
+                        <span className="text-2xl font-bold">{symbol}{data.price}</span>
                         <span className="text-sm text-muted-foreground">/ {data.duration_days} days</span>
                     </div>
                 </div>

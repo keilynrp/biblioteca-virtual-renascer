@@ -19,6 +19,7 @@ import { DataTable } from '@/components/ui/data-table'
 import { Plus, RefreshCw, Loader2, DollarSign, Pencil, Star } from 'lucide-react'
 import api from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
+import { useCurrency } from '@/context/currency-context'
 
 type Currency = {
     id: string
@@ -44,6 +45,7 @@ interface CurrenciesSectionProps {
 
 export function CurrenciesSection({ isAdmin }: CurrenciesSectionProps) {
     const { toast } = useToast()
+    const { refresh } = useCurrency()
     const [currencies, setCurrencies] = useState<Currency[]>([])
     const [rates, setRates] = useState<ExchangeRate[]>([])
     const [loading, setLoading] = useState(true)
@@ -86,6 +88,7 @@ export function CurrenciesSection({ isAdmin }: CurrenciesSectionProps) {
         try {
             await api.patch(`/currencies/currencies/${currency.id}/`, { is_base: true })
             setCurrencies(prev => prev.map(c => ({ ...c, is_base: c.id === currency.id })))
+            refresh()
             toast({
                 title: 'Moneda predeterminada actualizada',
                 description: `${currency.code} es ahora la moneda predeterminada del sistema.`,

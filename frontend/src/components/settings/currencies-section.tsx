@@ -16,7 +16,7 @@ import {
     DialogFooter,
 } from '@/components/ui/dialog'
 import { DataTable } from '@/components/ui/data-table'
-import { Plus, RefreshCw, Loader2, DollarSign, Pencil } from 'lucide-react'
+import { Plus, RefreshCw, Loader2, DollarSign, Pencil, Star } from 'lucide-react'
 import api from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
 
@@ -79,6 +79,19 @@ export function CurrenciesSection({ isAdmin }: CurrenciesSectionProps) {
             toast({ title: 'Error', description: 'No se pudieron cargar los datos de monedas', variant: 'destructive' })
         } finally {
             setLoading(false)
+        }
+    }
+
+    const handleSetAsDefault = async (currency: Currency) => {
+        try {
+            await api.patch(`/currencies/currencies/${currency.id}/`, { is_base: true })
+            setCurrencies(prev => prev.map(c => ({ ...c, is_base: c.id === currency.id })))
+            toast({
+                title: 'Moneda predeterminada actualizada',
+                description: `${currency.code} es ahora la moneda predeterminada del sistema.`,
+            })
+        } catch {
+            toast({ title: 'Error', description: 'No se pudo actualizar la moneda predeterminada', variant: 'destructive' })
         }
     }
 
@@ -186,15 +199,22 @@ export function CurrenciesSection({ isAdmin }: CurrenciesSectionProps) {
         },
         {
             header: 'Acciones',
-            cell: (c: Currency) => c.is_base ? null : (
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleToggleActive(c)}
-                >
-                    {c.is_active ? 'Desactivar' : 'Activar'}
-                </Button>
-            ),
+            cell: (c: Currency) => {
+                if (c.is_base) return null
+                return (
+                    <div className="flex items-center gap-2">
+                        {c.is_active && (
+                            <Button variant="outline" size="sm" onClick={() => handleSetAsDefault(c)}>
+                                <Star className="h-3 w-3 mr-1" />
+                                Predeterminada
+                            </Button>
+                        )}
+                        <Button variant="outline" size="sm" onClick={() => handleToggleActive(c)}>
+                            {c.is_active ? 'Desactivar' : 'Activar'}
+                        </Button>
+                    </div>
+                )
+            },
         },
     ]
 

@@ -38,7 +38,7 @@ export default function SettingsPage() {
         // Fetch user profile to check if admin
         api.get('/auth/user/')
             .then(res => {
-                setIsAdmin(res.data.is_staff || res.data.is_superuser)
+                setIsAdmin(res.data.is_staff || res.data.is_superuser || res.data.user_type === 'admin')
             })
             .catch(() => setIsAdmin(false))
     }, [])

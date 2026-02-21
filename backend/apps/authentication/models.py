@@ -12,6 +12,7 @@ class User(AbstractUser):
         LIBRARIAN = 'librarian', _('Bibliotecário')
         MODERATOR = 'moderator', _('Moderador')
         CONTENT_MANAGER = 'content_manager', _('Gestor de Conteúdo')
+        ADMIN = 'admin', _('Administrador')
         OTHER = 'other', _('Outro')
 
     user_type = models.CharField(

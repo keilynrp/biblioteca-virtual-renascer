@@ -19,15 +19,46 @@ class UserSerializer(serializers.ModelSerializer):
         queryset=Institution.objects.all(), source='institution', write_only=True, required=False, allow_null=True
     )
     avatar = serializers.ImageField(required=False, allow_null=True)
+    password = serializers.CharField(write_only=True, required=False, allow_blank=True)
     password_expired = serializers.SerializerMethodField()
+    is_staff = serializers.BooleanField(read_only=True)
+    is_superuser = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'user_type', 'first_name', 'last_name', 
                   'avatar', 'bio', 'phone', 'date_of_birth', 'institution_detail', 
                   'institution_id', 'password_changed_at', 'force_password_change', 
-                  'password_expired', 'is_staff', 'is_superuser')
+                  'password_expired', 'is_staff', 'is_superuser', 'password')
         read_only_fields = ('username', 'email', 'password_changed_at', 'password_expired', 'is_staff', 'is_superuser')
+
+    PASSWORD_MAX_LENGTH = 128
+
+    def validate_password(self, value):
+        if value:
+            if len(value) > self.PASSWORD_MAX_LENGTH:
+                raise serializers.ValidationError(f"La contraseña no puede tener más de {self.PASSWORD_MAX_LENGTH} caracteres.")
+            # For existing users, we can validate against the instance
+            validate_password(value, user=self.instance)
+        return value
+
+    def create(self, validated_data):
+        password = validated_data.pop('password', None)
+        user = super().create(validated_data)
+        if password:
+            user.set_password(password)
+            user.save()
+        return user
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        user = super().update(instance, validated_data)
+        if password:
+            user.set_password(password)
+            user.save()
+            # Update password history tracking
+            user.update_password_changed_at()
+        return user
 
     def get_password_expired(self, obj):
         policy = PasswordPolicy.get_policy()

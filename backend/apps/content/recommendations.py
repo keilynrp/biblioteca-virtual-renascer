@@ -14,8 +14,8 @@ def get_similar_books(book, limit=6):
     similar_books = Book.objects.filter(
         Q(author=book.author) | Q(category=book.category)
     ).exclude(id=book.id).select_related('author', 'category').annotate(
-        avg_rating=Avg('reviews__rating')
-    ).order_by('-avg_rating', '-created_at')
+        average_rating_annotated=Avg('reviews__rating')
+    ).order_by('-average_rating_annotated', '-created_at')
     
     # If not enough, fill with random top rated from same category
     if similar_books.count() < limit:
@@ -81,8 +81,8 @@ def get_recommended_for_user(user, limit=10):
     ).exclude(
         id__in=read_book_ids
     ).select_related('author', 'category').annotate(
-        avg_rating=Avg('reviews__rating')
-    ).order_by('-avg_rating', '-created_at')
+        average_rating_annotated=Avg('reviews__rating')
+    ).order_by('-average_rating_annotated', '-created_at')
     
     recommendations = list(recommendations[:limit])
     
@@ -98,9 +98,9 @@ def get_trending_books(limit=10, exclude_ids=None):
     Get trending/popular books as fallback.
     """
     qs = Book.objects.all().select_related('author', 'category').annotate(
-        review_count=Count('reviews'),
-        avg_rating=Avg('reviews__rating')
-    ).order_by('-review_count', '-avg_rating')
+        review_count_annotated=Count('reviews'),
+        average_rating_annotated=Avg('reviews__rating')
+    ).order_by('-review_count_annotated', '-average_rating_annotated')
     
     if exclude_ids:
         qs = qs.exclude(id__in=exclude_ids)

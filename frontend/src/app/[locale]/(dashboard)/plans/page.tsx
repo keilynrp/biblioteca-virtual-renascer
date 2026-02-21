@@ -4,10 +4,11 @@ import { useEffect, useState } from "react"
 import api from "@/lib/api"
 import { PlanCard } from "@/components/plan-card"
 import { useRouter } from "next/navigation"
-import { Loader2, Sparkles, Shield, Zap } from "lucide-react"
+import { Loader2, Sparkles, Shield, Zap, Pencil, X } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useAuthStoreHydrated } from "@/store/authStore"
 
 interface Plan {
     id: number
@@ -24,7 +25,10 @@ export default function PlansPage() {
     const [loading, setLoading] = useState(true)
     const [subscribing, setSubscribing] = useState<number | null>(null)
     const [isAnnual, setIsAnnual] = useState(false)
+    const [isEditMode, setIsEditMode] = useState(false)
     const router = useRouter()
+    const { user } = useAuthStoreHydrated()
+    const isAdmin = user?.user_type === 'admin'
 
     useEffect(() => {
         async function fetchPlans() {
@@ -43,6 +47,16 @@ export default function PlansPage() {
 
     const handleSubscribe = (planId: number) => {
         router.push(`/checkout?planId=${planId}`)
+    }
+
+    const handleSavePlan = async (id: number, data: Partial<Plan>) => {
+        const response = await api.patch(`/subscriptions/plans/${id}/`, data)
+        setPlans(prev => prev.map(p => p.id === id ? { ...p, ...response.data } : p))
+    }
+
+    const handleDeletePlan = async (id: number) => {
+        await api.delete(`/subscriptions/plans/${id}/`)
+        setPlans(prev => prev.filter(p => p.id !== id))
     }
 
     if (loading) {
@@ -119,6 +133,30 @@ export default function PlansPage() {
                 </div>
             </div>
 
+            {/* Admin edit mode toggle */}
+            {isAdmin && (
+                <div className="flex justify-end max-w-6xl mx-auto px-4">
+                    <Button
+                        variant={isEditMode ? "destructive" : "outline"}
+                        size="sm"
+                        onClick={() => setIsEditMode(prev => !prev)}
+                        className="gap-2"
+                    >
+                        {isEditMode ? (
+                            <>
+                                <X className="h-4 w-4" />
+                                Salir de edición
+                            </>
+                        ) : (
+                            <>
+                                <Pencil className="h-4 w-4" />
+                                Editar planes
+                            </>
+                        )}
+                    </Button>
+                </div>
+            )}
+
             {/* Plans Grid */}
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto px-4">
                 {plans.map((plan) => (
@@ -128,6 +166,9 @@ export default function PlansPage() {
                         onSubscribe={handleSubscribe}
                         isLoading={subscribing === plan.id}
                         isAnnual={isAnnual}
+                        isEditMode={isEditMode}
+                        onSave={handleSavePlan}
+                        onDelete={handleDeletePlan}
                     />
                 ))}
             </div>

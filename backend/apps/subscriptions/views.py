@@ -9,11 +9,27 @@ from .serializers import PlanSerializer, UserSubscriptionSerializer, Institution
 class PlanListView(generics.ListCreateAPIView):
     queryset = Plan.objects.filter(is_active=True)
     serializer_class = PlanSerializer
-    
+
     def get_permissions(self):
         if self.request.method == 'POST':
             return [permissions.IsAuthenticated()] # Allow authenticated users to create for demo
         return [permissions.AllowAny()]
+
+
+class PlanDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Plan.objects.all()
+    serializer_class = PlanSerializer
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [permissions.AllowAny()]
+        return [permissions.IsAdminUser()]
+
+    def destroy(self, request, *args, **kwargs):
+        plan = self.get_object()
+        plan.is_active = False
+        plan.save(update_fields=['is_active'])
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class SubscriptionView(APIView):
     permission_classes = (permissions.IsAuthenticated,)

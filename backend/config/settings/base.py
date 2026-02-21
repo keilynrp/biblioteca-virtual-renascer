@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'apps.core',
     'apps.communities', # Sprint 7
     'apps.analytics',
+    'apps.currencies',
 ]
 
 AUTH_USER_MODEL = 'authentication.User'

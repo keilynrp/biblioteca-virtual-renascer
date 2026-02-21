@@ -31,6 +31,7 @@ urlpatterns = [
     path('api/communities/', include('apps.communities.urls')),
     path('api/notifications/', include('apps.notifications.urls')),
     path('api/analytics/', include('apps.analytics.urls')),
+    path('api/currencies/', include('apps.currencies.urls')),
 ]
 
 # Development-only URLs

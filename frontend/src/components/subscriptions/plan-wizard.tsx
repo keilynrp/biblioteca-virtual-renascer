@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/i18n/routing"
 import api from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,14 +14,7 @@ import { StepDetails } from "./steps/step-details"
 import { StepFeatures } from "./steps/step-features"
 import { StepReview } from "./steps/step-review"
 
-export type PlanData = {
-    plan_type: 'INDIVIDUAL' | 'INSTITUTIONAL'
-    name: string
-    description: string
-    price: string
-    duration_days: number
-    features: string[]
-}
+import type { PlanData } from "./types"
 
 const INITIAL_DATA: PlanData = {
     plan_type: 'INDIVIDUAL',
@@ -33,10 +26,10 @@ const INITIAL_DATA: PlanData = {
 }
 
 const STEPS = [
-    { id: 'type', title: 'Plan Type' },
-    { id: 'details', title: 'Details & Pricing' },
-    { id: 'features', title: 'Features' },
-    { id: 'review', title: 'Review' },
+    { id: 'type', title: 'Tipo de Plan' },
+    { id: 'details', title: 'Detalles y Precio' },
+    { id: 'features', title: 'Características' },
+    { id: 'review', title: 'Revisión' },
 ]
 
 export function PlanWizard() {
@@ -66,15 +59,15 @@ export function PlanWizard() {
         try {
             await api.post('/subscriptions/plans/', data)
             toast({
-                title: "Success",
-                description: "Plan created successfully!",
+                title: "Plan creado",
+                description: "El plan fue creado exitosamente.",
             })
             router.push('/plans')
         } catch (error) {
-            console.error("Failed to create plan", error)
+            console.error("Error al crear el plan", error)
             toast({
                 title: "Error",
-                description: "Failed to create plan. Please try again.",
+                description: "No se pudo crear el plan. Inténtalo de nuevo.",
                 variant: "destructive",
             })
         } finally {
@@ -142,17 +135,17 @@ export function PlanWizard() {
                         disabled={currentStep === 0 || loading}
                     >
                         <ChevronLeft className="mr-2 h-4 w-4" />
-                        Back
+                        Atrás
                     </Button>
 
                     {currentStep === STEPS.length - 1 ? (
                         <Button onClick={handleSubmit} disabled={loading}>
                             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Create Plan
+                            Crear Plan
                         </Button>
                     ) : (
                         <Button onClick={nextStep}>
-                            Next
+                            Siguiente
                             <ChevronRight className="ml-2 h-4 w-4" />
                         </Button>
                     )}

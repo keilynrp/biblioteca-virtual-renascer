@@ -2,7 +2,7 @@
 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { PlanData } from "../plan-wizard"
+import { PlanData } from "../types"
 
 interface StepSettingsProps {
     data: PlanData

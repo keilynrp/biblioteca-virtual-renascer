@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { Check, Crown, Sparkles, Zap, Star, Plus, X, Save, Trash2, RotateCcw } from "lucide-react"
+import { Check, Crown, Sparkles, Zap, Star, Plus, X, Save, Trash2, RotateCcw, User, Building2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface Plan {
@@ -215,6 +215,23 @@ export function PlanCard({
                         <Sparkles className="h-7 w-7 text-white" />
                     )}
                 </div>
+
+                {/* Plan Type Badge (view mode only) */}
+                {!isEditMode && plan.plan_type && (
+                    <div className={cn(
+                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium mb-3",
+                        plan.plan_type === 'INSTITUTIONAL'
+                            ? "bg-chart-4/10 text-chart-4"
+                            : "bg-primary/10 text-primary"
+                    )}>
+                        {plan.plan_type === 'INSTITUTIONAL' ? (
+                            <Building2 className="h-3.5 w-3.5" />
+                        ) : (
+                            <User className="h-3.5 w-3.5" />
+                        )}
+                        {plan.plan_type === 'INSTITUTIONAL' ? 'Institucional' : 'Individual'}
+                    </div>
+                )}
 
                 {/* Plan Name */}
                 {isEditing ? (
@@ -452,8 +469,8 @@ export function PlanCard({
                                     <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                                     Procesando...
                                 </span>
-                            ) : isEnterprise ? (
-                                "Contactar Ventas"
+                            ) : isEnterprise || plan.plan_type === 'INSTITUTIONAL' ? (
+                                "Para Instituciones"
                             ) : (
                                 "Comenzar Ahora"
                             )}

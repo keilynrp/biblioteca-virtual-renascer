@@ -11,8 +11,8 @@ class PlanListView(generics.ListCreateAPIView):
     serializer_class = PlanSerializer
 
     def get_permissions(self):
-        if self.request.method == 'POST':
-            return [permissions.IsAuthenticated()] # Allow authenticated users to create for demo
+        if self.request.method in ['POST']:
+            return [permissions.IsAdminUser()]
         return [permissions.AllowAny()]
 
 

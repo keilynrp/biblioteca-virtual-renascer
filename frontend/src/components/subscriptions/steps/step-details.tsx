@@ -3,7 +3,7 @@
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { PlanData } from "../plan-wizard"
+import { PlanData } from "../types"
 
 interface StepDetailsProps {
     data: PlanData

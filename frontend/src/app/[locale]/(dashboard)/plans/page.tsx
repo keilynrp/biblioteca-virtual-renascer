@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react"
 import api from "@/lib/api"
 import { PlanCard } from "@/components/plan-card"
-import { useRouter } from "next/navigation"
-import { Loader2, Sparkles, Shield, Zap, Pencil, X } from "lucide-react"
-import Link from "next/link"
+import { useRouter } from "@/i18n/routing"
+import { Link } from "@/i18n/routing"
+import { Loader2, Sparkles, Shield, Zap, Pencil, X, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useAuthStoreHydrated } from "@/store/authStore"
@@ -17,8 +17,10 @@ interface Plan {
     price: string
     duration_days: number
     features: string[]
-    plan_type?: string
+    plan_type?: 'INDIVIDUAL' | 'INSTITUTIONAL'
 }
+
+type PlanFilter = 'ALL' | 'INDIVIDUAL' | 'INSTITUTIONAL'
 
 export default function PlansPage() {
     const [plans, setPlans] = useState<Plan[]>([])
@@ -26,6 +28,7 @@ export default function PlansPage() {
     const [subscribing, setSubscribing] = useState<number | null>(null)
     const [isAnnual, setIsAnnual] = useState(false)
     const [isEditMode, setIsEditMode] = useState(false)
+    const [planFilter, setPlanFilter] = useState<PlanFilter>('ALL')
     const router = useRouter()
     const { user } = useAuthStoreHydrated()
     const isAdmin = user?.user_type === 'admin'
@@ -44,6 +47,10 @@ export default function PlansPage() {
         }
         fetchPlans()
     }, [])
+
+    const filteredPlans = plans.filter(p =>
+        planFilter === 'ALL' || p.plan_type === planFilter
+    )
 
     const handleSubscribe = (planId: number) => {
         router.push(`/checkout?planId=${planId}`)
@@ -133,33 +140,67 @@ export default function PlansPage() {
                 </div>
             </div>
 
-            {/* Admin edit mode toggle */}
-            {isAdmin && (
-                <div className="flex justify-end max-w-6xl mx-auto px-4">
-                    <Button
-                        variant={isEditMode ? "destructive" : "outline"}
-                        size="sm"
-                        onClick={() => setIsEditMode(prev => !prev)}
-                        className="gap-2"
-                    >
-                        {isEditMode ? (
-                            <>
-                                <X className="h-4 w-4" />
-                                Salir de edición
-                            </>
-                        ) : (
-                            <>
-                                <Pencil className="h-4 w-4" />
-                                Editar planes
-                            </>
-                        )}
-                    </Button>
+            {/* Filter Tabs + Admin Controls */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 max-w-6xl mx-auto px-4">
+                {/* Tabs */}
+                <div className="inline-flex items-center gap-1 bg-muted/50 border border-border rounded-full p-1">
+                    {(['ALL', 'INDIVIDUAL', 'INSTITUTIONAL'] as PlanFilter[]).map((filter) => {
+                        const labels: Record<PlanFilter, string> = {
+                            ALL: 'Todos',
+                            INDIVIDUAL: 'Individual',
+                            INSTITUTIONAL: 'Institucional',
+                        }
+                        return (
+                            <button
+                                key={filter}
+                                onClick={() => setPlanFilter(filter)}
+                                className={cn(
+                                    "px-4 py-1.5 rounded-full text-sm font-medium transition-colors duration-200",
+                                    planFilter === filter
+                                        ? "bg-background text-foreground shadow-sm"
+                                        : "text-muted-foreground hover:text-foreground/80"
+                                )}
+                            >
+                                {labels[filter]}
+                            </button>
+                        )
+                    })}
                 </div>
-            )}
+
+                {/* Admin controls */}
+                {isAdmin && (
+                    <div className="flex items-center gap-2">
+                        <Link href="/plans/builder">
+                            <Button size="sm" className="gap-2 rounded-full">
+                                <Plus className="h-4 w-4" />
+                                Crear Plan
+                            </Button>
+                        </Link>
+                        <Button
+                            variant={isEditMode ? "destructive" : "outline"}
+                            size="sm"
+                            onClick={() => setIsEditMode(prev => !prev)}
+                            className="gap-2 rounded-full"
+                        >
+                            {isEditMode ? (
+                                <>
+                                    <X className="h-4 w-4" />
+                                    Salir de edición
+                                </>
+                            ) : (
+                                <>
+                                    <Pencil className="h-4 w-4" />
+                                    Editar planes
+                                </>
+                            )}
+                        </Button>
+                    </div>
+                )}
+            </div>
 
             {/* Plans Grid */}
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto px-4">
-                {plans.map((plan) => (
+                {filteredPlans.length > 0 ? filteredPlans.map((plan) => (
                     <PlanCard
                         key={plan.id}
                         plan={plan}
@@ -170,7 +211,11 @@ export default function PlansPage() {
                         onSave={handleSavePlan}
                         onDelete={handleDeletePlan}
                     />
-                ))}
+                )) : (
+                    <div className="col-span-3 text-center py-16 text-muted-foreground">
+                        No hay planes disponibles en esta categoría.
+                    </div>
+                )}
             </div>
 
             {/* Trust Badges */}
@@ -187,18 +232,6 @@ export default function PlansPage() {
                     <Sparkles className="h-5 w-5 text-primary" />
                     <span className="text-sm">Cancela cuando quieras</span>
                 </div>
-            </div>
-
-            {/* Custom Plan CTA */}
-            <div className="text-center pt-4">
-                <p className="text-muted-foreground mb-4">
-                    ¿Necesitas un plan personalizado para tu institución?
-                </p>
-                <Link href="/plans/builder">
-                    <Button variant="outline" size="lg" className="rounded-xl">
-                        Crear Plan Personalizado
-                    </Button>
-                </Link>
             </div>
         </div>
     )

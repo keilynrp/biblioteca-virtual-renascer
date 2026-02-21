@@ -1,6 +1,6 @@
 "use client"
 
-import { PlanData } from "../plan-wizard"
+import { PlanData } from "../types"
 import { Card, CardContent } from "@/components/ui/card"
 import { Check, User, Building2 } from "lucide-react"
 

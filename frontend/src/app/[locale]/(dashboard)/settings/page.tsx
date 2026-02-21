@@ -21,6 +21,7 @@ import api from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
 import { PasswordPolicySection } from '@/components/settings/password-policy-section'
 import { CurrenciesSection } from '@/components/settings/currencies-section'
+import { EmailSection } from '@/components/settings/email-section'
 
 export default function SettingsPage() {
     const { activeLoans, isLoading, returnBook, renewLoan } = useLoans()
@@ -273,6 +274,14 @@ export default function SettingsPage() {
                 <>
                     <Separator className="my-8" />
                     <CurrenciesSection isAdmin={isAdmin} />
+                </>
+            )}
+
+            {/* Email Section - Admin Only */}
+            {isAdmin && (
+                <>
+                    <Separator className="my-8" />
+                    <EmailSection isAdmin={isAdmin} />
                 </>
             )}
         </div>

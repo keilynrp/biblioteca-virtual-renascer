@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'apps.communities', # Sprint 7
     'apps.analytics',
     'apps.currencies',
+    'apps.mailer',
 ]
 
 AUTH_USER_MODEL = 'authentication.User'
@@ -163,6 +164,10 @@ EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@biblioteca.ao')
+
+# Mailer encryption key (Fernet) — generate with:
+# python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+MAILER_ENCRYPTION_KEY = os.getenv('MAILER_ENCRYPTION_KEY', '')
 
 # Celery Configuration
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')

@@ -122,6 +122,7 @@ backend/static_root/
 backend/celerybeat-schedule
 backend/celerybeat.pid
 backend/logs/
+backend/migrate_log.txt
 logs/
 
 # Frontend specific

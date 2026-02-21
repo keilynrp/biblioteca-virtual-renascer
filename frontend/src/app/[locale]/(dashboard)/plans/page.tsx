@@ -17,7 +17,7 @@ interface Plan {
     price: string
     duration_days: number
     features: string[]
-    plan_type?: 'INDIVIDUAL' | 'INSTITUTIONAL'
+    plan_type?: string
 }
 
 type PlanFilter = 'ALL' | 'INDIVIDUAL' | 'INSTITUTIONAL'

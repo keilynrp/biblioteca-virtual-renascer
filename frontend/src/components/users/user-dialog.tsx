@@ -36,11 +36,19 @@ import { Institution } from "@/lib/api/institutions"
 const userSchema = z.object({
     username: z.string().min(3, "El usuario debe tener al menos 3 caracteres"),
     email: z.string().email("Debe ser un email válido"),
-    password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres").optional(),
+    password: z.string().optional(),
     first_name: z.string().optional(),
     last_name: z.string().optional(),
     user_type: z.enum(["student", "teacher", "admin"]),
     institution: z.number().optional(),
+}).refine((data) => {
+    // Password is only required when creating a new user (no ID yet)
+    // However, the UserDialog doesn't have the user ID in the schema.
+    // We handle this inside handleSubmit or by passing a flag.
+    return true;
+}, {
+    message: "La contraseña es obligatoria para nuevos usuarios",
+    path: ["password"],
 })
 
 type UserFormData = z.infer<typeof userSchema>
@@ -81,7 +89,7 @@ export function UserDialog({
             form.reset({
                 username: user.username,
                 email: user.email,
-                password: undefined,
+                password: "",
                 first_name: user.first_name || "",
                 last_name: user.last_name || "",
                 user_type: user.user_type,
@@ -103,6 +111,16 @@ export function UserDialog({
     const handleSubmit = async (data: UserFormData) => {
         setIsLoading(true)
         try {
+            // Manual validation for new users
+            if (!isEditing && (!data.password || data.password.length < 8)) {
+                form.setError("password", {
+                    type: "manual",
+                    message: "La contraseña debe tener al menos 8 caracteres para nuevos usuarios"
+                });
+                setIsLoading(false);
+                return;
+            }
+
             // Remove password field if editing and empty
             const submitData = { ...data }
             if (isEditing && !submitData.password) {

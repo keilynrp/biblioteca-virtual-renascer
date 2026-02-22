@@ -1,5 +1,6 @@
 "use client"
 
+import { AdminGuard } from "@/components/admin/admin-guard"
 import { useEffect, useState } from "react"
 import api from "@/lib/api"
 import { Button } from "@/components/ui/button"
@@ -740,5 +741,5 @@ function AdminBooksPageContent() {
 }
 
 export default function AdminBooksPage() {
-    return <AdminBooksPageContent />
+    return <AdminGuard><AdminBooksPageContent /></AdminGuard>
 }

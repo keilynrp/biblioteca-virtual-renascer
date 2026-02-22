@@ -1,5 +1,6 @@
 "use client"
 
+import { AdminGuard } from "@/components/admin/admin-guard"
 import { useState, useEffect } from "react"
 import { Plus, Pencil, Trash2, Building2 } from "lucide-react"
 import { DataTable } from "@/components/ui/data-table"
@@ -21,7 +22,7 @@ import { InstitutionDialog } from "@/components/institutions/institution-dialog"
 import { institutionsApi, Institution } from "@/lib/api/institutions"
 import { handleApiError, showSuccess } from "@/lib/api"
 
-export default function InstitutionsPage() {
+function InstitutionsPageContent() {
     const [data, setData] = useState<Institution[]>([])
     const [loading, setLoading] = useState(true)
     const [dialogOpen, setDialogOpen] = useState(false)
@@ -196,4 +197,8 @@ export default function InstitutionsPage() {
             </AlertDialog>
         </div>
     )
+}
+
+export default function InstitutionsPage() {
+    return <AdminGuard><InstitutionsPageContent /></AdminGuard>
 }

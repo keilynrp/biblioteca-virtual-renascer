@@ -20,6 +20,7 @@ interface AuthState {
     login: (user: User, accessToken: string, refreshToken: string) => void;
     logout: () => void;
     setHasHydrated: (state: boolean) => void;
+    updateUser: (data: Partial<User>) => void;
 }
 
 const useAuthStoreBase = create<AuthState>()(
@@ -51,6 +52,12 @@ const useAuthStoreBase = create<AuthState>()(
 
             setHasHydrated: (state) => {
                 set({ _hasHydrated: state });
+            },
+
+            updateUser: (data) => {
+                set((state) => ({
+                    user: state.user ? { ...state.user, ...data } : null,
+                }));
             },
         }),
         {

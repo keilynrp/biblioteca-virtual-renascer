@@ -1,5 +1,6 @@
 "use client"
 
+import { AdminGuard } from "@/components/admin/admin-guard"
 import { useState, useEffect } from "react"
 import { Plus, Search, Pencil, Trash2, FolderOpen, BookOpen } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -37,7 +38,7 @@ interface CategoryFormData {
     description: string
 }
 
-export default function CategoriesAdminPage() {
+function CategoriesAdminPageContent() {
     const [categories, setCategories] = useState<Category[]>([])
     const [filteredCategories, setFilteredCategories] = useState<Category[]>([])
     const [loading, setLoading] = useState(true)
@@ -360,4 +361,8 @@ export default function CategoriesAdminPage() {
             </Dialog>
         </div>
     )
+}
+
+export default function CategoriesAdminPage() {
+    return <AdminGuard><CategoriesAdminPageContent /></AdminGuard>
 }

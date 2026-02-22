@@ -1,5 +1,6 @@
 "use client"
 
+import { AdminGuard } from "@/components/admin/admin-guard"
 import { useState, useEffect } from "react"
 import { Plus, Search, Pencil, Trash2, Users, BookOpen } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -38,7 +39,7 @@ interface AuthorFormData {
     photo?: File | null
 }
 
-export default function AuthorsAdminPage() {
+function AuthorsAdminPageContent() {
     const [authors, setAuthors] = useState<Author[]>([])
     const [filteredAuthors, setFilteredAuthors] = useState<Author[]>([])
     const [loading, setLoading] = useState(true)
@@ -391,4 +392,8 @@ export default function AuthorsAdminPage() {
             </Dialog>
         </div>
     )
+}
+
+export default function AuthorsAdminPage() {
+    return <AdminGuard><AuthorsAdminPageContent /></AdminGuard>
 }

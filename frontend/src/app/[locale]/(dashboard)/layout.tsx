@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useAuthStore, useAuthStoreHydrated } from "@/store/authStore"
+import api from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
@@ -25,6 +26,7 @@ import {
     Search,
     Bell,
     Settings,
+    Settings2,
     ChevronDown,
     Moon,
     Sun,
@@ -39,6 +41,8 @@ import {
     BookUp,
     Building2, // Icon for Institutions
     BellDot,
+    LayoutTemplate,
+    Map,
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { SearchBar } from "@/components/search-bar"
@@ -49,6 +53,7 @@ import { NotificationBellComponent } from "@/components/notifications/notificati
 import { getAvatarUrl } from "@/lib/utils"
 import { CurrencyProvider } from "@/context/currency-context"
 import { TrialBanner } from "@/components/notifications/trial-banner"
+import { useSiteSettings } from "@/context/site-settings-context"
 
 export default function DashboardLayout({
     children,
@@ -59,7 +64,8 @@ export default function DashboardLayout({
     const router = useRouter()
     // Usar el hook hidratado para prevenir errores de hidratación
     const t = useTranslations("Navigation")
-    const { user, logout, isAuthenticated, _hasHydrated } = useAuthStoreHydrated()
+    const { user, logout, isAuthenticated, _hasHydrated, updateUser } = useAuthStoreHydrated()
+    const { logo_url, site_name } = useSiteSettings()
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
     const [isDarkMode, setIsDarkMode] = useState(false)
@@ -76,8 +82,14 @@ export default function DashboardLayout({
 
         if (!isAuthenticated) {
             router.push('/login')
+            return
         }
-    }, [isAuthenticated, router, _hasHydrated])
+
+        // Sincronizar datos del usuario con el backend para reflejar cambios de rol
+        api.get('/auth/user/').then(res => {
+            updateUser(res.data)
+        }).catch(() => {})
+    }, [_hasHydrated, isAuthenticated, router, updateUser])
 
     // Load sidebar collapsed state from localStorage (solo después de hidratar)
     useEffect(() => {
@@ -114,12 +126,15 @@ export default function DashboardLayout({
         { href: "/favorites", label: t("favorites"), icon: Heart },
         { href: "/reading-history", label: t("history"), icon: BookMarked },
         { href: "/admin", label: t("admin"), icon: Shield, adminOnly: true },
-        { href: "/admin/books", label: "Administrar Libros", icon: FileEdit },
-        { href: "/admin/authors", label: "Administrar Autores", icon: Users },
-        { href: "/admin/categories", label: "Administrar Categorías", icon: FolderOpen },
+        { href: "/admin/books", label: "Administrar Libros", icon: FileEdit, adminOnly: true },
+        { href: "/admin/authors", label: "Administrar Autores", icon: Users, adminOnly: true },
+        { href: "/admin/categories", label: "Administrar Categorías", icon: FolderOpen, adminOnly: true },
         { href: "/plans", label: "Planes", icon: CreditCard },
         { href: "/institutions", label: "Instituciones", icon: Building2, adminOnly: true },
         { href: "/admin/notifications", label: "Notificaciones Admin", icon: BellDot, adminOnly: true },
+        { href: "/admin/navigation", label: "Mapa del Sitio", icon: Map, adminOnly: true },
+        { href: "/admin/page-builder", label: "Constructor de Páginas", icon: LayoutTemplate, adminOnly: true },
+        { href: "/admin/site-settings", label: "Ajustes del Sitio", icon: Settings2, adminOnly: true },
         { href: "/users", label: "Usuarios", icon: Users, adminOnly: true },
         { href: "/profile", label: "Perfil", icon: User },
     ]
@@ -147,18 +162,24 @@ export default function DashboardLayout({
                         className={`flex items-center space-x-3 transition-all duration-300 cursor-pointer group ${isSidebarCollapsed ? "md:opacity-0 md:scale-90 md:hidden" : "opacity-100 scale-100"}`}
                         onClick={() => setIsSidebarOpen(false)}
                     >
-                        <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-primary via-primary-dark to-primary shadow-lg shadow-primary/30 flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <BookOpen className="h-6 w-6 text-white" />
-                            <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-lg font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
-                                BVS
-                            </span>
-                            <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
-                                Biblioteca
-                            </span>
-                        </div>
+                        {logo_url ? (
+                            <img src={logo_url} alt={site_name} className="h-10 object-contain max-w-[140px]" />
+                        ) : (
+                            <>
+                                <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-primary via-primary-dark to-primary shadow-lg shadow-primary/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <BookOpen className="h-6 w-6 text-white" />
+                                    <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-lg font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
+                                        BVS
+                                    </span>
+                                    <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+                                        Biblioteca
+                                    </span>
+                                </div>
+                            </>
+                        )}
                     </Link>
 
                     {/* Collapsed state logo */}
@@ -167,9 +188,13 @@ export default function DashboardLayout({
                         className={`flex items-center justify-center w-full transition-all duration-300 cursor-pointer ${isSidebarCollapsed ? "md:opacity-100 md:scale-100" : "md:opacity-0 md:scale-90 md:hidden"}`}
                         onClick={() => setIsSidebarOpen(false)}
                     >
-                        <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-primary via-primary-dark to-primary shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-110 transition-transform">
-                            <BookOpen className="h-6 w-6 text-white" />
-                        </div>
+                        {logo_url ? (
+                            <img src={logo_url} alt={site_name} className="h-8 w-8 object-contain rounded" />
+                        ) : (
+                            <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-primary via-primary-dark to-primary shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-110 transition-transform">
+                                <BookOpen className="h-6 w-6 text-white" />
+                            </div>
+                        )}
                     </Link>
 
                     {/* Mobile close button */}
@@ -189,7 +214,7 @@ export default function DashboardLayout({
                             Menú Principal
                         </span>
                     </div>
-                    {navItems.map((item, index) => {
+                    {navItems.filter(item => !item.adminOnly || user?.user_type === 'admin').map((item, index) => {
                         const Icon = item.icon
                         const isActive = pathname === item.href
                         return (

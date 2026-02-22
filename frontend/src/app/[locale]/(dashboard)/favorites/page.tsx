@@ -14,13 +14,13 @@ export default function FavoritesPage() {
     const { favorites, fetchFavorites } = useBookStore()
     const [isLoading, setIsLoading] = useState(true)
 
-    console.log('[FavoritesPage] Component rendered with favorites:', favorites?.length || 0)
-
-    // Reload favorites when component mounts OR when pathname changes back to /favorites
+    // Load favorites on mount and when pathname changes back to /favorites
     useEffect(() => {
-        console.log('[FavoritesPage] Pathname changed to:', pathname)
-        if (pathname === '/favorites') {
-            console.log('[FavoritesPage] Loading favorites...')
+        loadFavorites()
+    }, [])
+
+    useEffect(() => {
+        if (pathname.endsWith('/favorites')) {
             loadFavorites()
         }
     }, [pathname])
@@ -48,16 +48,13 @@ export default function FavoritesPage() {
     }, [])
 
     const loadFavorites = async () => {
-        console.log('[loadFavorites] Starting to load favorites...')
         setIsLoading(true)
         try {
             await fetchFavorites()
-            console.log('[loadFavorites] Favorites loaded successfully')
         } catch (error) {
-            console.error("[loadFavorites] Error loading favorites:", error)
+            console.error("Error loading favorites:", error)
         } finally {
             setIsLoading(false)
-            console.log('[loadFavorites] Loading finished')
         }
     }
 

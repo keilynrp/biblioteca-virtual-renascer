@@ -15,6 +15,21 @@ const nextConfig: NextConfig = {
   // typedRoutes: true,
   // Turbopack configuration (required for Next.js 16+)
   turbopack: {},
+
+  // Proxy all /api/* requests to the backend.
+  // In Docker: API_INTERNAL_URL=http://backend:8000/api (inter-service)
+  // Locally:   falls back to http://localhost:8000/api
+  // This eliminates browser CORS requirements entirely.
+  async rewrites() {
+    const backendUrl =
+      process.env.API_INTERNAL_URL || 'http://localhost:8000/api';
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${backendUrl}/:path*`,
+      },
+    ];
+  },
   // Experimental features for better performance
   experimental: {
     // Optimize package imports for faster compilation

@@ -9,6 +9,7 @@ class Transaction(models.Model):
         ('PENDING', 'Pending'),
         ('COMPLETED', 'Completed'),
         ('FAILED', 'Failed'),
+        ('REFUNDED', 'Refunded'),
     )
     PAYMENT_METHOD_CHOICES = (
         ('CREDIT_CARD', 'Credit Card'),

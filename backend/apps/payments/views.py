@@ -171,18 +171,34 @@ class StripeWebhookView(APIView):
 
                     # Activate Subscription
                     UserSubscription.objects.filter(
-                        user=transaction.user, 
+                        user=transaction.user,
                         is_active=True
                     ).update(is_active=False)
-                    
+
                     UserSubscription.objects.create(
                         user=transaction.user,
                         plan=transaction.plan,
                         start_date=timezone.now(),
                         is_active=True
                     )
+
+                    # Create Invoice for this transaction
+                    try:
+                        from apps.billing.services.invoice_service import create_invoice_for_transaction
+                        create_invoice_for_transaction(transaction)
+                    except Exception as invoice_err:
+                        import logging
+                        logging.getLogger(__name__).error(f'Invoice creation failed: {invoice_err}')
             except Transaction.DoesNotExist:
                 pass
+
+        elif event['type'] == 'setup_intent.succeeded':
+            try:
+                from apps.billing.services.webhook_billing import handle_setup_intent_succeeded
+                handle_setup_intent_succeeded(event['data']['object'])
+            except Exception as setup_err:
+                import logging
+                logging.getLogger(__name__).error(f'setup_intent.succeeded handler failed: {setup_err}')
 
         elif event['type'] == 'payment_intent.payment_failed':
             payment_intent = event['data']['object']

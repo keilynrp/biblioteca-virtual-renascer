@@ -23,6 +23,7 @@ boto3>=1.34
 
 # PDF Processing
 PyPDF2>=3.0
+reportlab>=4.0
 
 # Monitoring
 sentry-sdk[django]>=1.40

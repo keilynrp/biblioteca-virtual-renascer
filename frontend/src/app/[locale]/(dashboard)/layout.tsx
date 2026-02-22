@@ -43,6 +43,7 @@ import {
     BellDot,
     LayoutTemplate,
     Map,
+    Receipt,
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { SearchBar } from "@/components/search-bar"
@@ -130,6 +131,7 @@ export default function DashboardLayout({
         { href: "/admin/authors", label: "Administrar Autores", icon: Users, adminOnly: true },
         { href: "/admin/categories", label: "Administrar Categorías", icon: FolderOpen, adminOnly: true },
         { href: "/plans", label: "Planes", icon: CreditCard },
+        { href: "/billing", label: "Billing", icon: Receipt },
         { href: "/institutions", label: "Instituciones", icon: Building2, adminOnly: true },
         { href: "/admin/notifications", label: "Notificaciones Admin", icon: BellDot, adminOnly: true },
         { href: "/admin/navigation", label: "Mapa del Sitio", icon: Map, adminOnly: true },

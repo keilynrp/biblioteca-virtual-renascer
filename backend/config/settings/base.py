@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'apps.site_settings',
     'apps.pages',
     'apps.navigation',
+    'apps.billing',
 ]
 
 AUTH_USER_MODEL = 'authentication.User'

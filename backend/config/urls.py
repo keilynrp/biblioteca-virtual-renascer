@@ -33,6 +33,9 @@ urlpatterns = [
     path('api/analytics/', include('apps.analytics.urls')),
     path('api/currencies/', include('apps.currencies.urls')),
     path('api/mailer/', include('apps.mailer.urls')),
+    path('api/site-settings/', include('apps.site_settings.urls')),
+    path('api/pages/', include('apps.pages.urls')),
+    path('api/navigation/', include('apps.navigation.urls')),
 ]
 
 # Development-only URLs

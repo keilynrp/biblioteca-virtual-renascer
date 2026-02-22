@@ -15,10 +15,65 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { BookOpen, User, LogOut, ChevronDown, Settings } from "lucide-react"
 import { useAuthStore } from "@/store/authStore"
+import { useSiteSettings } from "@/context/site-settings-context"
+import { useNavigation } from "@/context/navigation-context"
+import type { NavItem } from "@/services/navigationApi"
+
+// Hardcoded fallback links
+const FALLBACK_LINKS = [
+    { label: "Acerca de", url: "/about" },
+    { label: "Precios", url: "/pricing" },
+    { label: "Contacto", url: "/contact" },
+]
+
+function NavLink({ item }: { item: { label: string; url: string; open_in_new_tab?: boolean } }) {
+    return (
+        <Link
+            href={item.url}
+            target={item.open_in_new_tab ? "_blank" : undefined}
+            rel={item.open_in_new_tab ? "noopener noreferrer" : undefined}
+            className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors"
+        >
+            {item.label}
+        </Link>
+    )
+}
+
+function NavDropdown({ item }: { item: NavItem }) {
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-1 text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors">
+                    {item.label}
+                    <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+                {(item.children ?? []).filter(c => c.is_visible).map((child) => (
+                    <DropdownMenuItem key={child.id ?? child.label} asChild>
+                        <Link
+                            href={child.url}
+                            target={child.open_in_new_tab ? "_blank" : undefined}
+                            rel={child.open_in_new_tab ? "noopener noreferrer" : undefined}
+                        >
+                            {child.label}
+                        </Link>
+                    </DropdownMenuItem>
+                ))}
+            </DropdownMenuContent>
+        </DropdownMenu>
+    )
+}
 
 export function Navbar() {
     const router = useRouter()
     const { user, logout, isAuthenticated } = useAuthStore()
+    const { logo_url, site_name } = useSiteSettings()
+    const { getZone } = useNavigation()
+
+    const headerZone = getZone('header')
+    const headerItems = headerZone?.items.filter(i => i.is_visible) ?? []
+    const useHeaderNav = headerItems.length > 0
 
     const handleLogout = () => {
         logout()
@@ -29,18 +84,26 @@ export function Navbar() {
         <nav className="border-b bg-white/80 backdrop-blur-sm fixed top-0 w-full z-50">
             <div className="container mx-auto px-4 py-4 flex items-center justify-between">
                 <Link href="/" className="flex items-center space-x-3 cursor-pointer">
-                    <Image src="/Logo_renascerdosaber.png" alt="Logo Renascer Saber" width={172} height={62} className="object-contain" priority />
+                    {logo_url ? (
+                        <img src={logo_url} alt={site_name} height={62} className="object-contain" style={{ maxHeight: 62 }} />
+                    ) : (
+                        <Image src="/Logo_renascerdosaber.png" alt="Logo Renascer Saber" width={172} height={62} className="object-contain" priority />
+                    )}
                 </Link>
                 <div className="hidden md:flex items-center space-x-8">
-                    <Link href="/about" className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors">
-                        Acerca de
-                    </Link>
-                    <Link href="/pricing" className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors">
-                        Precios
-                    </Link>
-                    <Link href="/contact" className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors">
-                        Contacto
-                    </Link>
+                    {useHeaderNav ? (
+                        headerItems.map(item => (
+                            item.children && item.children.length > 0 ? (
+                                <NavDropdown key={item.id ?? item.label} item={item} />
+                            ) : (
+                                <NavLink key={item.id ?? item.label} item={item} />
+                            )
+                        ))
+                    ) : (
+                        FALLBACK_LINKS.map(link => (
+                            <NavLink key={link.url} item={link} />
+                        ))
+                    )}
                 </div>
                 <div className="flex items-center space-x-4">
                     {isAuthenticated ? (

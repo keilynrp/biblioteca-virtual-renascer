@@ -80,7 +80,8 @@ export default function ReaderPage() {
     } catch (err: unknown) {
       console.error('[Reader] Error initializing reading:', err);
       const axiosErr = err as { response?: { status?: number; data?: { error_code?: string } } };
-      if (axiosErr?.response?.status === 403 && axiosErr?.response?.data?.error_code === 'SUBSCRIPTION_REQUIRED') {
+      if (axiosErr?.response?.status === 403) {
+        // Any 403 on reading initialization indicates a subscription/access issue
         setIsPaywalled(true);
       } else {
         const errorMessage = getErrorMessage(err);

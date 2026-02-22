@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'apps.notifications',
     'apps.analytics',
     'apps.currencies',
+    'apps.site_settings',
 ]
 
 # Django Debug Toolbar (only in DEBUG mode)

@@ -15,8 +15,8 @@ class InstitutionSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     institution_detail = InstitutionSerializer(source='institution', read_only=True)
-    institution_id = serializers.PrimaryKeyRelatedField(
-        queryset=Institution.objects.all(), source='institution', write_only=True, required=False, allow_null=True
+    institution = serializers.PrimaryKeyRelatedField(
+        queryset=Institution.objects.all(), required=False, allow_null=True
     )
     avatar = serializers.ImageField(required=False, allow_null=True)
     password = serializers.CharField(write_only=True, required=False, allow_blank=True)
@@ -26,9 +26,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'user_type', 'first_name', 'last_name', 
-                  'avatar', 'bio', 'phone', 'date_of_birth', 'institution_detail', 
-                  'institution_id', 'password_changed_at', 'force_password_change', 
+        fields = ('id', 'username', 'email', 'user_type', 'first_name', 'last_name',
+                  'avatar', 'bio', 'phone', 'date_of_birth', 'institution', 'institution_detail',
+                  'password_changed_at', 'force_password_change',
                   'password_expired', 'is_staff', 'is_superuser', 'password')
         read_only_fields = ('username', 'email', 'password_changed_at', 'password_expired', 'is_staff', 'is_superuser')
 

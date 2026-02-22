@@ -9,6 +9,9 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
+import { SiteSettingsProvider } from '@/context/site-settings-context';
+import { NavigationProvider } from '@/context/navigation-context';
+import { DynamicFavicon } from '@/components/dynamic-favicon';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -83,10 +86,15 @@ export default async function RootLayout({
         data-gr-ext-installed="0"
       >
         <NextIntlClientProvider messages={messages}>
-          <PwaManager />
-          {children}
-          <Toaster />
-          <SonnerToaster />
+          <SiteSettingsProvider>
+            <NavigationProvider>
+              <PwaManager />
+              <DynamicFavicon />
+              {children}
+              <Toaster />
+              <SonnerToaster />
+            </NavigationProvider>
+          </SiteSettingsProvider>
         </NextIntlClientProvider>
       </body>
     </html>

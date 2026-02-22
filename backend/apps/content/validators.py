@@ -1,10 +1,14 @@
-"""
+﻿"""
 File validators for content uploads (PDFs, images, etc.)
 """
 import os
 try:
-    import magic
-except ImportError:
+    import platform as _platform
+    if _platform.system() == 'Windows':
+        magic = None  # python-magic DLL hangs on Windows without libmagic
+    else:
+        import magic
+except (ImportError, OSError, Exception):
     magic = None
 from django.core.exceptions import ValidationError
 from django.template.defaultfilters import filesizeformat
@@ -14,10 +18,10 @@ class FileValidator:
     """Base file validator with common validation logic"""
 
     error_messages = {
-        'max_size': "El archivo es demasiado grande. Tamaño máximo: %(max_size)s. Tamaño actual: %(size)s.",
-        'min_size': "El archivo es demasiado pequeño. Tamaño mínimo: %(min_size)s. Tamaño actual: %(size)s.",
+        'max_size': "El archivo es demasiado grande. TamaÃ±o mÃ¡ximo: %(max_size)s. TamaÃ±o actual: %(size)s.",
+        'min_size': "El archivo es demasiado pequeÃ±o. TamaÃ±o mÃ­nimo: %(min_size)s. TamaÃ±o actual: %(size)s.",
         'content_type': "Tipo de archivo no permitido. Tipos permitidos: %(allowed_types)s.",
-        'extension': "Extensión de archivo no permitida. Extensiones permitidas: %(allowed_extensions)s.",
+        'extension': "ExtensiÃ³n de archivo no permitida. Extensiones permitidas: %(allowed_extensions)s.",
     }
 
     def __init__(self, max_size=None, min_size=None, allowed_types=None, allowed_extensions=None):
@@ -103,8 +107,8 @@ class PDFValidator(FileValidator):
 
     error_messages = {
         **FileValidator.error_messages,
-        'invalid_pdf': "El archivo no es un PDF válido o está corrupto.",
-        'encrypted': "El PDF está encriptado. Por favor, sube una versión sin protección.",
+        'invalid_pdf': "El archivo no es un PDF vÃ¡lido o estÃ¡ corrupto.",
+        'encrypted': "El PDF estÃ¡ encriptado. Por favor, sube una versiÃ³n sin protecciÃ³n.",
     }
 
     def __init__(self, max_size=None, min_size=None):

@@ -2,16 +2,12 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import Script from "next/script";
 import { PwaManager } from "@/components/pwa-manager";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
-import { SiteSettingsProvider } from '@/context/site-settings-context';
-import { NavigationProvider } from '@/context/navigation-context';
-import { DynamicFavicon } from '@/components/dynamic-favicon';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -86,15 +82,9 @@ export default async function RootLayout({
         data-gr-ext-installed="0"
       >
         <NextIntlClientProvider messages={messages}>
-          <SiteSettingsProvider>
-            <NavigationProvider>
-              <PwaManager />
-              <DynamicFavicon />
-              {children}
-              <Toaster />
-              <SonnerToaster />
-            </NavigationProvider>
-          </SiteSettingsProvider>
+          <PwaManager />
+          {children}
+          <Toaster />
         </NextIntlClientProvider>
       </body>
     </html>

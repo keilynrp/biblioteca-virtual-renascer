@@ -17,6 +17,10 @@ python-magic>=0.4.27
 # elasticsearch-dsl>=8.11
 meilisearch>=0.31
 
+# Object Storage (MinIO / S3)
+django-storages[s3]>=1.14
+boto3>=1.34
+
 # PDF Processing
 PyPDF2>=3.0
 

@@ -1064,14 +1064,8 @@ class StartReadingView(APIView):
 
         # Check if user has access (premium books require subscription)
         if book.is_premium:
-            from apps.subscriptions.models import UserSubscription
-            from django.utils import timezone
-            has_active_subscription = UserSubscription.objects.filter(
-                user=request.user,
-                is_active=True,
-                end_date__gte=timezone.now()
-            ).exists()
-            if not has_active_subscription and not request.user.is_staff:
+            from apps.subscriptions.utils import user_has_active_reading_access
+            if not user_has_active_reading_access(request.user):
                 return Response({
                     'error_code': 'SUBSCRIPTION_REQUIRED',
                     'error': 'Este contenido es exclusivo para suscriptores.',
@@ -1208,12 +1202,6 @@ class ServeBookFileView(APIView):
         if not book.file:
             raise Http404("Book file not found")
 
-        # Get file path
-        file_path = book.file.path
-
-        if not os.path.exists(file_path):
-            raise Http404("Book file not found on server")
-
         # Log the access
         logger.info(f"User {user.username} accessed book {book.title}")
 
@@ -1241,56 +1229,93 @@ class ServeBookFileView(APIView):
             defaults={'current_page': 1}
         )
 
-        # Update last_read_at to track active session
         reading.last_read_at = timezone.now()
         reading.save(update_fields=['last_read_at'])
 
-        # Serve the file with range support for streaming
-        import mimetypes
+        # ── Serve the file (MinIO or local filesystem) ────────────────────────
+        from django.conf import settings
+        import mimetypes, re
         from django.http import StreamingHttpResponse
 
-        file_size = os.path.getsize(file_path)
-        content_type = mimetypes.guess_type(file_path)[0] or 'application/pdf'
-
-        # Check for range request
         range_header = request.META.get('HTTP_RANGE', '').strip()
-        range_match = None
+        content_type = 'application/pdf'
 
-        if range_header:
-            import re
-            range_match = re.search(r'bytes=(\d+)-(\d*)', range_header)
+        if getattr(settings, 'USE_MINIO', False):
+            # ── MinIO: stream through Django (no CORS needed, auth enforced) ──
+            import boto3
+            from botocore.config import Config as BotocoreConfig
 
-        if range_match:
-            # Handle range request for streaming
-            start = int(range_match.group(1))
-            end = int(range_match.group(2)) if range_match.group(2) else file_size - 1
-            length = end - start + 1
-
-            with open(file_path, 'rb') as f:
-                f.seek(start)
-                data = f.read(length)
-
-            response = HttpResponse(
-                data,
-                status=206,  # Partial Content
-                content_type=content_type
+            s3 = boto3.client(
+                's3',
+                endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                region_name=settings.AWS_S3_REGION_NAME,
+                config=BotocoreConfig(signature_version='s3v4'),
             )
-            response['Content-Range'] = f'bytes {start}-{end}/{file_size}'
-            response['Content-Length'] = str(length)
+            bucket   = settings.AWS_STORAGE_BUCKET_NAME
+            file_key = book.file.name
+
+            try:
+                head = s3.head_object(Bucket=bucket, Key=file_key)
+            except Exception:
+                raise Http404("Book file not found in storage")
+
+            file_size    = head['ContentLength']
+            content_type = head.get('ContentType', content_type)
+
+            range_match = re.search(r'bytes=(\d+)-(\d*)', range_header) if range_header else None
+
+            if range_match:
+                start  = int(range_match.group(1))
+                end    = int(range_match.group(2)) if range_match.group(2) else file_size - 1
+                length = end - start + 1
+                s3_resp = s3.get_object(Bucket=bucket, Key=file_key, Range=f'bytes={start}-{end}')
+                response = HttpResponse(s3_resp['Body'].read(), status=206, content_type=content_type)
+                response['Content-Range']  = f'bytes {start}-{end}/{file_size}'
+                response['Content-Length'] = str(length)
+            else:
+                def _stream(body, chunk=65536):
+                    while True:
+                        data = body.read(chunk)
+                        if not data:
+                            break
+                        yield data
+
+                s3_resp  = s3.get_object(Bucket=bucket, Key=file_key)
+                response = StreamingHttpResponse(_stream(s3_resp['Body']), content_type=content_type)
+                response['Content-Length'] = str(file_size)
+
         else:
-            # Serve full file with streaming support
-            response = FileResponse(
-                open(file_path, 'rb'),
-                content_type=content_type
-            )
-            response['Content-Length'] = str(file_size)
+            # ── Local filesystem fallback ─────────────────────────────────────
+            file_path = book.file.path
+            if not os.path.exists(file_path):
+                raise Http404("Book file not found on server")
 
-        # Set headers for PDF viewing in browser
+            file_size    = os.path.getsize(file_path)
+            content_type = mimetypes.guess_type(file_path)[0] or content_type
+            range_match  = re.search(r'bytes=(\d+)-(\d*)', range_header) if range_header else None
+
+            if range_match:
+                start  = int(range_match.group(1))
+                end    = int(range_match.group(2)) if range_match.group(2) else file_size - 1
+                length = end - start + 1
+                with open(file_path, 'rb') as f:
+                    f.seek(start)
+                    data = f.read(length)
+                response = HttpResponse(data, status=206, content_type=content_type)
+                response['Content-Range']  = f'bytes {start}-{end}/{file_size}'
+                response['Content-Length'] = str(length)
+            else:
+                response = FileResponse(open(file_path, 'rb'), content_type=content_type)
+                response['Content-Length'] = str(file_size)
+
+        # ── Common response headers ───────────────────────────────────────────
         response['Content-Disposition'] = f'inline; filename="{book.title}.pdf"'
         response['X-Content-Type-Options'] = 'nosniff'
-        response['Accept-Ranges'] = 'bytes'  # Enable range requests
-        response['Cache-Control'] = 'no-store'  # Prevent browser from caching PDF to disk
-        response['X-Download-Options'] = 'noopen'  # Prevent IE/Edge from offering local open
+        response['Accept-Ranges']          = 'bytes'
+        response['Cache-Control']          = 'no-store'
+        response['X-Download-Options']     = 'noopen'
 
         return response
 

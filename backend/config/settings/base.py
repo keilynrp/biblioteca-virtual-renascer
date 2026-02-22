@@ -41,6 +41,9 @@ INSTALLED_APPS = [
     'apps.analytics',
     'apps.currencies',
     'apps.mailer',
+    'apps.site_settings',
+    'apps.pages',
+    'apps.navigation',
 ]
 
 AUTH_USER_MODEL = 'authentication.User'
@@ -144,9 +147,32 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Media files (uploads)
-MEDIA_URL = 'media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# ─── Storage: MinIO / S3 ──────────────────────────────────────────────────────
+USE_MINIO = os.getenv('USE_MINIO', 'False') == 'True'
+
+if USE_MINIO:
+    INSTALLED_APPS += ['storages']
+
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+    AWS_ACCESS_KEY_ID       = os.getenv('MINIO_ACCESS_KEY', 'minioadmin')
+    AWS_SECRET_ACCESS_KEY   = os.getenv('MINIO_SECRET_KEY', 'minioadmin123')
+    AWS_STORAGE_BUCKET_NAME = os.getenv('MINIO_BUCKET_NAME', 'biblioteca')
+    AWS_S3_ENDPOINT_URL     = os.getenv('MINIO_ENDPOINT_URL', 'http://minio:9000')
+    AWS_S3_REGION_NAME      = 'us-east-1'
+    AWS_DEFAULT_ACL         = 'private'       # todos los archivos privados
+    AWS_S3_FILE_OVERWRITE   = False           # nunca sobreescribir archivos
+    AWS_QUERYSTRING_AUTH    = False           # Django proxy maneja la auth
+    AWS_S3_SIGNATURE_VERSION = 's3v4'
+    AWS_S3_ADDRESSING_STYLE  = 'path'        # obligatorio para MinIO
+
+    MEDIA_URL  = f"{os.getenv('MINIO_ENDPOINT_URL', 'http://localhost:9000')}/{os.getenv('MINIO_BUCKET_NAME', 'biblioteca')}/"
+    MEDIA_ROOT = BASE_DIR / 'media'          # fallback local (no se usa con MinIO)
+else:
+    # Media files — almacenamiento local (desarrollo sin MinIO)
+    MEDIA_URL  = 'media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
+# ─────────────────────────────────────────────────────────────────────────────
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

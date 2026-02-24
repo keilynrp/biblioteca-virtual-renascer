@@ -30,6 +30,10 @@ const CARD_ELEMENT_OPTIONS = {
     },
 }
 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Input } from "@/components/ui/input"
+import { BankDetailsPanel } from "@/components/billing/bank-details-panel"
+
 function CheckoutForm({ planId }: { planId: string }) {
     const router = useRouter()
     const stripe = useStripe()
@@ -38,89 +42,138 @@ function CheckoutForm({ planId }: { planId: string }) {
     const [error, setError] = useState<string | null>(null)
     const [clientSecret, setClientSecret] = useState<string>('')
     const [transactionId, setTransactionId] = useState<string>('')
+    const [paymentMethod, setPaymentMethod] = useState<'CREDIT_CARD' | 'PAYPAL' | 'MANUAL_TRANSFER'>('CREDIT_CARD')
+    const [orderReference, setOrderReference] = useState('')
 
     useEffect(() => {
-        // Create PaymentIntent on mount
-        async function createPaymentIntent() {
+        // Create Transaction on mount or when payment method changes
+        async function initializeCheckout() {
+            setLoading(true)
+            setError(null)
             try {
                 const response = await api.post('/payments/checkout/', {
                     plan_id: planId,
-                    payment_method: 'CREDIT_CARD'
+                    payment_method: paymentMethod,
+                    order_reference: paymentMethod === 'MANUAL_TRANSFER' ? orderReference : ''
                 })
-                setClientSecret(response.data.client_secret)
+
+                if (paymentMethod === 'CREDIT_CARD') {
+                    setClientSecret(response.data.client_secret)
+                }
                 setTransactionId(response.data.transaction_id)
+
+                if (paymentMethod === 'MANUAL_TRANSFER' && response.data.status === 'PENDING_APPROVAL') {
+                    router.push('/profile?payment=pending')
+                }
             } catch (err: unknown) {
                 const error = err as { response?: { data?: { detail?: string } } }
                 setError(error.response?.data?.detail || "Failed to initialize payment")
+            } finally {
+                setLoading(false)
             }
         }
-        
-        if (planId) {
-            createPaymentIntent()
-        }
-    }, [planId])
 
-    async function handleSubmit(event: React.FormEvent) {
-        event.preventDefault()
-        
-        if (!stripe || !elements || !clientSecret) {
-            return
+        if (planId && (paymentMethod !== 'MANUAL_TRANSFER' || orderReference)) {
+            initializeCheckout()
         }
+    }, [planId, paymentMethod, orderReference, router])
+
+    async function handleStripeSubmit(event: React.FormEvent) {
+        event.preventDefault()
+        if (!stripe || !elements || !clientSecret) return
 
         setLoading(true)
         setError(null)
 
         try {
             const cardElement = elements.getElement(CardElement)
-            
-            if (!cardElement) {
-                throw new Error("Card element not found")
-            }
+            if (!cardElement) throw new Error("Card element not found")
 
-            // Confirm the payment with Stripe
             const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
                 clientSecret,
-                {
-                    payment_method: {
-                        card: cardElement,
-                    },
-                }
+                { payment_method: { card: cardElement } }
             )
 
             if (stripeError) {
                 setError(stripeError.message || "Payment failed")
-                setLoading(false)
                 return
             }
 
             if (paymentIntent.status === 'succeeded') {
-                // Confirm payment on backend
-                await api.post('/payments/confirm/', { 
+                await api.post('/payments/confirm/', {
                     transaction_id: transactionId,
-                    payment_intent_id: paymentIntent.id
+                    payment_method: 'CREDIT_CARD'
                 })
-
                 router.push('/profile?payment=success')
-            } else {
-                setError(`Payment status: ${paymentIntent.status}`)
             }
         } catch (err: unknown) {
             console.error("Payment error:", err)
-            const error = err as { response?: { data?: { detail?: string } }; message?: string }
-            setError(error.response?.data?.detail || error.message || "Payment failed. Please try again.")
+            setError("Payment failed. Please try again.")
         } finally {
             setLoading(false)
         }
     }
 
+    const handleManualSubmit = (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!orderReference) {
+            setError("Please enter your transfer reference")
+            return
+        }
+        // The useEffect will trigger initializeCheckout
+    }
+
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-                <label className="text-sm font-medium">Card Details</label>
-                <div className="border rounded-md p-3 bg-white">
-                    <CardElement options={CARD_ELEMENT_OPTIONS} />
-                </div>
-            </div>
+        <div className="space-y-6">
+            <Tabs defaultValue="CREDIT_CARD" onValueChange={(v) => setPaymentMethod(v as any)}>
+                <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="CREDIT_CARD" className="text-xs">Tarjeta</TabsTrigger>
+                    <TabsTrigger value="PAYPAL" className="text-xs">PayPal</TabsTrigger>
+                    <TabsTrigger value="MANUAL_TRANSFER" className="text-xs">Manual</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="CREDIT_CARD" className="space-y-4 pt-4">
+                    <form onSubmit={handleStripeSubmit} className="space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Detalles de Tarjeta</label>
+                            <div className="border rounded-md p-3 bg-white">
+                                <CardElement options={CARD_ELEMENT_OPTIONS} />
+                            </div>
+                        </div>
+                        <Button type="submit" className="w-full" disabled={!stripe || loading || !clientSecret}>
+                            {loading ? "Procesando..." : "Pagar con Tarjeta"}
+                        </Button>
+                    </form>
+                </TabsContent>
+
+                <TabsContent value="PAYPAL" className="space-y-4 pt-4 text-center">
+                    <div className="bg-muted p-8 rounded-md border border-dashed flex flex-col items-center justify-center space-y-4">
+                        <div className="text-blue-600 font-bold text-xl italic">PayPal</div>
+                        <p className="text-sm text-muted-foreground">Serás redirigido a PayPal para completar tu pago de forma segura.</p>
+                        <Button variant="outline" className="w-full" onClick={() => {/* PayPal Integration Logic */ }} disabled={loading}>
+                            Pagar con PayPal
+                        </Button>
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="MANUAL_TRANSFER" className="space-y-4 pt-4">
+                    <BankDetailsPanel />
+                    <form onSubmit={handleManualSubmit} className="space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Referencia de Transferencia</label>
+                            <Input
+                                placeholder="Ej: TRANS-12345"
+                                value={orderReference}
+                                onChange={(e) => setOrderReference(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <Button type="submit" className="w-full" disabled={loading}>
+                            Registrar Pago
+                        </Button>
+                    </form>
+                </TabsContent>
+            </Tabs>
 
             {error && (
                 <div className="bg-red-50 border border-red-200 rounded-md p-3 flex items-start space-x-2">
@@ -129,21 +182,12 @@ function CheckoutForm({ planId }: { planId: string }) {
                 </div>
             )}
 
-            <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={!stripe || loading || !clientSecret}
-            >
-                {loading ? "Processing Payment..." : "Pay Now"}
-            </Button>
-
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-                <p className="text-xs text-blue-800">
-                    <strong>Test Mode:</strong> Use card number <code className="bg-blue-100 px-1 rounded">4242 4242 4242 4242</code>, 
-                    any future expiry date, and any 3-digit CVC.
-                </p>
+            <div className="flex items-center justify-center space-x-4 opacity-50 grayscale scale-90">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" alt="Stripe" className="h-5" />
+                <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" className="h-5" />
+                <Lock className="h-4 w-4" />
             </div>
-        </form>
+        </div>
     )
 }
 

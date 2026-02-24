@@ -178,7 +178,7 @@ export default function ProfilePage() {
                                 <div className="h-24 w-24 rounded-full border-2 border-border overflow-hidden bg-muted">
                                     {user.avatar ? (
                                         <Image
-                                            src={getAvatarUrl(user.avatar)}
+                                            src={getAvatarUrl(user.avatar) ?? ''}
                                             alt={user.username}
                                             width={96}
                                             height={96}

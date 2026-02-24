@@ -23,7 +23,8 @@ ENV NEXT_TELEMETRY_DISABLED=1 \
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
 
-# Install dependencies with optimizations
+# Install dependencies with optimizations and network retry
+
 RUN npm install --no-audit --progress=false && \
     npm cache clean --force
 

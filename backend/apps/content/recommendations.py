@@ -88,7 +88,8 @@ def get_recommended_for_user(user, limit=10):
     
     # If not enough, fill with trending
     if len(recommendations) < limit:
-        trending = get_trending_books(limit - len(recommendations), exclude_ids=read_book_ids + [b.id for b in recommendations])
+        exclude_ids = list(read_book_ids) + [b.id for b in recommendations]
+        trending = get_trending_books(limit - len(recommendations), exclude_ids=exclude_ids)
         recommendations.extend(trending)
         
     return recommendations

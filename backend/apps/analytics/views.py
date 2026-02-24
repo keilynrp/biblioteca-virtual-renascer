@@ -33,9 +33,9 @@ class AnalyticsViewSet(viewsets.ViewSet):
             total_time=Sum('total_reading_time')
         )['total_time'] or 0
         
-        # Mock calculation for pages read (can be improved with actual page tracking)
-        pages_read = reading_history.filter(status='completed').aggregate(
-            total_pages=Sum('book__page_count')
+        # Total pages read (sum of current_page from all reading sessions)
+        pages_read = Reading.objects.filter(user=user).aggregate(
+            total_pages=Sum('current_page')
         )['total_pages'] or 0
 
         # Simple streak calculation (mock for now, requires daily activity tracking)

@@ -1,4 +1,6 @@
 import logging
+from decimal import Decimal
+from django.db.models import Sum, Q
 from django.http import HttpResponse
 from django.utils import timezone
 from rest_framework import generics, permissions, status
@@ -114,7 +116,41 @@ class InvoiceListView(generics.ListAPIView):
     serializer_class = InvoiceSerializer
 
     def get_queryset(self):
-        return Invoice.objects.filter(user=self.request.user)
+        qs = Invoice.objects.filter(user=self.request.user)
+
+        status_param = self.request.query_params.get('status')
+        if status_param:
+            qs = qs.filter(status=status_param.upper())
+
+        search = self.request.query_params.get('search', '').strip()
+        if search:
+            qs = qs.filter(
+                Q(invoice_number__icontains=search)
+                | Q(description__icontains=search)
+                | Q(billing_name__icontains=search)
+            )
+
+        return qs
+
+
+class InvoiceSummaryView(APIView):
+    """Lightweight summary stats for the invoices stat cards."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        qs = Invoice.objects.filter(user=request.user)
+        total_paid = qs.filter(status=Invoice.STATUS_PAID).aggregate(
+            s=Sum('amount')
+        )['s'] or Decimal('0')
+        total_refunded = qs.filter(status=Invoice.STATUS_REFUNDED).aggregate(
+            s=Sum('amount')
+        )['s'] or Decimal('0')
+        invoice_count = qs.count()
+        return Response({
+            'total_paid': str(total_paid),
+            'total_refunded': str(total_refunded),
+            'invoice_count': invoice_count,
+        })
 
 
 class InvoiceDownloadView(APIView):

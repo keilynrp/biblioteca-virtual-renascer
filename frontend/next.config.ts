@@ -3,7 +3,8 @@
 // =============================================================================
 // import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
-import withPWAInit from '@ducanh2912/next-pwa';
+// @serwist/next no soporta Next.js 16 Turbopack.
+// El SW se compila con esbuild via scripts/build-sw.mjs (postbuild).
 import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin(
@@ -13,8 +14,9 @@ const withNextIntl = createNextIntlPlugin(
 const nextConfig: NextConfig = {
   // typedRoutes disabled - requires full route typing across codebase
   // typedRoutes: true,
-  // Turbopack configuration (required for Next.js 16+)
-  turbopack: {},
+  // Note: Turbopack is enabled for dev via `next dev --turbo` in package.json.
+  // Do NOT add `turbopack: {}` here — it enables Turbopack for `next build`
+  // too, which breaks @ducanh2912/next-pwa (uses workbox-webpack-plugin).
 
   // Proxy all /api/* requests to the backend.
   // In Docker: API_INTERNAL_URL=http://backend:8000/api (inter-service)
@@ -117,11 +119,11 @@ const nextConfig: NextConfig = {
 // Sentry has been removed due to dependency conflicts with Next.js 16
 // const shouldUseSentry = process.env.NODE_ENV === 'production';
 
-const withPWA = withPWAInit({
-  dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
-  register: true,
-});
+// =============================================================================
+// PWA — service worker compilado con esbuild (scripts/build-sw.mjs)
+// =============================================================================
+// next build → postbuild → esbuild compila src/app/sw.ts → public/sw.js
+// El registro del SW ocurre en src/components/pwa-manager.tsx
 
-export default withNextIntl(withPWA(nextConfig));
+export default withNextIntl(nextConfig);
 

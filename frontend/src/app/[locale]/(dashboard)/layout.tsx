@@ -44,6 +44,7 @@ import {
     LayoutTemplate,
     Map,
     Receipt,
+    Newspaper,
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { SearchBar } from "@/components/search-bar"
@@ -89,7 +90,7 @@ export default function DashboardLayout({
         // Sincronizar datos del usuario con el backend para reflejar cambios de rol
         api.get('/auth/user/').then(res => {
             updateUser(res.data)
-        }).catch(() => {})
+        }).catch(() => { })
     }, [_hasHydrated, isAuthenticated, router, updateUser])
 
     // Load sidebar collapsed state from localStorage (solo después de hidratar)
@@ -122,6 +123,7 @@ export default function DashboardLayout({
     const navItems = [
         { href: "/home", label: t("dashboard"), icon: LayoutDashboard },
         { href: "/library", label: t("library"), icon: Library },
+        { href: "/blog", label: "Noticias", icon: Newspaper },
         { href: "/my-loans", label: t("loans"), icon: BookUp },
         { href: "/notifications", label: t("notifications"), icon: Bell },
         { href: "/favorites", label: t("favorites"), icon: Heart },

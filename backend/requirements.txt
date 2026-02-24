@@ -8,7 +8,7 @@ python-dotenv>=1.0
 celery>=5.3
 redis>=5.0
 gunicorn>=21.2
-Pillow>=11.0
+Pillow>=10.0
 stripe>=7.0
 python-magic>=0.4.27
 

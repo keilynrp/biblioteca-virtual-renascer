@@ -37,6 +37,7 @@ urlpatterns = [
     path('api/pages/', include('apps.pages.urls')),
     path('api/navigation/', include('apps.navigation.urls')),
     path('api/billing/', include('apps.billing.urls')),
+    path('api/blog/', include('apps.blog.urls')),
 ]
 
 # Development-only URLs

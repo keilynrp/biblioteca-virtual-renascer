@@ -37,6 +37,13 @@ export interface Invoice {
     stripe_refund_id: string | null
     issued_at: string
     refunded_at: string | null
+    plan_name: string | null
+}
+
+export interface InvoiceSummary {
+    total_paid: string
+    total_refunded: string
+    invoice_count: number
 }
 
 export interface SetupIntentResponse {

@@ -1,7 +1,31 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(docker compose exec:*)",
+      "Bash(docker compose restart:*)",
+      "Bash(npm run build:*)",
+      "Bash(docker compose rm:*)",
+      "Bash(docker compose up:*)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(docker ps:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker restart bvs_framework-backend-1 && sleep 8 && curl -s http://localhost:8000/api/site-settings/ 2>&1)",
+      "Bash(docker restart:*)",
+      "Bash(sleep 8:*)",
+      "Bash(curl:*)",
+      "Bash(cd \"D:/bvs_framework/backend\" && python manage.py migrate pages 2>&1)",
+      "Bash(cd \"D:/bvs_framework/backend\" && \"D:/bvs_framework/.venv/Scripts/python.exe\" manage.py migrate pages 2>&1)",
+      "Bash(tail:*)",
+      "Bash(\"D:/bvs_framework/.venv/Scripts/pip.exe\" install django-ratelimit 2>&1 | tail -5 && cd \"D:/bvs_framework/backend\" && \"D:/bvs_framework/.venv/Scripts/python.exe\" manage.py migrate pages --run-syncdb 2>&1)",
+      "Bash(echo EXIT: $?:*)",
+      "Bash(cmd:*)",
+      "Bash(cd /d/bvs_framework/backend && DJANGO_SETTINGS_MODULE=config.settings.base /d/bvs_framework/.venv/Scripts/python.exe manage.py migrate pages 2>&1)",
+      "Bash(cmd.exe:*)",
+      "Bash(powershell.exe:*)",
+      "Bash(docker rm:*)"
     ]
   }
 }

@@ -51,13 +51,12 @@ services:
     volumes:
       - ./frontend:/app:cached
       - /app/node_modules
-      - /app/.next
       - frontend_cache:/app/.next/cache
     ports:
       - "3002:3000"
     environment:
-      - WATCHPACK_POLLING=false
-      - CHOKIDAR_USEPOLLING=false
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
       - NEXT_PUBLIC_API_URL=http://localhost:8000/api
       - API_INTERNAL_URL=http://backend:8000/api
       - NEXT_TELEMETRY_DISABLED=1

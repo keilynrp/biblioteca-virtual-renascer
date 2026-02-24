@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["esnext", "webworker"],
+    "noEmit": false,
+    "module": "esnext",
+    "moduleResolution": "bundler"
+  },
+  "include": ["src/app/sw.ts"],
+  "exclude": ["node_modules"]
+}

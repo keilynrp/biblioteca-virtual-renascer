@@ -1,5 +1,5 @@
 import api from '@/lib/api'
-import type { BillingProfile, StoredPaymentMethod, Invoice, SetupIntentResponse, RefundRequest } from '@/types/billing'
+import type { BillingProfile, StoredPaymentMethod, Invoice, InvoiceSummary, SetupIntentResponse, RefundRequest } from '@/types/billing'
 import { useAuthStore } from '@/store/authStore'
 
 export const billingApi = {
@@ -27,8 +27,12 @@ export const billingApi = {
         return api.post(`/billing/payment-methods/${id}/set-default/`).then(r => r.data)
     },
 
-    getInvoices(): Promise<Invoice[]> {
-        return api.get('/billing/invoices/').then(r => r.data)
+    getInvoices(params?: { status?: string; search?: string }): Promise<Invoice[]> {
+        return api.get('/billing/invoices/', { params }).then(r => r.data)
+    },
+
+    getInvoiceSummary(): Promise<InvoiceSummary> {
+        return api.get('/billing/invoices/summary/').then(r => r.data)
     },
 
     getInvoiceDownloadUrl(id: string): string {

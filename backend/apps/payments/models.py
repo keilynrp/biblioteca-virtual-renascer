@@ -15,6 +15,8 @@ class Transaction(models.Model):
         ('CREDIT_CARD', 'Credit Card'),
         ('PIX', 'Pix'),
         ('SLIP', 'Bank Slip'),
+        ('PAYPAL', 'PayPal'),
+        ('MANUAL_TRANSFER', 'Manual Transfer'),
     )
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -26,6 +28,8 @@ class Transaction(models.Model):
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='CREDIT_CARD')
     reference_id = models.CharField(max_length=100, blank=True, help_text="External payment gateway ID")
     stripe_payment_intent_id = models.CharField(max_length=255, blank=True, null=True, help_text="Stripe PaymentIntent ID")
+    paypal_order_id = models.CharField(max_length=255, blank=True, null=True, help_text="PayPal Order ID")
+    payment_reference = models.CharField(max_length=255, blank=True, null=True, help_text="User provided reference for manual transfers")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

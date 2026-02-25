@@ -67,27 +67,40 @@ export default async function RootLayout({
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
-              // Suppress negative timestamp error in performance.measure
+              // Suppress negative timestamp error in performance.measure and performance.mark
               // This is a known Next.js/React 19 internal bug (#86060)
               (function() {
-                if (typeof window !== 'undefined' && window.performance && window.performance.measure) {
-                  const originalMeasure = window.performance.measure;
-                  window.performance.measure = function() {
-                    try {
-                      return originalMeasure.apply(window.performance, arguments);
-                    } catch (e) {
-                      // Catch both TypeError and DOMException related to negative timestamps
-                      const msg = e && e.message ? e.message.toLowerCase() : '';
-                      if (msg.includes('cannot be negative') || msg.includes('negative')) {
+                if (typeof window !== 'undefined' && window.performance) {
+                  const p = window.performance;
+                  
+                  if (typeof p.measure === 'function') {
+                    const originalMeasure = p.measure;
+                    p.measure = function() {
+                      try {
+                        return originalMeasure.apply(p, arguments);
+                      } catch (e) {
+                        // Suppress all errors to prevent crashes in telemetry
                         return;
                       }
-                      throw e;
-                    }
-                  };
+                    };
+                  }
+                  
+                  if (typeof p.mark === 'function') {
+                    const originalMark = p.mark;
+                    p.mark = function() {
+                      try {
+                        return originalMark.apply(p, arguments);
+                      } catch (e) {
+                        return;
+                      }
+                    };
+                  }
                 }
                 
                 // Keep Grammarly disable logic
-                window.grammarly = { isExtensionInstalled: false };
+                if (typeof window !== 'undefined') {
+                  window.grammarly = { isExtensionInstalled: false };
+                }
               })();
             `,
           }}

@@ -32,6 +32,7 @@ import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 import { User } from "@/lib/api/users"
 import { Institution } from "@/lib/api/institutions"
+import { useAuthStore } from "@/store/authStore"
 
 const userSchema = z.object({
     username: z.string().min(3, "El usuario debe tener al menos 3 caracteres"),

@@ -62,40 +62,34 @@ export default async function RootLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
-        <Script
-          id="performance-patch"
-          strategy="beforeInteractive"
+        <script
           dangerouslySetInnerHTML={{
             __html: `
-              // Suppress negative timestamp error in performance.measure and performance.mark
-              // This is a known Next.js/React 19 internal bug (#86060)
+              // Absolute top-level patch for Performance APIs
+              // Prevents crashes in Next.js/React 19 internal telemetry (#86060)
               (function() {
-                if (typeof window !== 'undefined' && window.performance) {
-                  const p = window.performance;
+                try {
+                  // Patch prototype if possible to catch all instances
+                  const p = window.Performance ? window.Performance.prototype : (window.performance ? Object.getPrototypeOf(window.performance) : null);
+                  const target = p || window.performance;
                   
-                  if (typeof p.measure === 'function') {
-                    const originalMeasure = p.measure;
-                    p.measure = function() {
-                      try {
-                        return originalMeasure.apply(p, arguments);
-                      } catch (e) {
-                        // Suppress all errors to prevent crashes in telemetry
-                        return;
+                  if (target) {
+                    const methods = ['measure', 'mark'];
+                    methods.forEach(method => {
+                      if (typeof target[method] === 'function') {
+                        const original = target[method];
+                        target[method] = function() {
+                          try {
+                            return original.apply(this, arguments);
+                          } catch (e) {
+                            // Silently swallow all telemetry errors
+                            return null;
+                          }
+                        };
                       }
-                    };
+                    });
                   }
-                  
-                  if (typeof p.mark === 'function') {
-                    const originalMark = p.mark;
-                    p.mark = function() {
-                      try {
-                        return originalMark.apply(p, arguments);
-                      } catch (e) {
-                        return;
-                      }
-                    };
-                  }
-                }
+                } catch (e) {}
                 
                 // Keep Grammarly disable logic
                 if (typeof window !== 'undefined') {

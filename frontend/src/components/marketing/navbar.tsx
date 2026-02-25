@@ -14,11 +14,16 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { BookOpen, User, LogOut, ChevronDown, Settings } from "lucide-react"
-import { useAuthStore } from "@/store/authStore"
+import { useAuthStoreHydrated } from "@/store/authStore"
+import { useNavigation } from "@/context/navigation-context"
+import { useState, useEffect } from "react"
 
 export function Navbar() {
     const router = useRouter()
-    const { user, logout, isAuthenticated } = useAuthStore()
+    const { user, logout, isAuthenticated, _hasHydrated } = useAuthStoreHydrated()
+    const { getZone } = useNavigation()
+
+    const headerItems = getZone('header')?.items || []
 
     const handleLogout = () => {
         logout()
@@ -32,18 +37,38 @@ export function Navbar() {
                     <Image src="/Logo_renascerdosaber.png" alt="Logo Renascer Saber" width={172} height={62} className="object-contain" priority />
                 </Link>
                 <div className="hidden md:flex items-center space-x-8">
-                    <Link href="/about" className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors">
-                        Acerca de
-                    </Link>
-                    <Link href="/pricing" className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors">
-                        Precios
-                    </Link>
-                    <Link href="/contact" className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors">
-                        Contacto
-                    </Link>
+                    {headerItems.length > 0 ? (
+                        headerItems.map((item) => (
+                            <Link
+                                key={item.id ?? item.url}
+                                href={item.url}
+                                target={item.open_in_new_tab ? "_blank" : undefined}
+                                className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors"
+                            >
+                                {item.label}
+                            </Link>
+                        ))
+                    ) : (
+                        <>
+                            <Link href="/about" className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors">
+                                Acerca de
+                            </Link>
+                            <Link href="/blog" className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors">
+                                Noticias
+                            </Link>
+                            <Link href="/pricing" className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors">
+                                Precios
+                            </Link>
+                            <Link href="/contact" className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors">
+                                Contacto
+                            </Link>
+                        </>
+                    )}
                 </div>
                 <div className="flex items-center space-x-4">
-                    {isAuthenticated ? (
+                    {!_hasHydrated ? (
+                        <div className="h-10 w-32 bg-gray-100 animate-pulse rounded-lg" />
+                    ) : isAuthenticated ? (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" className="flex items-center space-x-2 rounded-lg hover:bg-cyan-50 px-3">

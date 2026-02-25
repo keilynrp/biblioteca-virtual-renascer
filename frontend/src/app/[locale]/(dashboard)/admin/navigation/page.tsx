@@ -20,6 +20,7 @@ import {
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { navigationApi, type NavZone, type NavItem } from "@/services/navigationApi"
+import { pagesApi, type PageRecord } from "@/services/pagesApi"
 import { useNavigation } from "@/context/navigation-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -38,6 +39,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import {
     GripVertical,
@@ -49,6 +51,11 @@ import {
     Save,
     Loader2,
     ChevronRight,
+    Search,
+    Link as LinkIcon,
+    FileText,
+    Layout,
+    ChevronDown,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -155,6 +162,20 @@ const emptyItemForm = (): ItemFormData => ({
     parent_id: '',
 })
 
+const systemPages = [
+    { label: "Inicio", url: "/" },
+    { label: "Biblioteca", url: "/library" },
+    { label: "Blog / Noticias (Público)", url: "/blog" },
+    { label: "Gestión de noticias", url: "/gestion-de-noticias" },
+    { label: "Acerca de", url: "/about" },
+    { label: "Precios", url: "/pricing" },
+    { label: "Contacto", url: "/contact" },
+    { label: "Mi Perfil", url: "/profile" },
+    { label: "Mis Préstamos", url: "/my-loans" },
+    { label: "Favoritos", url: "/favorites" },
+    { label: "Historial de Lectura", url: "/reading-history" },
+]
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 function NavigationAdminPageContent() {
@@ -177,10 +198,24 @@ function NavigationAdminPageContent() {
     const [renameOpen, setRenameOpen] = useState(false)
     const [renameLabel, setRenameLabel] = useState('')
 
+    // Available pages
+    const [customPages, setCustomPages] = useState<PageRecord[]>([])
+    const [loadingPages, setLoadingPages] = useState(false)
+    const [selectedResources, setSelectedResources] = useState<string[]>([])
+    const [openSection, setOpenSection] = useState<'system' | 'custom' | 'link' | null>('system')
+
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     )
+
+    // Fetch custom pages
+    useEffect(() => {
+        setLoadingPages(true)
+        pagesApi.listPages()
+            .then(setCustomPages)
+            .finally(() => setLoadingPages(false))
+    }, [])
 
     // Keep local zones in sync with context
     useEffect(() => {
@@ -328,6 +363,55 @@ function NavigationAdminPageContent() {
         setItemForm(emptyItemForm())
     }
 
+    function addSelectedToMenu() {
+        if (selectedResources.length === 0) return
+
+        const itemsToAdd: NavItem[] = []
+
+        selectedResources.forEach(resId => {
+            // Check system pages
+            const sysPage = systemPages.find(p => p.url === resId)
+            if (sysPage) {
+                itemsToAdd.push({
+                    label: sysPage.label,
+                    url: sysPage.url,
+                    open_in_new_tab: false,
+                    item_type: 'link',
+                    widget_type: 'text',
+                    widget_content: {},
+                    order: 0,
+                    is_visible: true,
+                    children: []
+                })
+            } else {
+                // Check custom pages
+                const cusPage = customPages.find(p => p.slug === resId)
+                if (cusPage) {
+                    itemsToAdd.push({
+                        label: cusPage.title,
+                        url: `/p/${cusPage.slug}`,
+                        open_in_new_tab: false,
+                        item_type: 'link',
+                        widget_type: 'text',
+                        widget_content: {},
+                        order: 0,
+                        is_visible: true,
+                        children: []
+                    })
+                }
+            }
+        })
+
+        if (itemsToAdd.length > 0) {
+            setLocalItems(prev => [
+                ...prev,
+                ...itemsToAdd.map((it, idx) => ({ ...it, order: prev.length + idx }))
+            ])
+            setSelectedResources([])
+            toast.success(`${itemsToAdd.length} ítem(s) añadido(s)`)
+        }
+    }
+
     // ── Save to backend ───────────────────────────────────────────────────────
 
     async function handleSave() {
@@ -454,6 +538,173 @@ function NavigationAdminPageContent() {
                         </div>
                     ))}
                 </nav>
+
+                <div className="p-4 border-t space-y-4">
+                    <h2 className="font-semibold text-sm flex items-center gap-2">
+                        <Layout className="h-4 w-4" /> Páginas y Enlaces
+                    </h2>
+
+                    <div className="space-y-1">
+                        {/* System Pages Section */}
+                        <div className="border rounded-md overflow-hidden">
+                            <button
+                                onClick={() => setOpenSection(openSection === 'system' ? null : 'system')}
+                                className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium hover:bg-muted transition-colors"
+                            >
+                                Páginas del Sistema
+                                <ChevronDown className={cn("h-3 w-3 transition-transform", openSection === 'system' && "rotate-180")} />
+                            </button>
+                            {openSection === 'system' && (
+                                <div className="p-3 pt-0 space-y-2 max-h-40 overflow-y-auto">
+                                    {systemPages.map(page => (
+                                        <div key={page.url} className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id={`sys-${page.url}`}
+                                                checked={selectedResources.includes(page.url)}
+                                                onCheckedChange={(checked) => {
+                                                    setSelectedResources(prev =>
+                                                        checked ? [...prev, page.url] : prev.filter(p => p !== page.url)
+                                                    )
+                                                }}
+                                            />
+                                            <label htmlFor={`sys-${page.url}`} className="text-[11px] cursor-pointer truncate">
+                                                {page.label}
+                                            </label>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Custom Pages Section */}
+                        <div className="border rounded-md overflow-hidden">
+                            <button
+                                onClick={() => setOpenSection(openSection === 'custom' ? null : 'custom')}
+                                className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium hover:bg-muted transition-colors"
+                            >
+                                Páginas Personalizadas
+                                <ChevronDown className={cn("h-3 w-3 transition-transform", openSection === 'custom' && "rotate-180")} />
+                            </button>
+                            {openSection === 'custom' && (
+                                <div className="p-3 pt-0 space-y-2 max-h-40 overflow-y-auto">
+                                    {loadingPages ? (
+                                        <div className="flex items-center justify-center py-2">
+                                            <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                                        </div>
+                                    ) : customPages.length === 0 ? (
+                                        <p className="text-[10px] text-muted-foreground text-center py-2">No hay páginas.</p>
+                                    ) : (
+                                        customPages.map(page => (
+                                            <div key={page.slug} className="flex items-center space-x-2">
+                                                <Checkbox
+                                                    id={`cus-${page.slug}`}
+                                                    checked={selectedResources.includes(page.slug)}
+                                                    onCheckedChange={(checked) => {
+                                                        setSelectedResources(prev =>
+                                                            checked ? [...prev, page.slug] : prev.filter(p => p !== page.slug)
+                                                        )
+                                                    }}
+                                                />
+                                                <label htmlFor={`cus-${page.slug}`} className="text-[11px] cursor-pointer truncate">
+                                                    {page.title}
+                                                </label>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Custom Link Section */}
+                        <div className="border rounded-md overflow-hidden">
+                            <button
+                                onClick={() => setOpenSection(openSection === 'link' ? null : 'link')}
+                                className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium hover:bg-muted transition-colors"
+                            >
+                                Enlace Personalizado
+                                <ChevronDown className={cn("h-3 w-3 transition-transform", openSection === 'link' && "rotate-180")} />
+                            </button>
+                            {openSection === 'link' && (
+                                <div className="p-3 space-y-3">
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px]">URL</Label>
+                                        <Input
+                                            className="h-8 text-xs"
+                                            placeholder="https://..."
+                                            id="custom-url"
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    const url = (e.target as HTMLInputElement).value
+                                                    const label = (document.getElementById('custom-label') as HTMLInputElement).value
+                                                    if (url && label) {
+                                                        setLocalItems(prev => [...prev, {
+                                                            label,
+                                                            url,
+                                                            open_in_new_tab: false,
+                                                            item_type: 'link',
+                                                            widget_type: 'text',
+                                                            widget_content: {},
+                                                            order: prev.length,
+                                                            is_visible: true,
+                                                            children: []
+                                                        }])
+                                                        toast.success("Enlace añadido")
+                                                            ; (e.target as HTMLInputElement).value = ''
+                                                            ; (document.getElementById('custom-label') as HTMLInputElement).value = ''
+                                                    }
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px]">Etiqueta</Label>
+                                        <Input
+                                            className="h-8 text-xs"
+                                            placeholder="Mi Enlace"
+                                            id="custom-label"
+                                        />
+                                    </div>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="w-full h-8 text-xs"
+                                        onClick={() => {
+                                            const url = (document.getElementById('custom-url') as HTMLInputElement).value
+                                            const label = (document.getElementById('custom-label') as HTMLInputElement).value
+                                            if (url && label) {
+                                                setLocalItems(prev => [...prev, {
+                                                    label,
+                                                    url,
+                                                    open_in_new_tab: false,
+                                                    item_type: 'link',
+                                                    widget_type: 'text',
+                                                    widget_content: {},
+                                                    order: prev.length,
+                                                    is_visible: true,
+                                                    children: []
+                                                }])
+                                                toast.success("Enlace añadido")
+                                                    ; (document.getElementById('custom-url') as HTMLInputElement).value = ''
+                                                    ; (document.getElementById('custom-label') as HTMLInputElement).value = ''
+                                            }
+                                        }}
+                                    >
+                                        Añadir al Menú
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <Button
+                        size="sm"
+                        className="w-full text-xs"
+                        disabled={selectedResources.length === 0 || !selectedZoneId}
+                        onClick={addSelectedToMenu}
+                    >
+                        Añadir Seleccionados
+                    </Button>
+                </div>
             </aside>
 
             {/* ── Right Panel: Items ── */}

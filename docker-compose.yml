@@ -51,7 +51,7 @@ services:
     volumes:
       - ./frontend:/app:cached
       - /app/node_modules
-      - frontend_cache:/app/.next/cache
+      - /app/.next
     ports:
       - "3002:3000"
     environment:

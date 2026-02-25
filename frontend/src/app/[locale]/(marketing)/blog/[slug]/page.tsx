@@ -56,7 +56,7 @@ export default function BlogPostDetail() {
     }
 
     return (
-        <article className="min-h-screen pb-24 bg-muted/30">
+        <article className="min-h-screen pt-24 pb-24 bg-muted/30">
             {/* Hero Section */}
             <div className="relative w-full h-[45vh] md:h-[65vh] overflow-hidden bg-muted">
                 {post.featured_image ? (

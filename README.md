@@ -141,7 +141,13 @@
 - Persistencia en localStorage
 - Aplicación instantánea en toda la app
 
-### 📲 Progressive Web App (PWA)
+### 📰 Gestión de Noticias (Blog)
+- **Dashboard Administrativo**: Interfaz profesional inspirada en WordPress para gestionar publicaciones.
+- **Editor Rico (Tiptap)**: Soporte completo para formato de texto, encabezados, listas, enlaces y bloques de código.
+- **Imágenes Destacadas**: Sistema de carga y previsualización de portadas para artículos.
+- **Categorización y Tags**: Organización flexible de noticias por temas.
+- **Control de Estado**: Gestión de borradores y publicaciones programadas.
+- **Optimización SSR**: Renderizado eficiente en el servidor con hidratación optimizada.
 - Instalación en dispositivos móviles y escritorio
 - Funcionalidad offline
 - Shortcuts: Mi Biblioteca, Mis Préstamos
@@ -834,6 +840,8 @@ npm run test:e2e:debug    # Modo debug
 - Sistema de notificaciones
 - Personalización de temas (6 temas + modo oscuro)
 - PWA completa
+- Gestión de Noticias (Blog) con editor rico Tiptap
+- Estabilización de entorno Docker (Windows path fixes)
 
 #### 🚧 En Progreso
 - Mejoras de UX/UI

@@ -14,7 +14,7 @@ const NavigationContext = createContext<NavigationContextType>({
     zones: [],
     getZone: () => undefined,
     getZones: () => [],
-    refresh: () => {},
+    refresh: () => { },
 })
 
 export function NavigationProvider({ children }: { children: ReactNode }) {
@@ -31,11 +31,11 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => { fetchZones() }, [fetchZones])
 
-    const getZone = (location: NavZone['location']) =>
-        zones.find(z => z.location === location)
+    const getZone = useCallback((location: NavZone['location']) =>
+        zones.find(z => z.location === location), [zones])
 
-    const getZones = (location: NavZone['location']) =>
-        zones.filter(z => z.location === location).sort((a, b) => a.order - b.order)
+    const getZones = useCallback((location: NavZone['location']) =>
+        zones.filter(z => z.location === location).sort((a, b) => a.order - b.order), [zones])
 
     return (
         <NavigationContext.Provider value={{ zones, getZone, getZones, refresh: fetchZones }}>

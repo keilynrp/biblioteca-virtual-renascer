@@ -36,7 +36,7 @@ export default function BlogPage() {
     }, [activeCategory])
 
     return (
-        <div className="container mx-auto py-8 px-4">
+        <div className="container mx-auto pt-32 pb-8 px-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
                 <div className="space-y-1">
                     <h1 className="text-4xl font-extrabold tracking-tight flex items-center gap-3">

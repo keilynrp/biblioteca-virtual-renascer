@@ -58,7 +58,7 @@ export function BankDetailsPanel() {
                     <DetailItem label="Titular" value={details.accountName} onCopy={() => copyToClipboard(details.accountName)} />
                     <DetailItem label="Nº Cuenta" value={details.accountNumber} onCopy={() => copyToClipboard(details.accountNumber)} />
                     {details.pixKey && (
-                        <DetailItem label="Clave PIX" value={details.pixKey} onCopy={() => copyToClipboard(details.pixKey)} />
+                        <DetailItem label="Clave PIX" value={details.pixKey} onCopy={() => copyToClipboard(details.pixKey!)} />
                     )}
                 </div>
             </CardContent>

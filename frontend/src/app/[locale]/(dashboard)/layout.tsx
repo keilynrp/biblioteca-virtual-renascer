@@ -16,37 +16,20 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
     BookOpen,
-    LogOut,
-    User,
     Menu,
     X,
-    LayoutDashboard,
-    Library,
-    CreditCard,
-    Search,
-    Bell,
-    Settings,
-    Settings2,
     ChevronDown,
     Moon,
     Sun,
-    FileEdit,
-    Users,
-    FolderOpen,
     ChevronLeft,
     ChevronRight,
-    Heart,
-    BookMarked,
-    Shield,
-    BookUp,
-    Building2, // Icon for Institutions
-    BellDot,
-    LayoutTemplate,
-    Map,
-    Receipt,
-    Newspaper,
+    Search,
+    Bell,
+    LogOut,
+    Settings,
+    User,
 } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { SearchBar } from "@/components/search-bar"
 import { useTranslations } from "next-intl"
 import { LanguageSwitcher } from "@/components/language-switcher"
@@ -56,6 +39,8 @@ import { getAvatarUrl } from "@/lib/utils"
 import { CurrencyProvider } from "@/context/currency-context"
 import { TrialBanner } from "@/components/notifications/trial-banner"
 import { useSiteSettings } from "@/context/site-settings-context"
+import { useNavigation } from "@/context/navigation-context"
+import { getIconForUrl } from "@/lib/icon-mapping"
 
 export default function DashboardLayout({
     children,
@@ -68,6 +53,7 @@ export default function DashboardLayout({
     const t = useTranslations("Navigation")
     const { user, logout, isAuthenticated, _hasHydrated, updateUser } = useAuthStoreHydrated()
     const { logo_url, site_name } = useSiteSettings()
+    const { getZones } = useNavigation()
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
     const [isDarkMode, setIsDarkMode] = useState(false)
@@ -76,6 +62,8 @@ export default function DashboardLayout({
     // Mark as mounted to prevent SSR/CSR hydration mismatches with Radix UI IDs
     useEffect(() => {
         setMounted(true)
+        // Sincronizar estado inicial de modo oscuro
+        setIsDarkMode(document.documentElement.classList.contains('dark'))
     }, [])
 
     // Redirect if not authenticated (solo después de hidratar)
@@ -120,28 +108,42 @@ export default function DashboardLayout({
         document.documentElement.classList.toggle('dark')
     }
 
-    const navItems = [
-        { href: "/home", label: t("dashboard"), icon: LayoutDashboard },
-        { href: "/library", label: t("library"), icon: Library },
-        { href: "/blog", label: "Noticias", icon: Newspaper },
-        { href: "/my-loans", label: t("loans"), icon: BookUp },
-        { href: "/notifications", label: t("notifications"), icon: Bell },
-        { href: "/favorites", label: t("favorites"), icon: Heart },
-        { href: "/reading-history", label: t("history"), icon: BookMarked },
-        { href: "/admin", label: t("admin"), icon: Shield, adminOnly: true },
-        { href: "/admin/books", label: "Administrar Libros", icon: FileEdit, adminOnly: true },
-        { href: "/admin/authors", label: "Administrar Autores", icon: Users, adminOnly: true },
-        { href: "/admin/categories", label: "Administrar Categorías", icon: FolderOpen, adminOnly: true },
-        { href: "/plans", label: "Planes", icon: CreditCard },
-        { href: "/billing", label: "Billing", icon: Receipt },
-        { href: "/institutions", label: "Instituciones", icon: Building2, adminOnly: true },
-        { href: "/admin/notifications", label: "Notificaciones Admin", icon: BellDot, adminOnly: true },
-        { href: "/admin/navigation", label: "Mapa del Sitio", icon: Map, adminOnly: true },
-        { href: "/admin/page-builder", label: "Constructor de Páginas", icon: LayoutTemplate, adminOnly: true },
-        { href: "/admin/site-settings", label: "Ajustes del Sitio", icon: Settings2, adminOnly: true },
-        { href: "/users", label: "Usuarios", icon: Users, adminOnly: true },
-        { href: "/profile", label: "Perfil", icon: User },
-    ]
+    const sidebarZones = getZones('sidebar_left')
+    const dynamicItems = sidebarZones.length > 0 ? sidebarZones[0].items : []
+
+    const navItems = useMemo(() => {
+        if (dynamicItems.length > 0) {
+            return dynamicItems.map(item => ({
+                href: item.url,
+                label: item.label,
+                icon: getIconForUrl(item.url),
+                adminOnly: item.url.startsWith('/admin') || item.url.startsWith('/users') || item.url.startsWith('/institutions')
+            }))
+        }
+
+        return [
+            { href: "/home", label: t("dashboard"), icon: getIconForUrl("/home") },
+            { href: "/library", label: t("library"), icon: getIconForUrl("/library") },
+            { href: "/gestion-de-noticias", label: "Gestión de noticias", icon: getIconForUrl("/gestion-de-noticias") },
+            { href: "/my-loans", label: t("loans"), icon: getIconForUrl("/my-loans") },
+            { href: "/notifications", label: t("notifications"), icon: getIconForUrl("/notifications") },
+            { href: "/favorites", label: t("favorites"), icon: getIconForUrl("/favorites") },
+            { href: "/reading-history", label: t("history"), icon: getIconForUrl("/reading-history") },
+            { href: "/admin", label: t("admin"), icon: getIconForUrl("/admin"), adminOnly: true },
+            { href: "/admin/books", label: "Administrar Libros", icon: getIconForUrl("/admin/books"), adminOnly: true },
+            { href: "/admin/authors", label: "Administrar Autores", icon: getIconForUrl("/admin/authors"), adminOnly: true },
+            { href: "/admin/categories", label: "Administrar Categorías", icon: getIconForUrl("/admin/categories"), adminOnly: true },
+            { href: "/plans", label: "Planes", icon: getIconForUrl("/plans") },
+            { href: "/billing", label: "Billing", icon: getIconForUrl("/billing") },
+            { href: "/institutions", label: "Instituciones", icon: getIconForUrl("/institutions"), adminOnly: true },
+            { href: "/admin/notifications", label: "Notificaciones Admin", icon: getIconForUrl("/admin/notifications"), adminOnly: true },
+            { href: "/admin/navigation", label: "Mapa del Sitio", icon: getIconForUrl("/admin/navigation"), adminOnly: true },
+            { href: "/admin/page-builder", label: "Constructor de Páginas", icon: getIconForUrl("/admin/page-builder"), adminOnly: true },
+            { href: "/admin/site-settings", label: "Ajustes del Sitio", icon: getIconForUrl("/admin/site-settings"), adminOnly: true },
+            { href: "/users", label: "Usuarios", icon: getIconForUrl("/users"), adminOnly: true },
+            { href: "/profile", label: "Perfil", icon: getIconForUrl("/profile") },
+        ]
+    }, [dynamicItems, t])
 
     return (
         <div className="flex h-screen overflow-hidden bg-muted/30">
@@ -150,7 +152,7 @@ export default function DashboardLayout({
                 fixed inset-y-0 left-0 z-50 transform bg-card shadow-2xl transition-all duration-300 ease-in-out
                 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
                 md:static md:translate-x-0
-                ${isSidebarCollapsed ? "md:w-20" : "md:w-72"}
+                ${mounted && isSidebarCollapsed ? "md:w-20" : "md:w-72"}
                 w-72
                 border-r border-border/50
                 backdrop-blur-xl bg-card/95
@@ -163,7 +165,7 @@ export default function DashboardLayout({
                 <div className="relative flex h-16 items-center justify-between px-6 border-b border-border/50 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
                     <Link
                         href="/"
-                        className={`flex items-center space-x-3 transition-all duration-300 cursor-pointer group ${isSidebarCollapsed ? "md:opacity-0 md:scale-90 md:hidden" : "opacity-100 scale-100"}`}
+                        className={`flex items-center space-x-3 transition-all duration-300 cursor-pointer group ${mounted && isSidebarCollapsed ? "md:opacity-0 md:scale-90 md:hidden" : "opacity-100 scale-100"}`}
                         onClick={() => setIsSidebarOpen(false)}
                     >
                         {logo_url ? (
@@ -189,7 +191,7 @@ export default function DashboardLayout({
                     {/* Collapsed state logo */}
                     <Link
                         href="/"
-                        className={`flex items-center justify-center w-full transition-all duration-300 cursor-pointer ${isSidebarCollapsed ? "md:opacity-100 md:scale-100" : "md:opacity-0 md:scale-90 md:hidden"}`}
+                        className={`flex items-center justify-center w-full transition-all duration-300 cursor-pointer ${mounted && isSidebarCollapsed ? "md:opacity-100 md:scale-100" : "md:opacity-0 md:scale-90 md:hidden"}`}
                         onClick={() => setIsSidebarOpen(false)}
                     >
                         {logo_url ? (
@@ -212,7 +214,7 @@ export default function DashboardLayout({
 
                 {/* Navigation */}
                 <nav className="relative p-4 space-y-1 overflow-y-auto flex-1">
-                    <div className={`px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4 transition-all duration-300 ${isSidebarCollapsed ? "md:opacity-0 md:hidden" : "opacity-100"}`}>
+                    <div className={`px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4 transition-all duration-300 ${mounted && isSidebarCollapsed ? "md:opacity-0 md:hidden" : "opacity-100"}`}>
                         <span className="inline-flex items-center gap-2">
                             <span className="h-px w-3 bg-primary/30 block" />
                             Menú Principal
@@ -233,7 +235,7 @@ export default function DashboardLayout({
                                         ? "bg-gradient-to-r from-primary to-primary-dark text-white shadow-lg shadow-primary/30 scale-[1.02]"
                                         : "text-foreground hover:bg-gradient-to-r hover:from-muted/80 hover:to-muted/40 hover:text-primary hover:scale-[1.02]"
                                     }
-                                    ${isSidebarCollapsed ? "md:justify-center md:px-3" : ""}
+                                    ${mounted && isSidebarCollapsed ? "md:justify-center md:px-3" : ""}
                                 `}
                                 style={{
                                     animation: `fadeInUp 0.3s ease-out ${index * 0.05}s both`

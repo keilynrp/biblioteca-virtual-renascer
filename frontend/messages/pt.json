@@ -20,6 +20,12 @@
         "save": "Salvar",
         "cancel": "Cancelar",
         "delete": "Excluir",
-        "search": "Buscar livros, autores..."
+        "search": "Procurar livros, autores..."
+    },
+    "NotFound": {
+        "title": "404 - Página não encontrada",
+        "heading": "Parece que você se perdeu",
+        "description": "A página que você procura não existe ou foi movida.",
+        "backHome": "Voltar ao início"
     }
 }

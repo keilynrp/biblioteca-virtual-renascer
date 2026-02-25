@@ -21,5 +21,11 @@
         "cancel": "Cancel",
         "delete": "Delete",
         "search": "Search books, authors..."
+    },
+    "NotFound": {
+        "title": "404 - Page Not Found",
+        "heading": "Looks like you're lost",
+        "description": "The page you are looking for doesn't exist or has been moved.",
+        "backHome": "Back to Home"
     }
 }

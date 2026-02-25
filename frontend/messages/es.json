@@ -21,5 +21,11 @@
         "cancel": "Cancelar",
         "delete": "Eliminar",
         "search": "Buscar libros, autores..."
+    },
+    "NotFound": {
+        "title": "404 - Página no encontrada",
+        "heading": "Parece que te has perdido",
+        "description": "La página que buscas no existe o ha sido movida.",
+        "backHome": "Volver al inicio"
     }
 }

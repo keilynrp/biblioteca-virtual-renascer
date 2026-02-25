@@ -41,7 +41,7 @@ const profileSchema = z.object({
     email: z.string().email(),
     bio: z.string().optional(),
     phone: z.string().optional(),
-    institution_id: z.string().optional(),
+    institution_id: z.string().nullable().optional(),
 })
 
 interface Institution {
@@ -92,7 +92,7 @@ export default function ProfilePage() {
                     email: userData.email,
                     bio: userData.bio || "",
                     phone: userData.phone || "",
-                    institution_id: userData.institution_id ? String(userData.institution_id) : "",
+                    institution_id: userData.institution_id ? String(userData.institution_id) : null,
                 })
             } catch (error) {
                 console.error("Failed to load profile data", error)
@@ -115,6 +115,8 @@ export default function ProfilePage() {
             formData.append('phone', values.phone || '')
             if (values.institution_id) {
                 formData.append('institution_id', values.institution_id)
+            } else if (values.institution_id === null) {
+                formData.append('institution_id', '') // Clear institution if null
             }
             if (avatarFile) {
                 formData.append('avatar', avatarFile)
@@ -433,8 +435,9 @@ export default function ProfilePage() {
                                             <FormLabel>Institution</FormLabel>
                                             <Select
                                                 onValueChange={field.onChange}
-                                                defaultValue={field.value}
-                                                value={field.value}
+                                                defaultValue={field.value ?? undefined}
+                                                value={field.value ?? undefined}
+                                                disabled={user.user_type !== 'admin'}
                                             >
                                                 <FormControl>
                                                     <SelectTrigger>
@@ -442,6 +445,7 @@ export default function ProfilePage() {
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent>
+                                                    <SelectItem value="none">Sin institución</SelectItem>
                                                     {Array.isArray(institutions) && institutions.length > 0 ? (
                                                         institutions.map((inst) => (
                                                             <SelectItem key={inst.id} value={String(inst.id)}>
@@ -449,7 +453,7 @@ export default function ProfilePage() {
                                                             </SelectItem>
                                                         ))
                                                     ) : (
-                                                        <SelectItem value="none" disabled>
+                                                        <SelectItem value="no-avail" disabled>
                                                             No institutions available
                                                         </SelectItem>
                                                     )}

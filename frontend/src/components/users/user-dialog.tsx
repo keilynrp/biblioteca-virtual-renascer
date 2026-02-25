@@ -40,7 +40,7 @@ const userSchema = z.object({
     first_name: z.string().optional(),
     last_name: z.string().optional(),
     user_type: z.enum(["student", "teacher", "admin"]),
-    institution: z.number().optional(),
+    institution: z.number().nullable().optional(),
 }).refine((data) => {
     // Password is only required when creating a new user (no ID yet)
     // However, the UserDialog doesn't have the user ID in the schema.
@@ -93,7 +93,7 @@ export function UserDialog({
                 first_name: user.first_name || "",
                 last_name: user.last_name || "",
                 user_type: user.user_type,
-                institution: user.institution,
+                institution: user.institution ?? null,
             })
         } else {
             form.reset({
@@ -103,7 +103,7 @@ export function UserDialog({
                 first_name: "",
                 last_name: "",
                 user_type: "student",
-                institution: undefined,
+                institution: null,
             })
         }
     }, [user, form])
@@ -253,29 +253,36 @@ export function UserDialog({
                             <FormField
                                 control={form.control}
                                 name="institution"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Institución</FormLabel>
-                                        <Select
-                                            onValueChange={(value) => field.onChange(parseInt(value))}
-                                            value={field.value?.toString()}
-                                        >
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Seleccionar" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {Array.isArray(institutions) && institutions.map((inst) => (
-                                                    <SelectItem key={inst.id} value={inst.id.toString()}>
-                                                        {inst.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
+                                render={({ field }) => {
+                                    const { user: currentUser } = useAuthStore.getState();
+                                    const isAdmin = currentUser?.user_type === 'admin';
+
+                                    return (
+                                        <FormItem>
+                                            <FormLabel>Institución</FormLabel>
+                                            <Select
+                                                onValueChange={(value) => field.onChange(value === "none" ? null : parseInt(value))}
+                                                value={field.value?.toString() ?? "none"}
+                                                disabled={!isAdmin}
+                                            >
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Seleccionar" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="none">Sin institución</SelectItem>
+                                                    {Array.isArray(institutions) && institutions.map((inst) => (
+                                                        <SelectItem key={inst.id} value={inst.id.toString()}>
+                                                            {inst.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    );
+                                }}
                             />
                         </div>
 

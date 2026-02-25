@@ -2,7 +2,7 @@
     "name": "Biblioteca Virtual Renascer do Saber",
     "short_name": "BVS Renascer",
     "description": "Tu biblioteca digital personal con miles de libros, préstamos y lectura offline",
-    "start_url": "/",
+    "start_url": "/es",
     "scope": "/",
     "display": "standalone",
     "orientation": "portrait-primary",
@@ -92,7 +92,7 @@
             "name": "Mi Biblioteca",
             "short_name": "Biblioteca",
             "description": "Ver todos los libros disponibles",
-            "url": "/library",
+            "url": "/es/library",
             "icons": [
                 {
                     "src": "/icons/icon-96x96.png",
@@ -104,7 +104,7 @@
             "name": "Mis Préstamos",
             "short_name": "Préstamos",
             "description": "Ver tus libros prestados",
-            "url": "/my-loans",
+            "url": "/es/my-loans",
             "icons": [
                 {
                     "src": "/icons/icon-96x96.png",

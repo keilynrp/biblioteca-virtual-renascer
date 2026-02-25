@@ -13,9 +13,16 @@ class AuthorSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'bio', 'photo')
 
 class CategorySerializer(serializers.ModelSerializer):
+    children = serializers.SerializerMethodField()
+
     class Meta:
         model = Category
-        fields = ('id', 'name', 'slug', 'description')
+        fields = ('id', 'name', 'slug', 'description', 'parent', 'children')
+
+    def get_children(self, obj):
+        # Recursive children representation
+        serializer = CategorySerializer(obj.children.all(), many=True, context=self.context)
+        return serializer.data
 
 class BookListSerializer(serializers.ModelSerializer):
     author = AuthorSerializer(read_only=True)

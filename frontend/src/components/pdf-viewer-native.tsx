@@ -1,27 +1,22 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from './ui/button';
 import {
-  ChevronLeft,
-  ChevronRight,
-  ZoomIn,
-  ZoomOut,
   Loader2,
   Maximize2,
   Moon,
   Sun,
   PanelRightOpen,
+  ChevronLeft,
+  ChevronRight,
+  ZoomIn,
+  ZoomOut,
+  RefreshCw,
 } from 'lucide-react';
 import { BookmarkButton } from './reader/bookmark-button';
 import { AnnotationsSidebar } from './reader/annotations-sidebar';
-
-// PDF.js worker — renders via canvas, no browser native PDF toolbar appears
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url,
-).toString();
+import api from '@/lib/api';
 
 interface PDFViewerNativeProps {
   bookId: number;
@@ -45,23 +40,22 @@ export function PDFViewerNative({
   bookTitle,
   pdfUrl,
   initialPage = 1,
-  initialZoom = 1.0,
   totalPages: totalPagesProp,
-  accessToken,
   onProgressUpdate,
 }: PDFViewerNativeProps) {
   const [currentPage, setCurrentPage] = useState(initialPage);
-  const [zoomLevel, setZoomLevel] = useState(initialZoom);
   const [numPages, setNumPages] = useState<number | null>(totalPagesProp || null);
+  const [zoomLevel, setZoomLevel] = useState(1.5); // 1.5x scale
   const [readingTime, setReadingTime] = useState(0);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [containerWidth, setContainerWidth] = useState(0);
+  const [isReaderReady, setIsReaderReady] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
 
-  const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<HTMLDivElement>(null);
-  const progressSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const lastSavedProgressRef = useRef({ currentPage, zoomLevel, readingTime });
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Load dark mode preference
   useEffect(() => {
@@ -69,14 +63,76 @@ export function PDFViewerNative({
     if (saved) setIsDarkMode(saved === 'true');
   }, []);
 
-  // Measure container width for responsive page rendering
+  // Fetch PDF as ArrayBuffer
   useEffect(() => {
-    const observer = new ResizeObserver((entries) => {
-      if (entries[0]) setContainerWidth(entries[0].contentRect.width);
-    });
-    if (containerRef.current) observer.observe(containerRef.current);
-    return () => observer.disconnect();
+    async function fetchPdf() {
+      try {
+        setLoading(true);
+        setError(null);
+        console.log('[PDF Viewer] Fetching PDF data...');
+
+        const response = await api.get(pdfUrl, {
+          responseType: 'arraybuffer',
+        });
+
+        console.log('[PDF Viewer] PDF data received, size:', response.data.byteLength);
+        setPdfData(response.data);
+      } catch (err: any) {
+        console.error('[PDF Viewer] Fetch error:', err);
+        setError('Error de conexión al cargar el libro. Por favor, intente de nuevo.');
+        setLoading(false);
+      }
+    }
+
+    fetchPdf();
+  }, [pdfUrl]);
+
+  // Handle messages from the iframe reader
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      const data = event.data;
+      if (data.type === 'READER_READY') {
+        setIsReaderReady(true);
+      } else if (data.type === 'PAGE_RENDERED') {
+        setCurrentPage(data.pageNum);
+        setNumPages(data.totalPages);
+        setLoading(false);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
   }, []);
+
+  // Send data to iframe when both data and iframe are ready
+  useEffect(() => {
+    if (isReaderReady && pdfData && iframeRef.current?.contentWindow) {
+      console.log('[PDF Viewer] Sending data to iframe...');
+      iframeRef.current.contentWindow.postMessage({
+        type: 'LOAD_DATA',
+        arrayBuffer: pdfData
+      }, '*');
+    }
+  }, [isReaderReady, pdfData]);
+
+  // Sync state changes to Iframe (Navigation & Zoom)
+  useEffect(() => {
+    if (isReaderReady && iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage({
+        type: 'GOTO_PAGE',
+        page: currentPage
+      }, '*');
+    }
+  }, [currentPage, isReaderReady]);
+
+  useEffect(() => {
+    if (isReaderReady && iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage({
+        type: 'SET_ZOOM',
+        zoom: zoomLevel
+      }, '*');
+    }
+  }, [zoomLevel, isReaderReady]);
 
   // Track reading time
   useEffect(() => {
@@ -84,43 +140,31 @@ export function PDFViewerNative({
     return () => clearInterval(interval);
   }, []);
 
-  // Debounced auto-save progress
+  // Update progress periodically
   useEffect(() => {
-    if (!numPages || !onProgressUpdate) return;
-    const progress = { currentPage, totalPages: numPages, zoomLevel, readingTime };
-    const last = lastSavedProgressRef.current;
-    const hasPageChanged = progress.currentPage !== last.currentPage;
-    const hasZoomChanged = Math.abs(progress.zoomLevel - last.zoomLevel) > 0.01;
-    const hasEnoughTimeElapsed = progress.readingTime - last.readingTime >= 30;
-    if (!hasPageChanged && !hasZoomChanged && !hasEnoughTimeElapsed) return;
-    if (progressSaveTimerRef.current) clearTimeout(progressSaveTimerRef.current);
-    progressSaveTimerRef.current = setTimeout(() => {
-      onProgressUpdate(progress);
-      lastSavedProgressRef.current = progress;
-    }, 3000);
-    return () => {
-      if (progressSaveTimerRef.current) clearTimeout(progressSaveTimerRef.current);
-    };
+    if (!onProgressUpdate) return;
+    const interval = setInterval(() => {
+      onProgressUpdate({
+        currentPage,
+        totalPages: numPages || 0,
+        zoomLevel: zoomLevel,
+        readingTime
+      });
+    }, 15000);
+    return () => clearInterval(interval);
   }, [currentPage, numPages, zoomLevel, readingTime, onProgressUpdate]);
 
-  // Save progress on unmount
-  useEffect(() => {
-    return () => {
-      if (numPages && onProgressUpdate) {
-        onProgressUpdate({ currentPage, totalPages: numPages, zoomLevel, readingTime });
-      }
-    };
-  }, [currentPage, numPages, zoomLevel, readingTime, onProgressUpdate]);
+  const handleFullscreen = () => {
+    if (viewerRef.current?.requestFullscreen) {
+      viewerRef.current.requestFullscreen();
+    }
+  };
 
-  // Memoized PDF file config — prevents reloading on every render
-  const pdfFile = useMemo(() => ({
-    url: pdfUrl,
-    httpHeaders: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-  }), [pdfUrl, accessToken]);
-
-  const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
-    setNumPages(numPages);
-  }, []);
+  const toggleDarkMode = () => {
+    const next = !isDarkMode;
+    setIsDarkMode(next);
+    localStorage.setItem('pdf-viewer-dark-mode', next.toString());
+  };
 
   const goToPreviousPage = useCallback(() => {
     setCurrentPage((p) => Math.max(p - 1, 1));
@@ -138,64 +182,39 @@ export function PDFViewerNative({
     setZoomLevel((z) => Math.max(z - 0.25, 0.5));
   }, []);
 
-  const handleFullscreen = () => {
-    if (viewerRef.current?.requestFullscreen) {
-      viewerRef.current.requestFullscreen();
-    }
-  };
-
-  const toggleDarkMode = () => {
-    const next = !isDarkMode;
-    setIsDarkMode(next);
-    localStorage.setItem('pdf-viewer-dark-mode', next.toString());
-  };
-
-  const handleKeyPress = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') goToPreviousPage();
-      else if (e.key === 'ArrowRight') goToNextPage();
-      else if (e.key === '+' || e.key === '=') handleZoomIn();
-      else if (e.key === '-') handleZoomOut();
-    },
-    [goToPreviousPage, goToNextPage, handleZoomIn, handleZoomOut]
-  );
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [handleKeyPress]);
-
   return (
     <div
       ref={viewerRef}
-      className={`flex flex-col h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'}`}
+      className={`flex flex-col h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'} select-none`}
+      onContextMenu={(e) => e.preventDefault()}
     >
       {/* Header */}
       <div
-        className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-b px-3 sm:px-6 py-3 sm:py-4 shadow-sm`}
+        className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-b px-3 sm:px-6 py-2 sm:py-3 shadow-sm relative z-20 transition-colors duration-200`}
       >
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="w-full sm:w-auto">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
+          <div className="w-full lg:w-auto">
             <h1
-              className={`text-base sm:text-xl font-semibold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+              className={`text-sm sm:text-lg font-semibold truncate max-w-[300px] ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
             >
               {bookTitle}
             </h1>
-            <p className={`text-xs sm:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              Página {currentPage} {numPages && `de ${numPages}`}
+            <p className={`text-[10px] sm:text-xs font-medium uppercase tracking-wider ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+              Lectura Protegida Renascer
             </p>
           </div>
 
-          {/* Controls */}
-          <div className="flex items-center gap-2 sm:gap-4 flex-wrap w-full sm:w-auto justify-end">
-            {/* Navigation */}
+          {/* Controls Container */}
+          <div className="flex items-center gap-2 sm:gap-6 flex-wrap w-full lg:w-auto justify-between lg:justify-end">
+
+            {/* Page Navigation */}
             <div className="flex items-center gap-1 sm:gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={goToPreviousPage}
-                disabled={currentPage <= 1}
-                title="Página anterior (←)"
+                disabled={currentPage <= 1 || loading}
+                title="Página anterior"
                 className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -209,17 +228,16 @@ export function PDFViewerNative({
                     const page = parseInt(e.target.value);
                     if (page >= 1 && (!numPages || page <= numPages)) setCurrentPage(page);
                   }}
-                  className={`w-12 sm:w-16 px-1 sm:px-2 py-1 text-xs sm:text-sm text-center border rounded-md ${
-                    isDarkMode
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
-                  }`}
+                  className={`w-10 sm:w-14 px-1 py-1 text-xs text-center border rounded-md transition-colors ${isDarkMode
+                      ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500'
+                      : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                    }`}
                   min={1}
                   max={numPages || undefined}
                 />
                 {numPages && (
                   <span
-                    className={`text-xs sm:text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                    className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
                   >
                     / {numPages}
                   </span>
@@ -230,59 +248,53 @@ export function PDFViewerNative({
                 variant="outline"
                 size="sm"
                 onClick={goToNextPage}
-                disabled={!!numPages && currentPage >= numPages}
-                title="Página siguiente (→)"
+                disabled={(!!numPages && currentPage >= numPages) || loading}
+                title="Página siguiente"
                 className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
 
-            {/* Zoom */}
-            <div
-              className={`flex items-center gap-1 sm:gap-2 ${isDarkMode ? 'border-gray-600' : 'border-gray-300'} border-l pl-2 sm:pl-4`}
-            >
+            {/* Zoom Controls */}
+            <div className={`flex items-center gap-1 sm:gap-2 border-l pl-2 sm:pl-4 ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleZoomOut}
-                disabled={zoomLevel <= 0.5}
-                title="Alejar (-)"
+                disabled={zoomLevel <= 0.5 || loading}
+                title="Alejar"
                 className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
               >
                 <ZoomOut className="w-4 h-4" />
               </Button>
-              <span
-                className={`text-xs sm:text-sm font-medium min-w-[50px] sm:min-w-[60px] text-center ${
-                  isDarkMode ? 'text-gray-200' : 'text-gray-700'
-                }`}
-              >
+
+              <span className={`text-xs font-medium min-w-[40px] text-center ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
                 {Math.round(zoomLevel * 100)}%
               </span>
+
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleZoomIn}
-                disabled={zoomLevel >= 3.0}
-                title="Acercar (+)"
+                disabled={zoomLevel >= 3.0 || loading}
+                title="Acercar"
                 className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
               >
                 <ZoomIn className="w-4 h-4" />
               </Button>
             </div>
 
-            {/* Additional Controls */}
-            <div
-              className={`flex items-center gap-1 sm:gap-2 ${isDarkMode ? 'border-gray-600' : 'border-gray-300'} border-l pl-2 sm:pl-4`}
-            >
+            {/* Utility Controls */}
+            <div className={`flex items-center gap-1 sm:gap-2 border-l pl-2 sm:pl-4 ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
               <BookmarkButton bookId={bookId} pageNumber={currentPage} />
 
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                title="Abrir anotaciones"
-                className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
+                title="Anotaciones"
+                className="h-8 w-8 p-0 sm:h-9"
               >
                 <PanelRightOpen className="w-4 h-4" />
               </Button>
@@ -292,7 +304,7 @@ export function PDFViewerNative({
                 size="sm"
                 onClick={handleFullscreen}
                 title="Pantalla completa"
-                className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3 hidden sm:flex"
+                className="h-8 w-8 p-0 hidden sm:flex"
               >
                 <Maximize2 className="w-4 h-4" />
               </Button>
@@ -302,7 +314,7 @@ export function PDFViewerNative({
                 size="sm"
                 onClick={toggleDarkMode}
                 title={isDarkMode ? 'Modo claro' : 'Modo nocturno'}
-                className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
+                className="h-8 w-8 p-0"
               >
                 {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </Button>
@@ -311,91 +323,48 @@ export function PDFViewerNative({
         </div>
       </div>
 
-      {/* PDF Canvas Viewer — no browser native toolbar appears */}
-      <div
-        ref={containerRef}
-        className={`flex-1 overflow-auto ${isDarkMode ? 'bg-gray-950' : 'bg-gray-800'}`}
-        onContextMenu={(e) => e.preventDefault()}
-      >
-        <div className="flex justify-center min-h-full py-6">
-          <Document
-            file={pdfFile}
-            onLoadSuccess={onDocumentLoadSuccess}
-            onLoadError={(err) => console.error('[PDF Viewer] Load error:', err)}
-            loading={
-              <div className="flex flex-col items-center justify-center gap-4 text-white py-20">
-                <Loader2 className="w-12 h-12 animate-spin" />
-                <p>Cargando documento...</p>
-              </div>
-            }
-            error={
-              <div className="flex flex-col items-center justify-center gap-4 text-white py-20">
-                <p className="text-lg">No se pudo cargar el documento.</p>
-              </div>
-            }
-          >
-            {containerWidth > 0 && (
-              <Page
-                pageNumber={currentPage}
-                width={containerWidth * zoomLevel}
-                renderTextLayer={false}
-                renderAnnotationLayer={false}
-                loading={
-                  <div
-                    className="flex items-center justify-center text-white py-10"
-                    style={{ width: containerWidth * zoomLevel }}
-                  >
-                    <Loader2 className="w-8 h-8 animate-spin" />
-                  </div>
-                }
-              />
-            )}
-          </Document>
-        </div>
-      </div>
-
-      {/* Footer — Reading Progress */}
-      <div
-        className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-t px-3 sm:px-6 py-2 sm:py-3`}
-      >
-        <div
-          className={`flex items-center justify-between text-xs sm:text-sm ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}
-        >
-          <div>Progreso: {numPages ? Math.round((currentPage / numPages) * 100) : 0}%</div>
-          <div className="hidden sm:block">
-            Tiempo de lectura: {Math.floor(readingTime / 60)}m {readingTime % 60}s
+      {/* Main Viewer Content */}
+      <div className="flex-1 relative overflow-hidden bg-zinc-900/50">
+        {error ? (
+          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-gray-900 text-white p-6 text-center">
+            <p className="text-xl mb-4 text-red-400">{error}</p>
+            <Button onClick={() => window.location.reload()}>
+              <RefreshCw className="w-4 h-4 mr-2" /> Reintentar
+            </Button>
           </div>
-          <div className="sm:hidden">
-            {Math.floor(readingTime / 60)}m {readingTime % 60}s
-          </div>
-        </div>
-
-        {numPages && (
-          <div
-            className={`mt-2 w-full ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-full h-2`}
-          >
-            <div
-              className={`${isDarkMode ? 'bg-blue-500' : 'bg-blue-600'} h-2 rounded-full transition-all duration-300`}
-              style={{ width: `${(currentPage / numPages) * 100}%` }}
+        ) : (
+          <>
+            <iframe
+              ref={iframeRef}
+              src="/reader/viewer.html"
+              className="w-full h-full border-none"
+              title={bookTitle}
             />
-          </div>
+
+            {/* Security Overlay (Transparent, blocks some interactions) */}
+            <div
+              className="absolute inset-0 z-10 pointer-events-none"
+              style={{ background: 'transparent' }}
+              onContextMenu={(e) => e.preventDefault()}
+            />
+          </>
         )}
       </div>
 
-      {/* Keyboard shortcuts hint */}
+      {/* Footer */}
       <div
-        className={`${
-          isDarkMode
-            ? 'bg-gray-900 border-gray-800 text-gray-400'
-            : 'bg-gray-50 border-gray-200 text-gray-500'
-        } border-t px-3 sm:px-6 py-2 text-center hidden sm:block`}
+        className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-t px-3 sm:px-6 py-2 relative z-20 transition-colors duration-200`}
       >
-        <p className="text-xs">Usa las flechas &larr; &rarr; para navegar, + / - para zoom</p>
+        <div className={`flex items-center justify-between text-[10px] sm:text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" /> Servidor Seguro</span>
+            <span>•</span>
+            <span>Tiempo: {Math.floor(readingTime / 60)}m {readingTime % 60}s</span>
+          </div>
+          <p className="italic font-medium text-red-500/80">Queda prohibida la reproducción o descarga total o parcial de este documento</p>
+        </div>
       </div>
 
-      {/* Annotations Sidebar */}
       <AnnotationsSidebar
         bookId={bookId}
         bookTitle={bookTitle}

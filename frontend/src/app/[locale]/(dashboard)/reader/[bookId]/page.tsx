@@ -71,8 +71,8 @@ export default function ReaderPage() {
       console.log('[Reader] Reading session initialized:', response.data);
       setReading(response.data.reading);
 
-      // Get PDF URL
-      const pdfUrl = `${process.env.NEXT_PUBLIC_API_URL}/content/books/${bookId}/file/`;
+      // Get PDF URL relative to api.baseURL (avoiding duplicate /api)
+      const pdfUrl = `content/books/${bookId}/file/`;
       console.log('[Reader] PDF URL:', pdfUrl);
       setPdfUrl(pdfUrl);
 
@@ -182,9 +182,7 @@ export default function ReaderPage() {
         bookTitle={reading.book.title}
         pdfUrl={pdfUrl || ''}
         initialPage={reading.current_page || 1}
-        initialZoom={parseFloat(reading.zoom_level || '1.0')}
-        accessToken={accessToken || undefined}
-        userRole={user?.user_type}
+        totalPages={reading.total_pages}
         onProgressUpdate={handleProgressUpdate}
       />
     </div>

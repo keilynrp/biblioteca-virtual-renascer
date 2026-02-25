@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visor Seguro Renascer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #1a1a1a;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #viewer-container {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            padding: 20px 0;
+            box-sizing: border-box;
+        }
+
+        #canvas-wrapper {
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            background-color: white;
+            min-height: 100px;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #1a1a1a;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            font-family: sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #333;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        #error-msg {
+            color: #ff6b6b;
+            margin-top: 10px;
+            max-width: 400px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body oncontextmenu="return false;">
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div id="loading-text">Iniciando motor seguro...</div>
+        <div id="error-msg"></div>
+    </div>
+
+    <div id="viewer-container">
+        <div id="canvas-wrapper">
+            <canvas id="pdf-canvas"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        let pdfDoc = null;
+        let pageNum = 1;
+        let pageRendering = false;
+        let pageNumPending = null;
+        let scale = 1.5;
+        const canvas = document.getElementById('pdf-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function renderPage(num) {
+            if (!pdfDoc) return;
+            pageRendering = true;
+            pdfDoc.getPage(num).then(function (page) {
+                const viewport = page.getViewport({ scale: scale });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                const renderContext = {
+                    canvasContext: ctx,
+                    viewport: viewport
+                };
+                const renderTask = page.render(renderContext);
+
+                renderTask.promise.then(function () {
+                    pageRendering = false;
+                    document.getElementById('loading-overlay').style.display = 'none';
+                    if (pageNumPending !== null) {
+                        renderPage(pageNumPending);
+                        pageNumPending = null;
+                    }
+
+                    window.parent.postMessage({
+                        type: 'PAGE_RENDERED',
+                        pageNum: num,
+                        totalPages: pdfDoc.numPages
+                    }, '*');
+                });
+            }).catch(err => {
+                console.error('Error rendering page:', err);
+                document.getElementById('error-msg').innerText = 'Error al renderizar la página: ' + err.message;
+            });
+        }
+
+        function queueRenderPage(num) {
+            if (pageRendering) {
+                pageNumPending = num;
+            } else {
+                renderPage(num);
+            }
+        }
+
+        window.addEventListener('message', function (event) {
+            const data = event.data;
+            if (data.type === 'LOAD_DATA') {
+                loadPdfFromData(data.arrayBuffer);
+            } else if (data.type === 'GOTO_PAGE') {
+                pageNum = data.page;
+                if (pdfDoc) queueRenderPage(pageNum);
+            } else if (data.type === 'SET_ZOOM') {
+                scale = data.zoom;
+                if (pdfDoc) queueRenderPage(pageNum);
+            }
+        });
+
+        async function loadPdfFromData(arrayBuffer) {
+            document.getElementById('loading-overlay').style.display = 'flex';
+            document.getElementById('loading-text').innerText = 'Procesando documento...';
+            document.getElementById('error-msg').innerText = '';
+
+            try {
+                const loadingTask = pdfjsLib.getDocument({
+                    data: arrayBuffer
+                });
+
+                pdfDoc = await loadingTask.promise;
+                renderPage(pageNum);
+            } catch (error) {
+                console.error('Error cargando PDF desde datos:', error);
+                document.getElementById('loading-text').innerText = 'No se pudo procesar el contenido.';
+                document.getElementById('error-msg').innerText = 'Detalle: ' + (error.message || error.name || 'Error desconocido');
+                document.querySelector('.spinner').style.display = 'none';
+            }
+        }
+
+        // Notify parent that reader is ready to receive instructions
+        window.parent.postMessage({ type: 'READER_READY' }, '*');
+    </script>
+</body>
+
+</html>

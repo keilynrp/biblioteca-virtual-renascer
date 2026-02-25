@@ -1,7 +1,8 @@
 "use client"
 
 import { AdminGuard } from "@/components/admin/admin-guard"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
+import { useSearchParams } from "next/navigation"
 import api from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -41,6 +42,8 @@ import {
 import { BookOpen, Plus, Search, MoreVertical, Edit, Trash2, Eye, Download, FileSpreadsheet, FileText } from "lucide-react"
 import Link from "next/link"
 import { YearPicker } from "@/components/ui/year-picker"
+import { TaxonomySelector } from "@/components/ui/taxonomy-selector"
+import { ImageUpload } from "@/components/ui/image-upload"
 
 interface Book {
     id: number
@@ -61,15 +64,17 @@ interface Book {
     created_at: string
 }
 
+interface Author {
+    id: number
+    name: string
+}
+
 interface Category {
     id: number
     name: string
     slug: string
-}
-
-interface Author {
-    id: number
-    name: string
+    parent?: number | null
+    children?: Category[]
 }
 
 interface BookFormData {
@@ -107,6 +112,8 @@ function AdminBooksPageContent() {
         file: null,
     })
     const [submitting, setSubmitting] = useState(false)
+    const searchParams = useSearchParams()
+    const editSlug = searchParams.get("edit")
 
     useEffect(() => {
         fetchData()
@@ -138,6 +145,16 @@ function AdminBooksPageContent() {
             setLoading(false)
         }
     }
+
+    // Auto-open edit dialog if edit param is present
+    useEffect(() => {
+        if (!loading && editSlug && books.length > 0) {
+            const bookToEdit = books.find(b => b.slug === editSlug || String(b.id) === editSlug)
+            if (bookToEdit) {
+                handleOpenDialog(bookToEdit)
+            }
+        }
+    }, [loading, editSlug, books])
 
     useEffect(() => {
         const filtered = books.filter(book =>
@@ -229,6 +246,32 @@ function AdminBooksPageContent() {
         })
     }
 
+    const handleAddAuthor = async (name: string) => {
+        try {
+            const res = await api.post("/content/authors/", { name })
+            const newAuthor = res.data
+            setAuthors(prev => [...prev, newAuthor])
+            return newAuthor
+        } catch (err) {
+            console.error("Error creating author:", err)
+            alert("Error al crear el autor")
+            return null
+        }
+    }
+
+    const handleAddCategory = async (name: string) => {
+        try {
+            const res = await api.post("/content/categories/", { name })
+            const newCategory = res.data
+            setCategories(prev => [...prev, newCategory])
+            return newCategory
+        } catch (err) {
+            console.error("Error creating category:", err)
+            alert("Error al crear la categoría")
+            return null
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setSubmitting(true)
@@ -265,7 +308,7 @@ function AdminBooksPageContent() {
             if (formData.file) {
                 formDataToSend.append('file_upload', formData.file)
             } else if (!editingBook) {
-                // Para nuevos libros sin archivo, usar placeholder
+                // Para nuevos libros sin archivo, usar placeholder (solo si es creación)
                 const placeholderBlob = new Blob(['placeholder'], { type: 'application/pdf' })
                 formDataToSend.append('file_upload', placeholderBlob, 'placeholder.pdf')
             }
@@ -274,7 +317,7 @@ function AdminBooksPageContent() {
             // El navegador lo configura automáticamente con el boundary correcto
             const config = {
                 headers: {
-                    // Content-Type se establece automáticamente por el navegador
+                    'Content-Type': 'multipart/form-data',
                 },
             }
 
@@ -589,42 +632,26 @@ function AdminBooksPageContent() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="grid gap-2">
                                     <Label htmlFor="author">Autor *</Label>
-                                    <Select
+                                    <TaxonomySelector
+                                        items={authors}
                                         value={formData.author}
                                         onValueChange={(value) => setFormData({ ...formData, author: value })}
-                                        required
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Seleccionar autor" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {authors.map((author) => (
-                                                <SelectItem key={author.id} value={String(author.id)}>
-                                                    {author.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                        placeholder="Seleccionar autor"
+                                        searchPlaceholder="Buscar o añadir autor..."
+                                        onAddItem={handleAddAuthor}
+                                    />
                                 </div>
 
                                 <div className="grid gap-2">
                                     <Label htmlFor="category">Categoría *</Label>
-                                    <Select
+                                    <TaxonomySelector
+                                        items={categories}
                                         value={formData.category}
                                         onValueChange={(value) => setFormData({ ...formData, category: value })}
-                                        required
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Seleccionar categoría" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {categories.map((category) => (
-                                                <SelectItem key={category.id} value={String(category.id)}>
-                                                    {category.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                        placeholder="Seleccionar categoría"
+                                        searchPlaceholder="Buscar o añadir categoría..."
+                                        onAddItem={handleAddCategory}
+                                    />
                                 </div>
                             </div>
 
@@ -680,15 +707,13 @@ function AdminBooksPageContent() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="grid gap-2">
                                     <Label htmlFor="cover_image">Imagen de Portada</Label>
-                                    <Input
-                                        id="cover_image"
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(e) => setFormData({ ...formData, cover_image: e.target.files?.[0] || null })}
-                                        className="cursor-pointer"
+                                    <ImageUpload
+                                        value={formData.cover_image || (editingBook?.cover_image)}
+                                        onChange={(file) => setFormData({ ...formData, cover_image: file })}
+                                        onRemove={() => setFormData({ ...formData, cover_image: null })}
                                     />
-                                    <p className="text-xs text-muted-foreground">
-                                        Formatos: JPG, PNG, WebP (Máx. 2MB)
+                                    <p className="text-xs text-muted-foreground mt-2">
+                                        Arrastra una imagen o haz clic para seleccionar. Formatos: JPG, PNG, WebP (Máx. 2MB)
                                     </p>
                                 </div>
 

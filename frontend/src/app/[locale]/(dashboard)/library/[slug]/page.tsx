@@ -16,9 +16,9 @@ import {
     Calendar,
     Eye,
     Heart,
-    Share2,
     Star,
-    User
+    User,
+    Pencil
 } from "lucide-react"
 import { ReviewForm } from "@/components/review-form"
 import { ReviewList } from "@/components/review-list"
@@ -27,6 +27,7 @@ import { ReadingStatusSelector } from "@/components/reading-status-selector"
 import { BorrowBookButton } from "@/components/loans/borrow-book-button"
 import { contentApi, Book } from "@/services/contentApi"
 import { BookCard } from "@/components/book-card"
+import { useAuthStoreHydrated } from "@/store/authStore"
 import dynamic from "next/dynamic"
 
 // Dynamically import FlipbookPreview to avoid SSR issues with PDF.js DOMMatrix
@@ -82,6 +83,14 @@ export default function BookDetailPage() {
     const [similarBooks, setSimilarBooks] = useState<Book[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const { user, _hasHydrated } = useAuthStoreHydrated()
+
+    const canEdit = _hasHydrated && user && [
+        "admin",
+        "content_manager",
+        "moderator",
+        "librarian"
+    ].includes(user.user_type)
 
     useEffect(() => {
         const fetchBook = async () => {
@@ -215,11 +224,21 @@ export default function BookDetailPage() {
                                 className="w-full"
                             />
 
-                            {/* Share Button */}
-                            <Button variant="outline" className="w-full" size="lg">
-                                <Share2 className="mr-2 h-4 w-4" />
-                                Compartir
-                            </Button>
+
+                            {/* Edit Button (Admin Only) */}
+                            {canEdit && (
+                                <Button
+                                    variant="secondary"
+                                    className="w-full bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-200"
+                                    size="lg"
+                                    asChild
+                                >
+                                    <Link href={`/admin/books?edit=${book.slug}`}>
+                                        <Pencil className="mr-2 h-4 w-4" />
+                                        Editar Libro
+                                    </Link>
+                                </Button>
+                            )}
 
                             {/* Reading Status Selector */}
                             <div className="pt-2">

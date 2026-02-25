@@ -11,7 +11,7 @@ export const loansApi = {
         const response = await api.get<{
             count: number
             results: Loan[]
-        }>(BASE_URL, { params })
+        }>(`${BASE_URL}/`, { params })
         return response.data
     },
 
@@ -19,7 +19,7 @@ export const loansApi = {
      * Get active loans only
      */
     getActiveLoans: async () => {
-        const response = await api.get<Loan[]>(`${BASE_URL}/loans/active/`)
+        const response = await api.get<Loan[]>(`${BASE_URL}/active/`)
         return response.data
     },
 
@@ -46,7 +46,7 @@ export const loansApi = {
      * Create a new loan (borrow a book)
      */
     borrowBook: async (bookId: number) => {
-        const response = await api.post<Loan>(BASE_URL, { book: bookId })
+        const response = await api.post<Loan>(`${BASE_URL}/`, { book: bookId })
         return response.data
     },
 
@@ -80,7 +80,7 @@ export const loansApi = {
      * Join the loan queue for a book
      */
     joinQueue: async (bookId: number) => {
-        const response = await api.post<LoanQueue>('/loan-queue/', { book: bookId })
+        const response = await api.post<LoanQueue>(`${BASE_URL}/loan-queue/`, { book: bookId })
         return response.data
     },
 
@@ -88,7 +88,7 @@ export const loansApi = {
      * Get my active reservations
      */
     getMyReservations: async () => {
-        const response = await api.get<LoanQueue[]>('/loan-queue/my_reservations/')
+        const response = await api.get<LoanQueue[]>(`${BASE_URL}/loan-queue/my_reservations/`)
         return response.data
     }
 }

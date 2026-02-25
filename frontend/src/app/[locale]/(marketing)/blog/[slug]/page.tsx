@@ -88,11 +88,14 @@ export default function BlogPostDetail() {
                             <Badge className="bg-primary text-white border-none px-4 py-1.5 text-xs uppercase tracking-widest font-black shadow-lg shadow-primary/30">
                                 {typeof post.category === 'object' ? post.category?.name : post.category_name || "General"}
                             </Badge>
-                            {post.tags?.map(tag => (
-                                <Badge key={tag.id} variant="outline" className="text-white border-white/30 bg-black/30 backdrop-blur-sm px-3 font-medium">
-                                    #{tag.name}
-                                </Badge>
-                            ))}
+                            {post.tags?.map(tag => {
+                                if (typeof tag === 'number') return null;
+                                return (
+                                    <Badge key={tag.id} variant="outline" className="text-white border-white/30 bg-black/30 backdrop-blur-sm px-3 font-medium">
+                                        #{tag.name}
+                                    </Badge>
+                                );
+                            })}
                         </div>
 
                         <h1 className="text-4xl md:text-5xl lg:text-7xl font-black text-foreground leading-[1.1] mb-8 tracking-tighter drop-shadow-sm">

@@ -62,6 +62,8 @@ interface Book {
     publication_date: string | null
     is_premium: boolean
     created_at: string
+    cover_image: string | null
+    file: string | null
 }
 
 interface Author {

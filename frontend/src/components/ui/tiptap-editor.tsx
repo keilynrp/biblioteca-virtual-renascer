@@ -206,7 +206,7 @@ export function TiptapEditor({ content, onChange, placeholder = 'Empieza a escri
             <MenuBar editor={editor} />
             <EditorContent editor={editor} />
             <div className="bg-muted/30 px-4 py-2 border-t border-muted-foreground/10 text-[10px] text-muted-foreground flex justify-between items-center font-medium">
-                <span>{editor?.storage.smth?.words || 0} palabras</span>
+                <span>{(editor?.getText() || '').split(/\s+/).filter(Boolean).length} palabras</span>
                 <span className="opacity-60 italic">Autoguardado local activo</span>
             </div>
         </div>

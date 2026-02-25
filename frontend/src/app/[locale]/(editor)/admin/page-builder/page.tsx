@@ -98,13 +98,13 @@ export default function PageBuilderListPage() {
     const PAGE_TYPE_LABELS: Record<string, string> = {
         marketing: 'Marketing',
         dashboard: 'Dashboard',
-        custom:    'Landing personalizada',
+        custom: 'Landing personalizada',
     }
 
     const PREVIEW_PATHS: Record<string, string> = {
-        homepage:       '/',
-        about:          '/about',
-        contact:        '/contact',
+        homepage: '/',
+        about: '/about',
+        contact: '/contact',
         'dashboard-home': '/home',
     }
 
@@ -133,7 +133,7 @@ export default function PageBuilderListPage() {
                     <CardHeader>
                         <CardTitle className="text-base">Páginas disponibles</CardTitle>
                         <CardDescription>
-                            Haz clic en "Editar" para abrir el editor visual de una página.
+                            Haz clic en &quot;Editar&quot; para abrir el editor visual de una página.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>

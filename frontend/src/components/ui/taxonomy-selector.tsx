@@ -171,7 +171,7 @@ export function TaxonomySelector({
                                 ) : (
                                     <Plus className="h-4 w-4" />
                                 )}
-                                <span className="font-medium">Añadir "{searchQuery}"</span>
+                                <span className="font-medium">Añadir &quot;{searchQuery}&quot;</span>
                             </button>
                         </div>
                     )}

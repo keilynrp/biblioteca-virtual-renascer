@@ -14,6 +14,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Additional ignores:
     "jest.config.cjs",
+    "public/sw.js",
     "public/pdf-worker/**",
     "**/*.min.js",
     "**/*.min.mjs",

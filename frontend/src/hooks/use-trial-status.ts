@@ -10,13 +10,15 @@ export function useTrialStatus() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (!_hasHydrated || !isAuthenticated || user?.user_type === 'admin') {
+    if (!_hasHydrated) return;
+
+    if (!isAuthenticated || user?.user_type === 'admin') {
       setIsLoading(false)
       return
     }
     subscriptionsApi.getTrialStatus()
       .then(setTrialStatus)
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setIsLoading(false))
   }, [_hasHydrated, isAuthenticated, user?.user_type])
 

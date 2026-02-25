@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from './ui/button';
 import {
-  Loader2,
   Maximize2,
   Moon,
   Sun,
@@ -25,8 +24,6 @@ interface PDFViewerNativeProps {
   initialPage?: number;
   initialZoom?: number;
   totalPages?: number;
-  accessToken?: string;
-  userRole?: string;
   onProgressUpdate?: (progress: {
     currentPage: number;
     totalPages: number;
@@ -229,8 +226,8 @@ export function PDFViewerNative({
                     if (page >= 1 && (!numPages || page <= numPages)) setCurrentPage(page);
                   }}
                   className={`w-10 sm:w-14 px-1 py-1 text-xs text-center border rounded-md transition-colors ${isDarkMode
-                      ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500'
-                      : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                    ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500'
+                    : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
                     }`}
                   min={1}
                   max={numPages || undefined}

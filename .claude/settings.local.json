@@ -25,7 +25,8 @@
       "Bash(cd /d/bvs_framework/backend && DJANGO_SETTINGS_MODULE=config.settings.base /d/bvs_framework/.venv/Scripts/python.exe manage.py migrate pages 2>&1)",
       "Bash(cmd.exe:*)",
       "Bash(powershell.exe:*)",
-      "Bash(docker rm:*)"
+      "Bash(docker rm:*)",
+      "Bash(cd:*)"
     ]
   }
 }

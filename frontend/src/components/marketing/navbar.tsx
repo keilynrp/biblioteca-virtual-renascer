@@ -53,7 +53,7 @@ export function Navbar() {
                             <Link href="/about" className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors">
                                 Acerca de
                             </Link>
-                            <Link href="/blog" className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors">
+                            <Link href="/es/blog" className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors">
                                 Noticias
                             </Link>
                             <Link href="/pricing" className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors">

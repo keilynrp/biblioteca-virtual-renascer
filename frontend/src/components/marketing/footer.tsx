@@ -52,7 +52,7 @@ export function Footer() {
                                 <ul className="space-y-2 text-base">
                                     <li><Link href="/" className="hover:text-[#00576F]">Inicio</Link></li>
                                     <li><Link href="/about" className="hover:text-[#00576F]">Acerca de</Link></li>
-                                    <li><Link href="/blog" className="hover:text-[#00576F]">Noticias</Link></li>
+                                    <li><Link href="/es/blog" className="hover:text-[#00576F]">Noticias</Link></li>
                                     <li><Link href="/pricing" className="hover:text-[#00576F]">Precios</Link></li>
                                     <li><Link href="/contact" className="hover:text-[#00576F]">Contacto</Link></li>
                                 </ul>

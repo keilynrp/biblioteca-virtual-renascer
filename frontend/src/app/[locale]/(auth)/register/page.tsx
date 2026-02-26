@@ -15,7 +15,6 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 import api from "@/lib/api"
 import { useRouter } from "next/navigation"
@@ -101,76 +100,166 @@ export default function RegisterPage() {
     }
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Create an account</CardTitle>
-                <CardDescription>Enter your details to register</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <FormField
-                            control={form.control}
-                            name="username"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Username</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="johndoe" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="email"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Email</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="m@example.com" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="password"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Password</FormLabel>
-                                    <FormControl>
-                                        <Input type="password" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="confirmPassword"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Confirm Password</FormLabel>
-                                    <FormControl>
-                                        <Input type="password" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        {error && <p className="text-sm text-red-500">{error}</p>}
-                        <Button type="submit" className="w-full" disabled={isLoading}>
-                            {isLoading ? "Creando cuenta..." : "Crear cuenta"}
-                        </Button>
-                    </form>
-                </Form>
-                <div className="mt-4 text-center text-sm">
-                    Already have an account? <Link href="/login" className="underline">Login</Link>
+        <div className="w-full max-w-screen-2xl rounded-sm border border-slate-200 bg-white shadow-default">
+            <div className="flex flex-wrap items-center">
+                {/* Left Column - Branding (Hidden on Mobile) */}
+                <div className="hidden w-full lg:block lg:w-1/2">
+                    <div className="px-10 py-17.5 text-center sm:px-12.5 xl:px-17.5">
+                        <Link className="mb-5.5 inline-block" href="/">
+                            <div className="flex items-center justify-center gap-2">
+                                <div className="h-8 w-8 rounded bg-primary flex items-center justify-center">
+                                    <span className="text-white font-bold text-xl">R</span>
+                                </div>
+                                <span className="text-2xl font-bold text-slate-900">Renascer</span>
+                            </div>
+                        </Link>
+                        <p className="2xl:px-20 text-slate-500 xl:px-10 pb-10">
+                            Únete hoy a la Biblioteca Virtual Renascer y expande tus horizontes.
+                        </p>
+                        <span className="mt-15 inline-block">
+                            <svg width="350" height="350" viewBox="0 0 350 350" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="25" y="25" width="300" height="300" rx="20" fill="#F1F5F9" />
+                                <path d="M125 150h100v20H125v-20zm0 40h100v20H125v-20zm0 40h60v20h-60v-20z" fill="#3C50E0" opacity="0.5" />
+                                <circle cx="175" cy="110" r="30" fill="#3C50E0" />
+                            </svg>
+                        </span>
+                    </div>
                 </div>
-            </CardContent>
-        </Card>
+
+                {/* Right Column - Form */}
+                <div className="w-full border-slate-200 lg:w-1/2 lg:border-l-2">
+                    <div className="w-full p-4 sm:p-12.5 xl:p-17.5">
+                        <span className="mb-1.5 block font-medium text-slate-500">Crea tu cuenta</span>
+                        <h2 className="mb-9 text-2xl font-bold text-slate-900 sm:text-title-xl2">
+                            Registro
+                        </h2>
+
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                                <FormField
+                                    control={form.control}
+                                    name="username"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="mb-2.5 block font-medium text-slate-900">Username</FormLabel>
+                                            <FormControl>
+                                                <div className="relative">
+                                                    <Input
+                                                        placeholder="Ingresa tu username"
+                                                        className="w-full rounded-lg border border-slate-200 bg-transparent py-6 pl-6 pr-10 text-slate-900 outline-none focus:border-primary focus-visible:shadow-none"
+                                                        {...field}
+                                                    />
+                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+                                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                        </svg>
+                                                    </span>
+                                                </div>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="email"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="mb-2.5 block font-medium text-slate-900">Email</FormLabel>
+                                            <FormControl>
+                                                <div className="relative">
+                                                    <Input
+                                                        placeholder="tucorreo@ejemplo.com"
+                                                        className="w-full rounded-lg border border-slate-200 bg-transparent py-6 pl-6 pr-10 text-slate-900 outline-none focus:border-primary focus-visible:shadow-none"
+                                                        {...field}
+                                                    />
+                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+                                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                        </svg>
+                                                    </span>
+                                                </div>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="password"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="mb-2.5 block font-medium text-slate-900">Contraseña</FormLabel>
+                                            <FormControl>
+                                                <div className="relative">
+                                                    <Input
+                                                        type="password"
+                                                        placeholder="Ingresa tu contraseña"
+                                                        className="w-full rounded-lg border border-slate-200 bg-transparent py-6 pl-6 pr-10 text-slate-900 outline-none focus:border-primary focus-visible:shadow-none"
+                                                        {...field}
+                                                    />
+                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+                                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                        </svg>
+                                                    </span>
+                                                </div>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="confirmPassword"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="mb-2.5 block font-medium text-slate-900">Confirmar Contraseña</FormLabel>
+                                            <FormControl>
+                                                <div className="relative">
+                                                    <Input
+                                                        type="password"
+                                                        placeholder="Confirma tu contraseña"
+                                                        className="w-full rounded-lg border border-slate-200 bg-transparent py-6 pl-6 pr-10 text-slate-900 outline-none focus:border-primary focus-visible:shadow-none"
+                                                        {...field}
+                                                    />
+                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+                                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                        </svg>
+                                                    </span>
+                                                </div>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                {error && <p className="text-sm font-medium text-red-500">{error}</p>}
+
+                                <div className="mb-5">
+                                    <Button
+                                        type="submit"
+                                        className="w-full cursor-pointer rounded-lg border border-primary bg-primary py-6 text-white transition hover:bg-opacity-90"
+                                        disabled={isLoading}
+                                    >
+                                        {isLoading ? "Creando cuenta..." : "Crear Cuenta"}
+                                    </Button>
+                                </div>
+                            </form>
+                        </Form>
+
+                        <div className="mt-6 text-center">
+                            <p className="font-medium text-slate-500">
+                                ¿Ya tienes una cuenta?{" "}
+                                <Link href="/login" className="text-primary hover:underline">
+                                    Inicia Sesión
+                                </Link>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     )
 }

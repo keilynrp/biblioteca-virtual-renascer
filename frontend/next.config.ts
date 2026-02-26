@@ -15,9 +15,6 @@ const nextConfig: NextConfig = {
   // typedRoutes disabled - requires full route typing across codebase
   // typedRoutes: true,
   // Note: Turbopack is enabled for dev via `next dev --turbo` in package.json.
-  // Do NOT add `turbopack: {}` here — it enables Turbopack for `next build`
-  // too, which breaks @ducanh2912/next-pwa (uses workbox-webpack-plugin).
-
   // Proxy all /api/* requests to the backend.
   // In Docker: API_INTERNAL_URL=http://backend:8000/api (inter-service)
   // Locally:   falls back to http://localhost:8000/api
@@ -27,8 +24,12 @@ const nextConfig: NextConfig = {
       process.env.API_INTERNAL_URL || 'http://localhost:8000/api';
     return [
       {
+        source: '/api/:path*/',
+        destination: `${backendUrl}/:path*/`,
+      },
+      {
         source: '/api/:path*',
-        destination: `${backendUrl}/:path*`,
+        destination: `${backendUrl}/:path*/`,
       },
     ];
   },

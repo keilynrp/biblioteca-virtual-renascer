@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { NotificationItem } from './notification-item'
 import type { Notification } from '@/types/notification'
+import { isImportantNotification } from '@/types/notification'
 
 interface NotificationDropdownProps {
     notifications: Notification[]
@@ -22,6 +23,14 @@ export function NotificationDropdown({
     onClose
 }: NotificationDropdownProps) {
     const hasUnread = notifications.some(n => !n.is_read)
+
+    const sortedNotifications = [...notifications].sort((a, b) => {
+        const aImportant = !a.is_read && isImportantNotification(a.type)
+        const bImportant = !b.is_read && isImportantNotification(b.type)
+        if (aImportant && !bImportant) return -1
+        if (!aImportant && bImportant) return 1
+        return 0
+    })
 
     return (
         <div className="w-80 bg-background border border-border rounded-lg shadow-lg">
@@ -65,7 +74,7 @@ export function NotificationDropdown({
                     </div>
                 ) : (
                     <div className="divide-y divide-border">
-                        {notifications.map((notification) => (
+                        {sortedNotifications.map((notification) => (
                             <NotificationItem
                                 key={notification.id}
                                 notification={notification}

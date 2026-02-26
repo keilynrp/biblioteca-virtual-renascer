@@ -15,3 +15,15 @@ export interface Notification {
 export interface NotificationUnreadCount {
     unread_count: number
 }
+
+// Map of notification types that are considered high-priority
+export const IMPORTANT_NOTIFICATION_TYPES = [
+    'loan_expiring',
+    'subscription_expiring',
+    'admin_announcement',
+    'trial_expiring'
+]
+
+export const isImportantNotification = (type: string): boolean => {
+    return IMPORTANT_NOTIFICATION_TYPES.includes(type)
+}

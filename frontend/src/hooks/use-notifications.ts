@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { notificationsApi } from '@/services/notificationsApi'
 import type { Notification } from '@/types/notification'
+import { isImportantNotification } from '@/types/notification'
+import { useToast } from '@/hooks/use-toast'
 
 const POLLING_INTERVAL = 30000 // 30 seconds
 
@@ -8,16 +10,39 @@ export function useNotifications() {
     const [notifications, setNotifications] = useState<Notification[]>([])
     const [unreadCount, setUnreadCount] = useState(0)
     const [isLoading, setIsLoading] = useState(true)
+    const { toast } = useToast()
+
+    const initialized = useRef(false)
+    const knownNotificationIds = useRef<Set<number>>(new Set())
 
     // Fetch recent notifications
     const fetchNotifications = useCallback(async () => {
         try {
             const data = await notificationsApi.getRecent()
+
+            data.forEach(n => {
+                if (
+                    initialized.current &&
+                    !knownNotificationIds.current.has(n.id) &&
+                    !n.is_read &&
+                    isImportantNotification(n.type)
+                ) {
+                    toast({
+                        title: "Aviso Importante",
+                        description: n.title,
+                        variant: "destructive",
+                        duration: 6000,
+                    })
+                }
+                knownNotificationIds.current.add(n.id)
+            })
+
+            initialized.current = true
             setNotifications(data)
         } catch (error) {
             console.error('Error fetching notifications:', error)
         }
-    }, [])
+    }, [toast])
 
     // Fetch unread count
     const fetchUnreadCount = useCallback(async () => {
@@ -85,14 +110,15 @@ export function useNotifications() {
         fetchUnreadCount()
     }, [fetchNotifications, fetchUnreadCount])
 
-    // Polling for unread count
+    // Polling for unread count and new notifications
     useEffect(() => {
         const interval = setInterval(() => {
+            fetchNotifications()
             fetchUnreadCount()
         }, POLLING_INTERVAL)
 
         return () => clearInterval(interval)
-    }, [fetchUnreadCount])
+    }, [fetchNotifications, fetchUnreadCount])
 
     return {
         notifications,

@@ -133,6 +133,7 @@ export default function DashboardLayout({
             { href: "/admin/books", label: "Administrar Libros", icon: getIconForUrl("/admin/books"), adminOnly: true },
             { href: "/admin/authors", label: "Administrar Autores", icon: getIconForUrl("/admin/authors"), adminOnly: true },
             { href: "/admin/categories", label: "Administrar Categorías", icon: getIconForUrl("/admin/categories"), adminOnly: true },
+            { href: "/admin/invoices", label: "Facturas", icon: getIconForUrl("/admin/invoices"), adminOnly: true },
             { href: "/plans", label: "Planes", icon: getIconForUrl("/plans") },
             { href: "/billing", label: "Billing", icon: getIconForUrl("/billing") },
             { href: "/institutions", label: "Instituciones", icon: getIconForUrl("/institutions"), adminOnly: true },

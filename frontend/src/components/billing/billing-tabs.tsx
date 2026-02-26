@@ -17,15 +17,15 @@ export function BillingTabs() {
                 </TabsTrigger>
                 <TabsTrigger value="address" className="gap-1.5">
                     <MapPin className="h-4 w-4 hidden sm:block" />
-                    Address
+                    Dirección
                 </TabsTrigger>
-                <TabsTrigger value="cards" className="gap-1.5">
+                <TabsTrigger value="payments" className="gap-1.5">
                     <Wallet className="h-4 w-4 hidden sm:block" />
-                    Cards
+                    Pagos
                 </TabsTrigger>
                 <TabsTrigger value="invoices" className="gap-1.5">
                     <FileText className="h-4 w-4 hidden sm:block" />
-                    Invoices
+                    Facturas
                 </TabsTrigger>
             </TabsList>
 
@@ -37,7 +37,7 @@ export function BillingTabs() {
                 <BillingAddressForm />
             </TabsContent>
 
-            <TabsContent value="cards">
+            <TabsContent value="payments">
                 <PaymentMethodsPanel />
             </TabsContent>
 

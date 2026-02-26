@@ -1,17 +1,18 @@
 import logging
 from decimal import Decimal
-from django.db.models import Sum, Q
+from django.db.models import Sum, Count, Q, Avg, F
 from django.http import HttpResponse
 from django.utils import timezone
 from rest_framework import generics, permissions, status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
 from .models import BillingProfile, StoredPaymentMethod, Invoice
-from .serializers import BillingProfileSerializer, StoredPaymentMethodSerializer, InvoiceSerializer
-from .services.stripe_service import StripeService
+from .serializers import BillingProfileSerializer, StoredPaymentMethodSerializer, InvoiceSerializer, AdminInvoiceSerializer
+from .services.stripe_service import StripeService, STRIPE_CONFIGURED
 
 logger = logging.getLogger(__name__)
 
@@ -45,10 +46,24 @@ class SetupIntentView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
+        if not STRIPE_CONFIGURED:
+            return Response(
+                {'detail': 'Stripe is not configured. Please set a valid STRIPE_SECRET_KEY.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
         profile = _get_or_create_billing_profile(request.user)
         try:
             StripeService.get_or_create_customer(profile, request.user)
             result = StripeService.create_setup_intent(profile.stripe_customer_id)
+            
+            if not result.get('client_secret'):
+                logger.error(f'SetupIntent missing client_secret for user {request.user}')
+                return Response(
+                    {'detail': 'Stripe backend failed to provide a setup secret.'}, 
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+                
             return Response(result, status=status.HTTP_201_CREATED)
         except Exception as e:
             logger.error(f'SetupIntent error for user {request.user}: {e}')
@@ -68,6 +83,12 @@ class PaymentMethodDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def delete(self, request, pk):
+        if not STRIPE_CONFIGURED:
+            return Response(
+                {'detail': 'Stripe is not configured.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
         try:
             method = StoredPaymentMethod.objects.get(pk=pk, user=request.user)
         except StoredPaymentMethod.DoesNotExist:
@@ -87,6 +108,12 @@ class PaymentMethodSetDefaultView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk):
+        if not STRIPE_CONFIGURED:
+            return Response(
+                {'detail': 'Stripe is not configured.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
         try:
             method = StoredPaymentMethod.objects.get(pk=pk, user=request.user)
         except StoredPaymentMethod.DoesNotExist:
@@ -244,3 +271,81 @@ class RefundView(APIView):
 
         serializer = InvoiceSerializer(invoice)
         return Response(serializer.data)
+
+
+# ─── Admin endpoints ────────────────────────────────────────────────
+
+class AdminInvoicePagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+
+class AdminInvoiceListView(generics.ListAPIView):
+    """List ALL invoices across all clients. Admin only."""
+    permission_classes = [permissions.IsAdminUser]
+    serializer_class = AdminInvoiceSerializer
+    pagination_class = AdminInvoicePagination
+
+    def get_queryset(self):
+        qs = Invoice.objects.select_related('user', 'transaction').all()
+
+        status_param = self.request.query_params.get('status')
+        if status_param:
+            qs = qs.filter(status=status_param.upper())
+
+        search = self.request.query_params.get('search', '').strip()
+        if search:
+            qs = qs.filter(
+                Q(invoice_number__icontains=search)
+                | Q(description__icontains=search)
+                | Q(billing_name__icontains=search)
+                | Q(user__email__icontains=search)
+                | Q(user__username__icontains=search)
+            )
+
+        customer = self.request.query_params.get('customer', '').strip()
+        if customer:
+            qs = qs.filter(
+                Q(user__username__icontains=customer)
+                | Q(user__email__icontains=customer)
+                | Q(billing_name__icontains=customer)
+            )
+
+        ordering = self.request.query_params.get('ordering', '-issued_at')
+        allowed = {'issued_at', '-issued_at', 'amount', '-amount', 'invoice_number', '-invoice_number'}
+        if ordering in allowed:
+            qs = qs.order_by(ordering)
+
+        return qs
+
+
+class AdminInvoiceSummaryView(APIView):
+    """Global invoice summary stats for admin dashboard."""
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request):
+        qs = Invoice.objects.all()
+        total_paid = qs.filter(status=Invoice.STATUS_PAID).aggregate(
+            s=Sum('amount')
+        )['s'] or Decimal('0')
+        total_refunded = qs.filter(status=Invoice.STATUS_REFUNDED).aggregate(
+            s=Sum('amount')
+        )['s'] or Decimal('0')
+        total_void = qs.filter(status=Invoice.STATUS_VOID).aggregate(
+            s=Sum('amount')
+        )['s'] or Decimal('0')
+        invoice_count = qs.count()
+        paid_count = qs.filter(status=Invoice.STATUS_PAID).count()
+        refunded_count = qs.filter(status=Invoice.STATUS_REFUNDED).count()
+        void_count = qs.filter(status=Invoice.STATUS_VOID).count()
+
+        return Response({
+            'total_paid': str(total_paid),
+            'total_refunded': str(total_refunded),
+            'total_void': str(total_void),
+            'invoice_count': invoice_count,
+            'paid_count': paid_count,
+            'refunded_count': refunded_count,
+            'void_count': void_count,
+        })

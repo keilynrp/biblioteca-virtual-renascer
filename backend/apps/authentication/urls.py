@@ -5,15 +5,17 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from .views import (
-    RegisterView, 
-    UserProfileView, 
-    get_user_profile, 
-    ChangePasswordView, 
+    RegisterView,
+    UserProfileView,
+    get_user_profile,
+    ChangePasswordView,
     UserViewSet,
     PasswordPolicyView,
     ForcePasswordResetView,
     UsersPasswordStatusView,
-    CheckPasswordExpirationView
+    CheckPasswordExpirationView,
+    OnboardingView,
+    OnboardingOptionsView,
 )
 from rest_framework.routers import DefaultRouter
 from django.urls import include
@@ -30,6 +32,10 @@ urlpatterns = [
     path('user/update/', UserProfileView.as_view(), name='user_profile_update'),
     path('password/change/', ChangePasswordView.as_view(), name='change_password'),
     
+    # Onboarding
+    path('onboarding/', OnboardingView.as_view(), name='onboarding'),
+    path('onboarding/options/', OnboardingOptionsView.as_view(), name='onboarding_options'),
+
     # Password Policy endpoints
     path('password-policy/', PasswordPolicyView.as_view(), name='password_policy'),
     path('password-policy/force-reset/', ForcePasswordResetView.as_view(), name='force_password_reset'),

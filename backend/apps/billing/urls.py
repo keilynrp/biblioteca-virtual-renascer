@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # ── Client endpoints ──
     path('profile/', views.BillingProfileView.as_view(), name='billing-profile'),
     path('setup-intent/', views.SetupIntentView.as_view(), name='billing-setup-intent'),
     path('payment-methods/', views.PaymentMethodListView.as_view(), name='billing-payment-methods'),
@@ -11,4 +12,8 @@ urlpatterns = [
     path('invoices/summary/', views.InvoiceSummaryView.as_view(), name='billing-invoices-summary'),
     path('invoices/<uuid:pk>/download/', views.InvoiceDownloadView.as_view(), name='billing-invoice-download'),
     path('invoices/<uuid:pk>/refund/', views.RefundView.as_view(), name='billing-invoice-refund'),
+
+    # ── Admin endpoints ──
+    path('admin/invoices/', views.AdminInvoiceListView.as_view(), name='admin-invoices'),
+    path('admin/invoices/summary/', views.AdminInvoiceSummaryView.as_view(), name='admin-invoices-summary'),
 ]

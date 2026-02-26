@@ -60,13 +60,18 @@ export default function LoginPage() {
             const userResponse = await api.get("/auth/user/")
 
             // Step 4: Update with complete user data
-            login(userResponse.data, access, refresh)
+            const userData = userResponse.data
+            login(userData, access, refresh)
 
             // Step 5: Show success message
             showSuccess('Inicio de sesión exitoso')
 
-            // Step 6: Redirect to home dashboard
-            router.push("/home")
+            // Step 6: Redirect — onboarding if not completed, otherwise home
+            if (!userData.onboarding_completed && !userData.is_staff) {
+                router.push("/onboarding")
+            } else {
+                router.push("/home")
+            }
 
         } catch (err) {
             handleApiError(err, 'Credenciales inválidas. Por favor, intenta nuevamente.')

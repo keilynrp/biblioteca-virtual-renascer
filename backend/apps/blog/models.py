@@ -39,10 +39,10 @@ class Post(models.Model):
 
     title = models.CharField(max_length=200)
     slug = models.SlugField(max_length=250, unique=True, blank=True)
-    description = models.TextField(help_text="Brief summary for list views")
-    content = models.TextField()
+    description = models.TextField(blank=True, null=True, help_text="Brief summary for list views")
+    content = models.TextField(blank=True, null=True)
     featured_image = models.ImageField(upload_to='blog/images/', blank=True, null=True)
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='posts')
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='posts')
     tags = models.ManyToManyField(Tag, blank=True, related_name='posts')
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='blog_posts')
     

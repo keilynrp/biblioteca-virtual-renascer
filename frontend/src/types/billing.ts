@@ -54,3 +54,25 @@ export interface RefundRequest {
     amount?: number
     reason: string
 }
+
+export interface AdminInvoice extends Invoice {
+    customer_name: string
+    customer_email: string
+}
+
+export interface AdminInvoiceSummary {
+    total_paid: string
+    total_refunded: string
+    total_void: string
+    invoice_count: number
+    paid_count: number
+    refunded_count: number
+    void_count: number
+}
+
+export interface PaginatedResponse<T> {
+    count: number
+    next: string | null
+    previous: string | null
+    results: T[]
+}

@@ -41,3 +41,36 @@ class InvoiceSerializer(serializers.ModelSerializer):
             return obj.transaction.subscription.plan.name
         except AttributeError:
             return None
+
+
+class AdminInvoiceSerializer(serializers.ModelSerializer):
+    """Extended invoice serializer for admin views — includes customer info."""
+    plan_name = serializers.SerializerMethodField()
+    customer_name = serializers.SerializerMethodField()
+    customer_email = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Invoice
+        fields = [
+            'id', 'invoice_number', 'status', 'amount', 'currency',
+            'description', 'billing_name', 'billing_address',
+            'stripe_refund_id', 'issued_at', 'refunded_at', 'plan_name',
+            'customer_name', 'customer_email',
+        ]
+        read_only_fields = fields
+
+    def get_plan_name(self, obj) -> str | None:
+        try:
+            return obj.transaction.subscription.plan.name
+        except AttributeError:
+            return None
+
+    def get_customer_name(self, obj) -> str:
+        if obj.billing_name:
+            return obj.billing_name
+        u = obj.user
+        full = f"{u.first_name} {u.last_name}".strip()
+        return full or u.username
+
+    def get_customer_email(self, obj) -> str:
+        return obj.user.email

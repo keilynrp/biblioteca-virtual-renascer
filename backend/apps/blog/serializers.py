@@ -63,20 +63,41 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
     Serializer for creating and updating posts.
     Handles primary keys for category and tags.
     """
+    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), required=False, allow_null=True)
+    tags = serializers.PrimaryKeyRelatedField(many=True, queryset=Tag.objects.all(), required=False)
+    
     class Meta:
         model = Post
         fields = ('id', 'title', 'slug', 'description', 'content', 'featured_image', 
                   'category', 'tags', 'status', 'published_at')
         extra_kwargs = {
             'slug': {'required': False},
+            'description': {'required': False, 'allow_null': True, 'allow_blank': True},
+            'content': {'required': False, 'allow_null': True, 'allow_blank': True},
+            'status': {'required': False},
             'published_at': {'required': False, 'allow_null': True}
         }
 
+    def to_internal_value(self, data):
+        """Aggressively handle empty strings from FormData."""
+        data = data.copy() if hasattr(data, 'copy') else dict(data)
+        
+        # Clean up all fields that might be empty strings
+        for field in ['category', 'description', 'content', 'featured_image', 'published_at', 'status']:
+            if field in data and data[field] == '':
+                data[field] = None
+                
+        # Many-to-Many special case
+        if 'tags' in data and (data['tags'] == '' or data['tags'] == '[]'):
+            data['tags'] = []
+            
+        return super().to_internal_value(data)
+
     def create(self, validated_data):
         if not validated_data.get('slug'):
-            validated_data['slug'] = slugify(validated_data['name']) if 'name' in validated_data else slugify(validated_data['title'])
+            validated_data['slug'] = slugify(validated_data['title'])
         
-        # Auto-assign author if not provided (should be current user)
+        # Auto-assign author if not provided
         if 'author' not in validated_data:
             request = self.context.get('request')
             if request and request.user:

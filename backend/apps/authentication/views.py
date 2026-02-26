@@ -9,14 +9,15 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth import get_user_model
 from django.utils.decorators import method_decorator
 from .serializers import (
-    RegisterSerializer, 
-    UserSerializer, 
+    RegisterSerializer,
+    UserSerializer,
     ChangePasswordSerializer,
     PasswordPolicySerializer,
     ForcePasswordResetSerializer,
-    UserPasswordStatusSerializer
+    UserPasswordStatusSerializer,
+    OnboardingSerializer,
 )
-from .models import PasswordPolicy
+from .models import PasswordPolicy, User as UserModel
 from rest_framework_simplejwt.views import TokenObtainPairView
 from apps.core.decorators import (
     rate_limit_register,
@@ -131,6 +132,61 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['institution']
     search_fields = ['username', 'email', 'first_name', 'last_name']
+
+
+# =============================================================================
+# ONBOARDING VIEWS
+# =============================================================================
+
+class OnboardingView(APIView):
+    """Save multi-step onboarding data for the authenticated user."""
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def post(self, request):
+        serializer = OnboardingSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.update(request.user, serializer.validated_data)
+        return Response(
+            UserSerializer(request.user, context={'request': request}).data,
+            status=status.HTTP_200_OK,
+        )
+
+
+class OnboardingOptionsView(APIView):
+    """Return all selectable options for the onboarding form."""
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request):
+        from apps.content.models import Category
+        from apps.institutions.models import Institution
+
+        categories = list(
+            Category.objects.values('id', 'name', 'slug', 'description').order_by('name')
+        )
+        institutions = list(
+            Institution.objects.values('id', 'name', 'code').order_by('name')
+        )
+        user_types = [
+            {'value': choice[0], 'label': str(choice[1])}
+            for choice in UserModel.UserType.choices
+            if choice[0] not in ('admin', 'moderator', 'content_manager')
+        ]
+        age_ranges = [
+            {'value': '13-17', 'label': '13 – 17 años'},
+            {'value': '18-24', 'label': '18 – 24 años'},
+            {'value': '25-34', 'label': '25 – 34 años'},
+            {'value': '35-44', 'label': '35 – 44 años'},
+            {'value': '45-54', 'label': '45 – 54 años'},
+            {'value': '55-64', 'label': '55 – 64 años'},
+            {'value': '65+', 'label': '65+ años'},
+        ]
+
+        return Response({
+            'categories': categories,
+            'institutions': institutions,
+            'user_types': user_types,
+            'age_ranges': age_ranges,
+        })
 
 
 # =============================================================================

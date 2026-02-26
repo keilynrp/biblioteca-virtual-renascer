@@ -9,6 +9,11 @@ interface User {
     institution_id?: number;
     bio?: string;
     phone?: string;
+    onboarding_completed?: boolean;
+    age_range?: string;
+    preferences?: Record<string, any>;
+    first_name?: string;
+    last_name?: string;
 }
 
 interface AuthState {

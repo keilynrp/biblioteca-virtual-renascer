@@ -3,6 +3,9 @@ import os
 
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
+_key = stripe.api_key or ''
+STRIPE_CONFIGURED = bool(_key and 'your' not in _key.lower())
+
 
 class StripeService:
 

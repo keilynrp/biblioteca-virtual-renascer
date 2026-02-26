@@ -30,6 +30,9 @@ class User(AbstractUser):
     two_factor_enabled = models.BooleanField(default=False)
     trial_end_date = models.DateTimeField(null=True, blank=True, verbose_name=_('Fin del período de prueba'))
     
+    onboarding_completed = models.BooleanField(default=False)
+    age_range = models.CharField(max_length=20, blank=True, help_text="e.g. 18-24, 25-34")
+
     # Password expiration fields
     password_changed_at = models.DateTimeField(null=True, blank=True)
     force_password_change = models.BooleanField(default=False)

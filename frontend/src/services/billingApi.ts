@@ -1,5 +1,9 @@
 import api from '@/lib/api'
-import type { BillingProfile, StoredPaymentMethod, Invoice, InvoiceSummary, SetupIntentResponse, RefundRequest } from '@/types/billing'
+import type {
+    BillingProfile, StoredPaymentMethod, Invoice, InvoiceSummary,
+    SetupIntentResponse, RefundRequest,
+    AdminInvoice, AdminInvoiceSummary, PaginatedResponse,
+} from '@/types/billing'
 import { useAuthStore } from '@/store/authStore'
 
 export const billingApi = {
@@ -43,5 +47,22 @@ export const billingApi = {
 
     refundInvoice(id: string, data: RefundRequest): Promise<Invoice> {
         return api.post(`/billing/invoices/${id}/refund/`, data).then(r => r.data)
+    },
+
+    // ── Admin endpoints ──
+
+    getAdminInvoices(params?: {
+        status?: string
+        search?: string
+        customer?: string
+        ordering?: string
+        page?: number
+        page_size?: number
+    }): Promise<PaginatedResponse<AdminInvoice>> {
+        return api.get('/billing/admin/invoices/', { params }).then(r => r.data)
+    },
+
+    getAdminInvoiceSummary(): Promise<AdminInvoiceSummary> {
+        return api.get('/billing/admin/invoices/summary/').then(r => r.data)
     },
 }

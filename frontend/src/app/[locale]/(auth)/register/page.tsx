@@ -19,6 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import Link from "next/link"
 import api from "@/lib/api"
 import { useRouter } from "next/navigation"
+import { useAuthStore } from "@/store/authStore"
 
 const formSchema = z.object({
     username: z.string().min(2),
@@ -32,7 +33,9 @@ const formSchema = z.object({
 
 export default function RegisterPage() {
     const router = useRouter()
+    const login = useAuthStore((state) => state.login)
     const [error, setError] = useState<string | null>(null)
+    const [isLoading, setIsLoading] = useState(false)
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -47,17 +50,36 @@ export default function RegisterPage() {
     async function onSubmit(values: z.infer<typeof formSchema>) {
         try {
             setError(null)
+            setIsLoading(true)
+
+            // 1. Register user
             await api.post("/auth/register/", {
                 username: values.username,
                 email: values.email,
                 password: values.password,
-                user_type: "student" // Default for now
+                confirm_password: values.confirmPassword,
+                first_name: values.username,
+                last_name: "",
+                user_type: "student",
             })
-            router.push("/login")
+
+            // 2. Auto-login
+            const loginRes = await api.post("/auth/login/", {
+                username: values.username,
+                password: values.password,
+            })
+            const { access, refresh } = loginRes.data
+
+            // 3. Fetch full user profile
+            const tempUser = { username: values.username, email: values.email, user_type: "student" }
+            login(tempUser, access, refresh)
+            const userRes = await api.get("/auth/user/")
+            login(userRes.data, access, refresh)
+
+            // 4. Redirect to onboarding
+            router.push("/onboarding")
         } catch (err: unknown) {
             console.error("Registration error:", err)
-
-            // Handle specific field errors from backend
             const error = err as { response?: { data?: Record<string, string[]> } }
             if (error.response?.data) {
                 const errors = error.response.data
@@ -68,11 +90,13 @@ export default function RegisterPage() {
                 } else if (errors.password) {
                     setError(`Password: ${errors.password[0]}`)
                 } else {
-                    setError("Registration failed. Please check your information.")
+                    setError("Error en el registro. Verifica tu información.")
                 }
             } else {
-                setError("Registration failed. Please try again.")
+                setError("Error en el registro. Intenta de nuevo.")
             }
+        } finally {
+            setIsLoading(false)
         }
     }
 
@@ -138,7 +162,9 @@ export default function RegisterPage() {
                             )}
                         />
                         {error && <p className="text-sm text-red-500">{error}</p>}
-                        <Button type="submit" className="w-full">Register</Button>
+                        <Button type="submit" className="w-full" disabled={isLoading}>
+                            {isLoading ? "Creando cuenta..." : "Crear cuenta"}
+                        </Button>
                     </form>
                 </Form>
                 <div className="mt-4 text-center text-sm">

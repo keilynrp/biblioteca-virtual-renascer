@@ -186,11 +186,18 @@ class BookDetailSerializer(serializers.ModelSerializer):
         return BookListSerializer(similar, many=True, context=self.context).data
 
     def to_internal_value(self, data):
-        """Override to handle empty string for publication_date before validation"""
-        # Convert empty string to None for publication_date before DRF tries to parse it
+        """Override to handle empty string for fields before validation"""
+        data = data.copy() if hasattr(data, 'copy') else dict(data)
+        
         if 'publication_date' in data and data['publication_date'] == '':
-            data = data.copy() if hasattr(data, 'copy') else dict(data)
             data['publication_date'] = None
+            
+        if 'author' in data and data['author'] == '':
+            data['author'] = None
+            
+        if 'category' in data and data['category'] == '':
+            data['category'] = None
+            
         return super().to_internal_value(data)
 
     def validate_publication_date(self, value):

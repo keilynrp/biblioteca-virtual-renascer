@@ -28,6 +28,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'username', 'email', 'user_type', 'first_name', 'last_name',
                   'avatar', 'bio', 'phone', 'date_of_birth', 'institution', 'institution_detail',
+                  'age_range', 'preferences', 'onboarding_completed',
                   'password_changed_at', 'force_password_change',
                   'password_expired', 'is_staff', 'is_superuser', 'password')
         read_only_fields = ('username', 'email', 'password_changed_at', 'password_expired', 'is_staff', 'is_superuser')
@@ -86,6 +87,45 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('confirm_password')
         return User.objects.create_user(**validated_data)
+
+class OnboardingSerializer(serializers.Serializer):
+    """Accepts the multi-step onboarding data and persists it on the user."""
+    first_name = serializers.CharField(required=False, allow_blank=True)
+    last_name = serializers.CharField(required=False, allow_blank=True)
+    user_type = serializers.ChoiceField(choices=User.UserType.choices, required=False)
+    age_range = serializers.CharField(required=False, allow_blank=True)
+    institution_id = serializers.IntegerField(required=False, allow_null=True)
+    preferred_categories = serializers.ListField(
+        child=serializers.IntegerField(), required=False, default=list
+    )
+
+    def update(self, user, validated_data):
+        if 'first_name' in validated_data:
+            user.first_name = validated_data['first_name']
+        if 'last_name' in validated_data:
+            user.last_name = validated_data['last_name']
+        if 'user_type' in validated_data:
+            user.user_type = validated_data['user_type']
+        if 'age_range' in validated_data:
+            user.age_range = validated_data['age_range']
+        if 'institution_id' in validated_data:
+            inst_id = validated_data['institution_id']
+            if inst_id:
+                try:
+                    user.institution = Institution.objects.get(pk=inst_id)
+                except Institution.DoesNotExist:
+                    pass
+            else:
+                user.institution = None
+
+        prefs = user.preferences or {}
+        if 'preferred_categories' in validated_data:
+            prefs['preferred_categories'] = validated_data['preferred_categories']
+        user.preferences = prefs
+        user.onboarding_completed = True
+        user.save()
+        return user
+
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)

@@ -13,9 +13,13 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { toast } from "@/hooks/use-toast"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, CreditCard, Loader2 } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '')
+const STRIPE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ''
+const IS_STRIPE_PLACEHOLDER = STRIPE_KEY === '' || STRIPE_KEY.includes('your_real_publishable_key')
+
+const stripePromise = loadStripe(STRIPE_KEY)
 
 const CARD_ELEMENT_OPTIONS = {
     style: {
@@ -116,8 +120,9 @@ export function AddPaymentMethodDialog({ open, onOpenChange, onAdded }: AddPayme
             try {
                 const { client_secret } = await billingApi.createSetupIntent()
                 setClientSecret(client_secret)
-            } catch {
-                toast({ title: "Error", description: "Could not initialize card setup.", variant: "destructive" })
+            } catch (err: any) {
+                const detail = err?.response?.data?.detail || "Could not initialize card setup."
+                toast({ title: "Error", description: detail, variant: "destructive" })
                 onOpenChange(false)
             } finally {
                 setLoadingIntent(false)
@@ -143,8 +148,31 @@ export function AddPaymentMethodDialog({ open, onOpenChange, onAdded }: AddPayme
                 </DialogHeader>
 
                 {loadingIntent ? (
-                    <div className="flex justify-center py-8">
-                        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Skeleton className="h-4 w-20" />
+                            <Skeleton className="h-12 w-full rounded-md" />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <Skeleton className="h-10 w-24" />
+                            <Skeleton className="h-10 w-24" />
+                        </div>
+                    </div>
+                ) : IS_STRIPE_PLACEHOLDER ? (
+                    <div className="flex flex-col items-center justify-center py-8 text-center space-y-4">
+                        <div className="h-12 w-12 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+                            <AlertCircle className="h-6 w-6 text-yellow-600 dark:text-yellow-500" />
+                        </div>
+                        <div className="space-y-1">
+                            <p className="font-semibold text-sm">Configuración incompleta</p>
+                            <p className="text-xs text-muted-foreground px-4">
+                                La clave pública de Stripe no está configurada correctamente. 
+                                Por favor, contacta al administrador.
+                            </p>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+                            Cerrar
+                        </Button>
                     </div>
                 ) : clientSecret ? (
                     <Elements stripe={stripePromise} options={{ clientSecret }}>
@@ -154,7 +182,24 @@ export function AddPaymentMethodDialog({ open, onOpenChange, onAdded }: AddPayme
                             onClose={() => onOpenChange(false)}
                         />
                     </Elements>
-                ) : null}
+                ) : (
+                    <div className="flex flex-col items-center justify-center py-8 text-center space-y-3">
+                        <div className="h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                            <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-500" />
+                        </div>
+                        <p className="text-sm font-medium">Error al inicializar</p>
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                                setClientSecret(null)
+                                handleOpen(true)
+                            }}
+                        >
+                            Reintentar
+                        </Button>
+                    </div>
+                )}
             </DialogContent>
         </Dialog>
     )

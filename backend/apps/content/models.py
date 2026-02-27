@@ -93,6 +93,9 @@ class Book(models.Model):
         default='manual'
     )
     external_url = models.URLField(blank=True, null=True)
+    publisher = models.CharField(max_length=255, blank=True, default='')
+    language = models.CharField(max_length=50, blank=True, default='')
+    published_year = models.PositiveIntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

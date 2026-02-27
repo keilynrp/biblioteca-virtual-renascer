@@ -15,6 +15,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.clickjacking import xframe_options_exempt, xframe_options_sameorigin
 from django.core.cache import cache
 from django.conf import settings
+from datetime import datetime
 from .models import (
     Book, Category, Author, Review, ReviewHelpful, Favorite, ReadingHistory, Reading,
     Bookmark, Highlight, Annotation
@@ -49,6 +50,8 @@ from apps.core.cache_utils import (
 from .recommendations import get_similar_books, get_recommended_for_user
 from .utils import get_pdf_page_count
 import logging
+from django.http import HttpResponse
+from .utils.import_export import BookImportExport
 
 logger = logging.getLogger(__name__)
 
@@ -820,6 +823,250 @@ def import_books_from_openlibrary(request):
         )
 
 
+@api_view(['POST'])
+@permission_classes([permissions.IsAdminUser])
+def import_books_from_doab(request):
+    """
+    Importa libros Open Access desde DOAB (Directory of Open Access Books).
+    Solo para administradores.
+
+    Body params:
+        - query: Búsqueda libre (opcional)
+        - subject: Materia/subject (opcional)
+        - publisher_id: UUID de editorial DOAB (opcional)
+        - limit: Número máximo de libros (default: 50, max: 200)
+        - download_pdfs: Descargar PDFs al servidor (default: false)
+    """
+    try:
+        import requests
+        import time
+        from collections import defaultdict
+        from datetime import datetime
+        from django.utils.text import slugify
+        from django.core.files.base import ContentFile
+        from django.db import transaction
+
+        DOAB_BASE_URL = 'https://directory.doabooks.org/rest'
+        DOAB_SITE_URL = 'https://directory.doabooks.org'
+
+        # Obtener parámetros
+        query = request.data.get('query', '').strip()
+        subject = request.data.get('subject', '').strip()
+        publisher_id = request.data.get('publisher_id', '').strip()
+        limit = min(int(request.data.get('limit', 50)), 200)
+        download_pdfs = request.data.get('download_pdfs', False)
+
+        if not query and not subject and not publisher_id:
+            return Response(
+                {'error': 'Debes proporcionar query, subject o publisher_id'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Build search query
+        if subject:
+            search_query = f'dc.subject:{subject}'
+        elif publisher_id:
+            search_query = f'oapen.relation.isPublishedBy:{publisher_id}'
+        else:
+            search_query = query
+
+        # Fetch from DOAB API
+        url = f'{DOAB_BASE_URL}/search'
+        params = {
+            'query': search_query,
+            'limit': limit,
+            'expand': 'metadata,bitstreams'
+        }
+
+        response = requests.get(url, params=params, timeout=30)
+        response.raise_for_status()
+        items = response.json()
+        if not isinstance(items, list):
+            items = []
+
+        imported_books = []
+        skipped_books = []
+        errors = []
+
+        for item in items[:limit]:
+            try:
+                # Parse metadata
+                meta = defaultdict(list)
+                for entry in item.get('metadata', []):
+                    meta[entry['key']].append(entry['value'])
+
+                title = meta.get('dc.title', [''])[0].strip()
+                if not title:
+                    errors.append({'status': 'error', 'reason': 'No title'})
+                    continue
+
+                slug = slugify(title)
+                if not slug:
+                    errors.append({'status': 'error', 'reason': 'Invalid slug', 'title': title})
+                    continue
+
+                # Check duplicates by DOI then slug
+                doi = meta.get('oapen.identifier.doi', [''])[0].strip() or None
+                if doi and Book.objects.filter(doi=doi).exists():
+                    skipped_books.append({'status': 'skipped', 'reason': 'DOI duplicado', 'title': title})
+                    continue
+
+                if Book.objects.filter(slug=slug).exists():
+                    skipped_books.append({'status': 'skipped', 'reason': 'Already exists', 'title': title})
+                    continue
+
+                # Author
+                author_names = (
+                    meta.get('dc.contributor.author', [])
+                    or meta.get('dc.contributor.editor', [])
+                    or meta.get('dc.creator', [])
+                )
+                author_name = author_names[0].strip() if author_names else 'Autor Desconocido'
+                author, _ = Author.objects.get_or_create(
+                    name=author_name,
+                    defaults={'bio': f'Información sobre {author_name}'}
+                )
+
+                # Category from subjects
+                subjects = meta.get('dc.subject', [])
+                category = None
+                if subjects:
+                    category_name = subjects[0].strip().title()
+                    category, _ = Category.objects.get_or_create(
+                        name=category_name,
+                        defaults={'description': f'Libros sobre {category_name}'}
+                    )
+
+                # Description
+                descriptions = meta.get('dc.description.abstract', [])
+                description = descriptions[0].strip() if descriptions else 'Sin descripción disponible.'
+
+                # Publisher and language
+                publishers = meta.get('dc.publisher', [])
+                publisher = publishers[0].strip() if publishers else ''
+                languages = meta.get('dc.language', [])
+                language = languages[0].strip() if languages else ''
+
+                # Publication date and year
+                date_issued = meta.get('dc.date.issued', [''])[0]
+                publication_date = None
+                published_year = None
+                if date_issued:
+                    try:
+                        year = int(date_issued[:4])
+                        published_year = year
+                        publication_date = datetime(year=year, month=1, day=1).date()
+                    except (ValueError, TypeError):
+                        pass
+
+                # Parse bitstreams for PDF and cover
+                external_url = None
+                cover_link = None
+                for bs in (item.get('bitstreams') or []):
+                    mime = bs.get('mimeType', '')
+                    link = bs.get('retrieveLink', '')
+                    if not link:
+                        continue
+                    if mime.startswith('image/') and cover_link is None:
+                        cover_link = f'{DOAB_SITE_URL}{link}'
+                    elif mime == 'application/pdf' and external_url is None:
+                        external_url = f'{DOAB_SITE_URL}{link}'
+
+                # Fallback for PDF
+                if external_url is None:
+                    for bs in (item.get('bitstreams') or []):
+                        mime = bs.get('mimeType', '')
+                        link = bs.get('retrieveLink', '')
+                        if link and not mime.startswith('image/'):
+                            external_url = f'{DOAB_SITE_URL}{link}'
+                            break
+
+                with transaction.atomic():
+                    book = Book.objects.create(
+                        title=title,
+                        slug=slug,
+                        author=author,
+                        category=category,
+                        description=description,
+                        publication_date=publication_date,
+                        published_year=published_year,
+                        publisher=publisher,
+                        language=language,
+                        is_premium=False,
+                        doi=doi,
+                        is_open_access=True,
+                        source='doab',
+                        external_url=external_url,
+                    )
+
+                # Download cover
+                if cover_link:
+                    try:
+                        cover_resp = requests.get(cover_link, timeout=10)
+                        if cover_resp.status_code == 200:
+                            content_type = cover_resp.headers.get('Content-Type', '')
+                            if content_type.startswith('image/'):
+                                ext = 'jpg'
+                                if 'png' in content_type:
+                                    ext = 'png'
+                                elif 'webp' in content_type:
+                                    ext = 'webp'
+                                filename = f'{book.slug}.{ext}'
+                                book.cover_image.save(filename, ContentFile(cover_resp.content), save=True)
+                    except Exception:
+                        pass
+
+                # Download PDF if requested
+                pdf_downloaded = False
+                if download_pdfs and external_url:
+                    try:
+                        pdf_resp = requests.get(external_url, timeout=60, stream=True)
+                        if pdf_resp.status_code == 200:
+                            # Limit to 50MB
+                            content_length = pdf_resp.headers.get('Content-Length')
+                            if content_length and int(content_length) > 50 * 1024 * 1024:
+                                logger.warning(f"PDF too large for {title[:60]}: {content_length} bytes")
+                            else:
+                                pdf_content = pdf_resp.content
+                                if len(pdf_content) <= 50 * 1024 * 1024:
+                                    book.file.save(f'{slug}.pdf', ContentFile(pdf_content), save=True)
+                                    pdf_downloaded = True
+                    except Exception as e:
+                        logger.warning(f"Failed to download PDF for {title[:60]}: {e}")
+
+                imported_books.append({
+                    'status': 'imported',
+                    'title': title,
+                    'pdf_downloaded': pdf_downloaded,
+                })
+                time.sleep(0.3 if download_pdfs else 0.2)
+
+            except Exception as e:
+                errors.append({'status': 'error', 'reason': str(e)})
+                continue
+
+        pdfs_downloaded = sum(1 for b in imported_books if b.get('pdf_downloaded'))
+
+        return Response({
+            'success': True,
+            'imported': len(imported_books),
+            'skipped': len(skipped_books),
+            'errors': len(errors),
+            'indexed': 0,
+            'pdfs_downloaded': pdfs_downloaded,
+            'total_books_in_db': Book.objects.count(),
+            'imported_titles': [b['title'] for b in imported_books[:10]],
+            'error_details': errors[:5] if errors else []
+        })
+
+    except Exception as e:
+        logger.error(f"Error in import_books_from_doab: {str(e)}", exc_info=True)
+        return Response(
+            {'error': 'Error al importar libros desde DOAB', 'detail': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
 @api_view(['GET'])
 @permission_classes([permissions.IsAdminUser])
 def get_import_stats(request):
@@ -1578,3 +1825,89 @@ def institutional_analytics(request):
         'total_pages_read': pages_read,
         'top_books': top_books_data
     })
+
+
+# =============================================================================
+# EXPORT / IMPORT VIEWS
+# =============================================================================
+
+class BookExportView(generics.GenericAPIView):
+    """
+    Export books to CSV or XLSX.
+    
+    GET /api/content/books/export/?export_format=csv|xlsx&ids=1,2,3
+    """
+    permission_classes = [permissions.IsAdminUser]
+    queryset = Book.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        format_type = request.query_params.get('export_format', 'csv').lower()
+        if format_type not in ['csv', 'xlsx']:
+            return Response({'error': 'Unsupported format. Use csv or xlsx.'}, status=400)
+
+        # Get the base queryset
+        queryset = self.get_queryset()
+        
+        # Apply selective ID filtering if provided
+        ids_param = request.query_params.get('ids')
+        if ids_param:
+            try:
+                # Convert comma-separated string to list of integers
+                book_ids = [int(id.strip()) for id in ids_param.split(',') if id.strip()]
+                if book_ids:
+                    queryset = queryset.filter(id__in=book_ids)
+            except ValueError:
+                return Response({'error': 'Invalid format for ids parameter. Expected comma-separated integers.'}, status=400)
+
+        # Allow continuing with potential empty queryset since the user might have selected invalid IDs
+        # or applied restrictive search filters
+
+        try:
+            content = BookImportExport.export_books(queryset, format_type, request=request)
+            
+            if format_type == 'csv':
+                content_type = 'text/csv; charset=utf-8'
+                extension = 'csv'
+            else:
+                content_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                extension = 'xlsx'
+
+            filename = f"catalogo_libros_{datetime.now().strftime('%Y%m%d')}.{extension}"
+            
+            response = HttpResponse(content, content_type=content_type)
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            return response
+
+        except Exception as e:
+            logger.error(f"Error exporting books: {str(e)}")
+            return Response({'error': f'Error al exportar: {str(e)}'}, status=500)
+
+
+class BookImportView(generics.GenericAPIView):
+    """
+    Import books from CSV or XLSX.
+    
+    POST /api/content/books/import/
+    Body: multipart/form-data with 'file' field
+    """
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request, *args, **kwargs):
+        file_obj = request.FILES.get('file')
+        if not file_obj:
+            return Response({'error': 'No se proporcionó ningún archivo.'}, status=400)
+
+        filename = file_obj.name.lower()
+        if filename.endswith('.csv'):
+            format_type = 'csv'
+        elif filename.endswith('.xlsx'):
+            format_type = 'xlsx'
+        else:
+            return Response({'error': 'Formato no soportado. Use .csv o .xlsx'}, status=400)
+
+        try:
+            result = BookImportExport.import_books(file_obj, format_type)
+            return Response(result, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Error importing books: {str(e)}")
+            return Response({'error': f'Error al importar: {str(e)}'}, status=500)

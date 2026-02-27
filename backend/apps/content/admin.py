@@ -3,7 +3,8 @@ from django.shortcuts import render, redirect
 from django.urls import path
 from django import forms
 from .models import Category, Author, Book, Bookmark, Highlight, Annotation, Review
-from .utils.import_books import import_books_from_csv
+from .utils.import_export import BookImportExport
+from django.http import HttpResponse
 
 
 @admin.register(Category)
@@ -23,12 +24,27 @@ class AuthorAdmin(admin.ModelAdmin):
 
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
-    list_display = ('title', 'author', 'category', 'is_premium', 'publication_date', 'created_at')
-    search_fields = ('title', 'description', 'isbn')
-    list_filter = ('category', 'author', 'is_premium', 'created_at')
+    list_display = ('title', 'author', 'category', 'is_premium', 'source', 'publication_date', 'created_at')
+    search_fields = ('title', 'description', 'isbn', 'doi', 'publisher')
+    list_filter = ('category', 'author', 'is_premium', 'source', 'is_open_access', 'created_at')
     prepopulated_fields = {'slug': ('title',)}
     ordering = ('-created_at',)
     date_hierarchy = 'created_at'
+    actions = ['export_as_csv', 'export_as_xlsx']
+
+    def export_as_csv(self, request, queryset):
+        content = BookImportExport.export_books(queryset, 'csv')
+        response = HttpResponse(content, content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="libros.csv"'
+        return response
+    export_as_csv.short_description = "Exportar seleccionados a CSV"
+
+    def export_as_xlsx(self, request, queryset):
+        content = BookImportExport.export_books(queryset, 'xlsx')
+        response = HttpResponse(content, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="libros.xlsx"'
+        return response
+    export_as_xlsx.short_description = "Exportar seleccionados a Excel (XLSX)"
 
     def get_urls(self):
         urls = super().get_urls()
@@ -39,17 +55,38 @@ class BookAdmin(admin.ModelAdmin):
 
     def import_csv(self, request):
         if request.method == "POST":
-            csv_file = request.FILES.get("csv_file")
-            if not csv_file or not csv_file.name.endswith('.csv'):
-                self.message_user(request, "Error: Debe subir un archivo CSV válido.", level=messages.ERROR)
+            import_file = request.FILES.get("csv_file")
+            if not import_file:
+                self.message_user(request, "Error: Debe subir un archivo válido.", level=messages.ERROR)
                 return redirect("..")
             
-            count, errors = import_books_from_csv(csv_file)
-            if errors:
-                for error in errors:
-                    self.message_user(request, error, level=messages.WARNING)
+            filename = import_file.name.lower()
+            if filename.endswith('.csv'):
+                format_type = 'csv'
+            elif filename.endswith('.xlsx'):
+                format_type = 'xlsx'
+            else:
+                self.message_user(request, "Error: Formato no soportado. Use .csv o .xlsx", level=messages.ERROR)
+                return redirect("..")
+
+            try:
+                result = BookImportExport.import_books(import_file, format_type)
+                count = result['imported']
+                skipped = result['skipped']
+                errors = result['errors']
+
+                if errors:
+                    for error in errors[:10]: # Limit errors shown
+                        self.message_user(request, error, level=messages.WARNING)
+                
+                msg = f"Importación finalizada: {count} nuevos, {skipped} omitidos (ya existen)."
+                if errors:
+                    msg += f" {len(errors)} errores encontrados."
+                
+                self.message_user(request, msg, level=messages.SUCCESS)
+            except Exception as e:
+                self.message_user(request, f"Error durante la importación: {str(e)}", level=messages.ERROR)
             
-            self.message_user(request, f"Éxito: Se han importado {count} libros correctamente.", level=messages.SUCCESS)
             return redirect("..")
         
         form = CsvImportForm()
@@ -61,14 +98,19 @@ class BookAdmin(admin.ModelAdmin):
             'fields': ('title', 'slug', 'author', 'category', 'description')
         }),
         ('Publication Details', {
-            'fields': ('publication_date', 'isbn'),
-            'description': 'La fecha de publicación es opcional. Déjala vacía si no está disponible.'
+            'fields': ('publication_date', 'published_year', 'isbn', 'publisher', 'language'),
+            'description': 'Todos los campos son opcionales.'
         }),
         ('Media', {
             'fields': ('cover_image', 'file')
         }),
         ('Access Control', {
             'fields': ('is_premium',)
+        }),
+        ('DOAB / Open Access', {
+            'fields': ('doi', 'is_open_access', 'source', 'external_url'),
+            'classes': ('collapse',),
+            'description': 'Campos relacionados con la importación desde DOAB y contenido Open Access.'
         }),
     )
 

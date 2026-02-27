@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { PageHeader } from "@/components/page-header"
 import { BookImportPanel } from "@/components/admin/book-import-panel"
+import { DoabImportPanel } from "@/components/admin/doab-import-panel"
 import { ImportStatsPanel } from "@/components/admin/import-stats-panel"
 import api from "@/lib/api"
 import { Loader2, Shield } from "lucide-react"
@@ -60,8 +61,11 @@ export default function AdminPage() {
             {/* Estadísticas */}
             <ImportStatsPanel />
 
-            {/* Panel de Importación */}
+            {/* Panel de Importación OpenLibrary */}
             <BookImportPanel />
+
+            {/* Panel de Importación DOAB */}
+            <DoabImportPanel />
         </div>
     )
 }

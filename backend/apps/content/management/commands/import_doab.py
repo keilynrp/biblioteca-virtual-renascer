@@ -263,12 +263,20 @@ class Command(BaseCommand):
         descriptions = meta.get('dc.description.abstract', [])
         description = descriptions[0].strip() if descriptions else 'Sin descripcion disponible.'
 
-        # Publication date
+        # Publisher and language
+        publishers = meta.get('dc.publisher', [])
+        publisher = publishers[0].strip() if publishers else ''
+        languages = meta.get('dc.language', [])
+        language = languages[0].strip() if languages else ''
+
+        # Publication date and year
         date_issued = meta.get('dc.date.issued', [''])[0]
         publication_date = None
+        published_year = None
         if date_issued:
             try:
                 year = int(date_issued[:4])
+                published_year = year
                 publication_date = datetime(year=year, month=1, day=1).date()
             except (ValueError, TypeError):
                 pass
@@ -303,6 +311,9 @@ class Command(BaseCommand):
                 category=category,
                 description=description,
                 publication_date=publication_date,
+                published_year=published_year,
+                publisher=publisher,
+                language=language,
                 is_premium=False,
                 doi=doi,
                 is_open_access=True,

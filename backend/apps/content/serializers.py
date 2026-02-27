@@ -31,7 +31,7 @@ class BookListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Book
-        fields = ('id', 'title', 'slug', 'description', 'author', 'category', 'cover_image', 'is_premium', 'publication_date', 'isbn', 'created_at')
+        fields = ('id', 'title', 'slug', 'description', 'author', 'category', 'cover_image', 'is_premium', 'publication_date', 'isbn', 'is_open_access', 'source', 'language', 'published_year', 'created_at')
 
     def get_cover_image(self, obj):
         if obj.cover_image:
@@ -67,12 +67,21 @@ class BookDetailSerializer(serializers.ModelSerializer):
             'id', 'title', 'slug', 'description', 'author', 'author_detail',
             'category', 'category_detail', 'cover_image', 'cover_image_upload',
             'file', 'file_upload', 'publication_date',
-            'isbn', 'is_premium', 'average_rating', 'review_count', 'favorite_count',
+            'isbn', 'is_premium', 'doi', 'is_open_access', 'source', 'external_url',
+            'publisher', 'language', 'published_year',
+            'average_rating', 'review_count', 'favorite_count',
             'user_has_favorited', 'user_review', 'user_reading_status', 'similar_books'
         )
         read_only_fields = ('slug',)
         extra_kwargs = {
-            'publication_date': {'required': False, 'allow_null': True}
+            'publication_date': {'required': False, 'allow_null': True},
+            'doi': {'required': False, 'allow_blank': True},
+            'is_open_access': {'required': False},
+            'source': {'required': False},
+            'external_url': {'required': False, 'allow_blank': True, 'allow_null': True},
+            'publisher': {'required': False, 'allow_blank': True},
+            'language': {'required': False, 'allow_blank': True},
+            'published_year': {'required': False, 'allow_null': True},
         }
 
     def get_cover_image(self, obj):

@@ -7,6 +7,7 @@ import api from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
     Table,
     TableBody,
@@ -39,7 +40,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { BookOpen, Plus, Search, MoreVertical, Edit, Trash2, Eye, Download, FileSpreadsheet, FileText } from "lucide-react"
+import { BookOpen, Plus, Search, MoreVertical, Edit, Trash2, Eye, Download, FileSpreadsheet, FileText, Upload } from "lucide-react"
 import Link from "next/link"
 import { YearPicker } from "@/components/ui/year-picker"
 import { TaxonomySelector } from "@/components/ui/taxonomy-selector"
@@ -61,6 +62,13 @@ interface Book {
     isbn: string | null
     publication_date: string | null
     is_premium: boolean
+    doi: string | null
+    is_open_access: boolean
+    source: string
+    external_url: string | null
+    publisher: string
+    language: string
+    published_year: number | null
     created_at: string
     cover_image: string | null
     file: string | null
@@ -90,6 +98,12 @@ interface BookFormData {
     is_premium: boolean
     cover_image: File | null
     file: File | null
+    publisher: string
+    language: string
+    doi: string
+    external_url: string
+    source: string
+    is_open_access: boolean
 }
 
 function AdminBooksPageContent() {
@@ -100,6 +114,10 @@ function AdminBooksPageContent() {
     const [searchQuery, setSearchQuery] = useState("")
     const [filteredBooks, setFilteredBooks] = useState<Book[]>([])
     const [isDialogOpen, setIsDialogOpen] = useState(false)
+    const [selectedBooks, setSelectedBooks] = useState<Set<number>>(new Set())
+    const [isExportDialogOpen, setIsExportDialogOpen] = useState(false)
+    const [exportFormat, setExportFormat] = useState<"csv" | "xlsx">("csv")
+    const [exportMode, setExportMode] = useState<"all" | "selected">("all")
     const [editingBook, setEditingBook] = useState<Book | null>(null)
     const [formData, setFormData] = useState<BookFormData>({
         title: "",
@@ -112,8 +130,18 @@ function AdminBooksPageContent() {
         is_premium: false,
         cover_image: null,
         file: null,
+        publisher: "",
+        language: "",
+        doi: "",
+        external_url: "",
+        source: "manual",
+        is_open_access: false,
     })
     const [submitting, setSubmitting] = useState(false)
+    const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
+    const [importing, setImporting] = useState(false)
+    const [importResult, setImportResult] = useState<{ imported: number, skipped: number, errors: string[] } | null>(null)
+    const [importFile, setImportFile] = useState<File | null>(null)
     const searchParams = useSearchParams()
     const editSlug = searchParams.get("edit")
 
@@ -166,6 +194,33 @@ function AdminBooksPageContent() {
         setFilteredBooks(filtered)
     }, [searchQuery, books])
 
+    const handleSelectAll = (checked: boolean) => {
+        if (checked) {
+            setSelectedBooks(new Set(filteredBooks.map(b => b.id)))
+        } else {
+            setSelectedBooks(new Set())
+        }
+    }
+
+    const handleSelectBook = (id: number, checked: boolean) => {
+        const newSet = new Set(selectedBooks)
+        if (checked) {
+            newSet.add(id)
+        } else {
+            newSet.delete(id)
+        }
+        setSelectedBooks(newSet)
+    }
+
+    const handleExportConfirm = async () => {
+        setIsExportDialogOpen(false)
+        if (exportFormat === "csv") {
+            await exportToCSV(exportMode === "selected")
+        } else {
+            await exportToExcel(exportMode === "selected")
+        }
+    }
+
     const handleDelete = async (slug: string, id: number) => {
         if (!confirm("¿Estás seguro de que quieres eliminar este libro?")) return
 
@@ -212,6 +267,12 @@ function AdminBooksPageContent() {
                 is_premium: book.is_premium || false,
                 cover_image: null,
                 file: null,
+                publisher: book.publisher || "",
+                language: book.language || "",
+                doi: book.doi || "",
+                external_url: book.external_url || "",
+                source: book.source || "manual",
+                is_open_access: book.is_open_access || false,
             })
         } else {
             setEditingBook(null)
@@ -226,6 +287,12 @@ function AdminBooksPageContent() {
                 is_premium: false,
                 cover_image: null,
                 file: null,
+                publisher: "",
+                language: "",
+                doi: "",
+                external_url: "",
+                source: "manual",
+                is_open_access: false,
             })
         }
         setIsDialogOpen(true)
@@ -245,6 +312,12 @@ function AdminBooksPageContent() {
             is_premium: false,
             cover_image: null,
             file: null,
+            publisher: "",
+            language: "",
+            doi: "",
+            external_url: "",
+            source: "manual",
+            is_open_access: false,
         })
     }
 
@@ -303,6 +376,14 @@ function AdminBooksPageContent() {
 
             formDataToSend.append('is_premium', String(formData.is_premium))
 
+            // Campos adicionales opcionales
+            if (formData.publisher) formDataToSend.append('publisher', formData.publisher)
+            if (formData.language) formDataToSend.append('language', formData.language)
+            if (formData.doi) formDataToSend.append('doi', formData.doi)
+            if (formData.external_url) formDataToSend.append('external_url', formData.external_url)
+            formDataToSend.append('source', formData.source)
+            formDataToSend.append('is_open_access', String(formData.is_open_access))
+
             // Agregar archivos si existen (usar los nombres correctos del serializer)
             if (formData.cover_image) {
                 formDataToSend.append('cover_image_upload', formData.cover_image)
@@ -345,67 +426,71 @@ function AdminBooksPageContent() {
         }
     }
 
-    const exportToCSV = () => {
-        // Prepare CSV data
-        const headers = ['ID', 'Título', 'Autor', 'Categoría', 'ISBN', 'Fecha de Publicación', 'Premium']
-        const rows = filteredBooks.map(book => [
-            book.id,
-            `"${(book.title || '').replace(/"/g, '""')}"`,
-            `"${(book.author?.name || 'Sin autor').replace(/"/g, '""')}"`,
-            `"${(book.category?.name || 'Sin categoría').replace(/"/g, '""')}"`,
-            book.isbn || '',
-            book.publication_date || '',
-            book.is_premium ? 'Sí' : 'No'
-        ])
-
-        const csvContent = [
-            headers.join(','),
-            ...rows.map(row => row.join(','))
-        ].join('\n')
-
-        // Create blob and download
-        const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
-        const link = document.createElement('a')
-        const url = URL.createObjectURL(blob)
-        link.setAttribute('href', url)
-        link.setAttribute('download', `catalogo_libros_${new Date().toISOString().split('T')[0]}.csv`)
-        link.style.visibility = 'hidden'
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
+    const exportToCSV = async (onlySelected = false) => {
+        try {
+            const idsParam = onlySelected && selectedBooks.size > 0
+                ? `&ids=${Array.from(selectedBooks).join(',')}`
+                : ''
+            const response = await api.get(`/content/books/export/?export_format=csv${idsParam}`, {
+                responseType: 'blob'
+            })
+            const url = window.URL.createObjectURL(new Blob([response.data]))
+            const link = document.createElement('a')
+            link.href = url
+            link.setAttribute('download', `catalogo_libros_${new Date().toISOString().split('T')[0]}.csv`)
+            document.body.appendChild(link)
+            link.click()
+            link.remove()
+        } catch (err) {
+            console.error("Error exporting to CSV:", err)
+            alert("Error al exportar a CSV")
+        }
     }
 
-    const exportToExcel = () => {
-        // Create HTML table for Excel
-        const headers = ['ID', 'Título', 'Autor', 'Categoría', 'ISBN', 'Fecha de Publicación', 'Premium']
-        const rows = filteredBooks.map(book => [
-            book.id,
-            book.title || '',
-            book.author?.name || 'Sin autor',
-            book.category?.name || 'Sin categoría',
-            book.isbn || '',
-            book.publication_date || '',
-            book.is_premium ? 'Sí' : 'No'
-        ])
+    const exportToExcel = async (onlySelected = false) => {
+        try {
+            const idsParam = onlySelected && selectedBooks.size > 0
+                ? `&ids=${Array.from(selectedBooks).join(',')}`
+                : ''
+            const response = await api.get(`/content/books/export/?export_format=xlsx${idsParam}`, {
+                responseType: 'blob'
+            })
+            const url = window.URL.createObjectURL(new Blob([response.data]))
+            const link = document.createElement('a')
+            link.href = url
+            link.setAttribute('download', `catalogo_libros_${new Date().toISOString().split('T')[0]}.xlsx`)
+            document.body.appendChild(link)
+            link.click()
+            link.remove()
+        } catch (err) {
+            console.error("Error exporting to Excel:", err)
+            alert("Error al exportar a Excel")
+        }
+    }
 
-        let htmlContent = '<html><head><meta charset="UTF-8"></head><body><table border="1">'
-        htmlContent += '<thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead>'
-        htmlContent += '<tbody>'
-        rows.forEach(row => {
-            htmlContent += '<tr>' + row.map(cell => `<td>${cell}</td>`).join('') + '</tr>'
-        })
-        htmlContent += '</tbody></table></body></html>'
+    const handleImport = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!importFile) return
 
-        // Create blob and download
-        const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel' })
-        const link = document.createElement('a')
-        const url = URL.createObjectURL(blob)
-        link.setAttribute('href', url)
-        link.setAttribute('download', `catalogo_libros_${new Date().toISOString().split('T')[0]}.xls`)
-        link.style.visibility = 'hidden'
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
+        setImporting(true)
+        setImportResult(null)
+
+        try {
+            const formData = new FormData()
+            formData.append('file', importFile)
+
+            const res = await api.post("/content/books/import/", formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            })
+
+            setImportResult(res.data)
+            await fetchData()
+        } catch (err) {
+            console.error("Error importing books:", err)
+            alert("Error al importar libros")
+        } finally {
+            setImporting(false)
+        }
     }
 
     if (loading) {
@@ -440,24 +525,21 @@ function AdminBooksPageContent() {
                         </p>
                     </div>
                     <div className="flex gap-2">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline">
-                                    <Download className="mr-2 h-4 w-4" />
-                                    Exportar
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={exportToExcel}>
-                                    <FileSpreadsheet className="mr-2 h-4 w-4" />
-                                    Exportar a Excel (.xls)
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={exportToCSV}>
-                                    <FileText className="mr-2 h-4 w-4" />
-                                    Exportar a CSV
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <Button variant="outline" onClick={() => {
+                            setImportResult(null)
+                            setImportFile(null)
+                            setIsImportDialogOpen(true)
+                        }}>
+                            <Upload className="mr-2 h-4 w-4" />
+                            Importar
+                        </Button>
+                        <Button variant="outline" onClick={() => {
+                            setExportMode(selectedBooks.size > 0 ? "selected" : "all")
+                            setIsExportDialogOpen(true)
+                        }}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Exportar {selectedBooks.size > 0 && `(${selectedBooks.size})`}
+                        </Button>
                         <Button
                             className="bg-gradient-to-r from-primary to-primary-dark"
                             onClick={() => handleOpenDialog()}
@@ -531,6 +613,13 @@ function AdminBooksPageContent() {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
+                                        <TableHead className="w-12">
+                                            <Checkbox
+                                                checked={filteredBooks.length > 0 && selectedBooks.size === filteredBooks.length}
+                                                onCheckedChange={handleSelectAll}
+                                            />
+                                        </TableHead>
+                                        <TableHead className="w-20">Portada</TableHead>
                                         <TableHead>Título</TableHead>
                                         <TableHead>Autor</TableHead>
                                         <TableHead>Categoría</TableHead>
@@ -542,7 +631,7 @@ function AdminBooksPageContent() {
                                 <TableBody>
                                     {filteredBooks.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                                            <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                                                 <BookOpen className="mx-auto h-12 w-12 mb-2 opacity-50" />
                                                 <p>No se encontraron libros</p>
                                             </TableCell>
@@ -550,6 +639,30 @@ function AdminBooksPageContent() {
                                     ) : (
                                         filteredBooks.map((book) => (
                                             <TableRow key={book.id}>
+                                                <TableCell>
+                                                    <Checkbox
+                                                        checked={selectedBooks.has(book.id)}
+                                                        onCheckedChange={(checked) => handleSelectBook(book.id, checked as boolean)}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    {book.cover_image ? (
+                                                        <div className="relative w-12 h-16 rounded overflow-hidden border shadow-sm bg-muted/50 group">
+                                                            <img
+                                                                src={book.cover_image}
+                                                                alt={book.title}
+                                                                className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-110"
+                                                                onError={(e) => {
+                                                                    e.currentTarget.src = 'https://via.placeholder.com/150?text=No+Cover'
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="w-12 h-16 rounded bg-muted flex items-center justify-center border border-dashed text-muted-foreground/40">
+                                                            <BookOpen className="h-6 w-6" />
+                                                        </div>
+                                                    )}
+                                                </TableCell>
                                                 <TableCell className="font-medium">{book.title}</TableCell>
                                                 <TableCell>{book.author?.name || 'Sin autor'}</TableCell>
                                                 <TableCell>{book.category?.name || 'Sin categoría'}</TableCell>
@@ -605,6 +718,84 @@ function AdminBooksPageContent() {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Export Dialog */}
+            <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Exportar Libros</DialogTitle>
+                        <DialogDescription>
+                            Selecciona el formato y los registros que deseas exportar.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="space-y-4">
+                            <Label className="text-base text-foreground font-semibold">Registros a exportar</Label>
+                            <div className="flex flex-col gap-3 ml-1">
+                                <label className="flex items-center gap-3 text-sm font-medium cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="exportMode"
+                                        value="all"
+                                        checked={exportMode === "all"}
+                                        onChange={() => setExportMode("all")}
+                                        className="h-4 w-4 text-primary"
+                                    />
+                                    Todos los registros en la lista actual
+                                </label>
+                                <label className={`flex items-center gap-3 text-sm font-medium ${selectedBooks.size === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                                    <input
+                                        type="radio"
+                                        name="exportMode"
+                                        value="selected"
+                                        checked={exportMode === "selected"}
+                                        onChange={() => setExportMode("selected")}
+                                        disabled={selectedBooks.size === 0}
+                                        className="h-4 w-4 text-primary"
+                                    />
+                                    Solo registros seleccionados ({selectedBooks.size})
+                                </label>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <Label className="text-base text-foreground font-semibold">Formato</Label>
+                            <div className="flex flex-col gap-3 ml-1">
+                                <label className="flex items-center gap-3 text-sm font-medium cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="exportFormat"
+                                        value="xlsx"
+                                        checked={exportFormat === "xlsx"}
+                                        onChange={() => setExportFormat("xlsx")}
+                                        className="h-4 w-4 text-primary"
+                                    />
+                                    Excel (.xlsx)
+                                </label>
+                                <label className="flex items-center gap-3 text-sm font-medium cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="exportFormat"
+                                        value="csv"
+                                        checked={exportFormat === "csv"}
+                                        onChange={() => setExportFormat("csv")}
+                                        className="h-4 w-4 text-primary"
+                                    />
+                                    CSV
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setIsExportDialogOpen(false)}>
+                            Cancelar
+                        </Button>
+                        <Button onClick={handleExportConfirm}>
+                            Exportar
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Create/Edit Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -746,6 +937,88 @@ function AdminBooksPageContent() {
                                     Marcar como Premium
                                 </Label>
                             </div>
+
+                            {/* Información Adicional (Opcional) */}
+                            <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                                <p className="text-sm font-semibold text-muted-foreground">Información Adicional (Opcional)</p>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="publisher">Editorial</Label>
+                                        <Input
+                                            id="publisher"
+                                            value={formData.publisher}
+                                            onChange={(e) => setFormData({ ...formData, publisher: e.target.value })}
+                                            placeholder="ej: Cambridge University Press"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="language">Idioma</Label>
+                                        <Input
+                                            id="language"
+                                            value={formData.language}
+                                            onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+                                            placeholder="ej: es, en, pt"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="doi">DOI</Label>
+                                        <Input
+                                            id="doi"
+                                            value={formData.doi}
+                                            onChange={(e) => setFormData({ ...formData, doi: e.target.value })}
+                                            placeholder="ej: 10.1234/example"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="external_url">URL Externa (PDF)</Label>
+                                        <Input
+                                            id="external_url"
+                                            type="url"
+                                            value={formData.external_url}
+                                            onChange={(e) => setFormData({ ...formData, external_url: e.target.value })}
+                                            placeholder="https://..."
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="source">Fuente</Label>
+                                        <Select
+                                            value={formData.source}
+                                            onValueChange={(value) => setFormData({ ...formData, source: value })}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Seleccionar fuente" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="manual">Manual</SelectItem>
+                                                <SelectItem value="openlibrary">OpenLibrary</SelectItem>
+                                                <SelectItem value="doab">DOAB</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label>&nbsp;</Label>
+                                        <div className="flex items-center space-x-2 h-10">
+                                            <input
+                                                type="checkbox"
+                                                id="is_open_access"
+                                                checked={formData.is_open_access}
+                                                onChange={(e) => setFormData({ ...formData, is_open_access: e.target.checked })}
+                                                className="h-4 w-4 rounded border-gray-300"
+                                            />
+                                            <Label htmlFor="is_open_access" className="cursor-pointer">
+                                                Open Access
+                                            </Label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <DialogFooter>
                             <Button
@@ -761,6 +1034,74 @@ function AdminBooksPageContent() {
                             </Button>
                         </DialogFooter>
                     </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Import Dialog */}
+            <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Importar Libros</DialogTitle>
+                        <DialogDescription>
+                            Sube un archivo CSV o XLSX para importar libros masivamente.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {!importResult ? (
+                        <form onSubmit={handleImport} className="space-y-4 py-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="import-file">Archivo (CSV o XLSX)</Label>
+                                <Input
+                                    id="import-file"
+                                    type="file"
+                                    accept=".csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                    onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+                                    required
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Asegúrate de que las columnas coincidan: Título, Autor, Categoría, Descripción, ISBN, Es Premium.
+                                </p>
+                            </div>
+                            <DialogFooter>
+                                <Button type="button" variant="outline" onClick={() => setIsImportDialogOpen(false)}>
+                                    Cancelar
+                                </Button>
+                                <Button type="submit" disabled={!importFile || importing}>
+                                    {importing ? "Importando..." : "Comenzar Importación"}
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    ) : (
+                        <div className="py-4 space-y-4">
+                            <div className="grid grid-cols-2 gap-4 text-center">
+                                <div className="border rounded-lg p-3">
+                                    <div className="text-2xl font-bold text-green-600">{importResult.imported}</div>
+                                    <div className="text-xs text-muted-foreground uppercase">Importados</div>
+                                </div>
+                                <div className="border rounded-lg p-3">
+                                    <div className="text-2xl font-bold text-amber-600">{importResult.skipped}</div>
+                                    <div className="text-xs text-muted-foreground uppercase">Omitidos</div>
+                                </div>
+                            </div>
+
+                            {importResult.errors.length > 0 && (
+                                <div className="space-y-2">
+                                    <Label className="text-destructive font-semibold">Errores ({importResult.errors.length})</Label>
+                                    <div className="max-h-32 overflow-y-auto border rounded p-2 text-xs bg-muted/30">
+                                        {importResult.errors.map((err, i) => (
+                                            <div key={i} className="mb-1 text-destructive">• {err}</div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            <DialogFooter>
+                                <Button onClick={() => setIsImportDialogOpen(false)}>
+                                    Cerrar
+                                </Button>
+                            </DialogFooter>
+                        </div>
+                    )}
                 </DialogContent>
             </Dialog>
         </>

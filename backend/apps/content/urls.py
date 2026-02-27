@@ -10,6 +10,7 @@ from .views import (
     search_facets,
     rebuild_search_index,
     import_books_from_openlibrary,
+    import_books_from_doab,
     get_import_stats,
     # Review views
     ReviewListCreateView, ReviewDetailView, UserReviewListView, MarkReviewHelpfulView,
@@ -25,7 +26,9 @@ from .views import (
     HighlightListCreateView, HighlightDetailView,
     AnnotationListCreateView, AnnotationDetailView,
     export_book_notes,
-    institutional_analytics
+    institutional_analytics,
+    BookExportView,
+    BookImportView
 )
 
 urlpatterns = [
@@ -40,10 +43,13 @@ urlpatterns = [
 
     # Admin - Import endpoints
     path('admin/import-books/', import_books_from_openlibrary, name='import_books'),
+    path('admin/import-books-doab/', import_books_from_doab, name='import_books_doab'),
     path('admin/import-stats/', get_import_stats, name='import_stats'),
 
     # Books
     path('books/', BookListView.as_view(), name='book_list'),
+    path('books/export/', BookExportView.as_view(), name='book_export'),
+    path('books/import/', BookImportView.as_view(), name='book_import'),
     path('recommendations/for-you/', BookRecommendationsView.as_view(), name='recommended_for_you'),
     path('books/<slug:slug>/', BookDetailView.as_view(), name='book_detail'),
     path('books/<slug:slug>/similar/', BookSimilarView.as_view(), name='book_similar'),

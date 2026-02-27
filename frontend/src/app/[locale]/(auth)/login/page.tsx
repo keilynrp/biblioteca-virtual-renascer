@@ -65,7 +65,7 @@ export default function LoginPage() {
             showSuccess('Inicio de sesión exitoso')
 
             // Step 6: Redirect 
-            if (!userData.onboarding_completed && !userData.is_staff) {
+            if (!userData.onboarding_completed && !userData.is_staff && !userData.is_superuser) {
                 router.push("/onboarding")
             } else {
                 router.push("/home")

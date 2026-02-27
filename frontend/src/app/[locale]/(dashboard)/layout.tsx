@@ -66,7 +66,7 @@ export default function DashboardLayout({
         setIsDarkMode(document.documentElement.classList.contains('dark'))
     }, [])
 
-    // Redirect if not authenticated (solo después de hidratar)
+    // Redirect if not authenticated or onboarding not completed
     useEffect(() => {
         if (!_hasHydrated) return
 
@@ -75,11 +75,17 @@ export default function DashboardLayout({
             return
         }
 
+        // Onboarding guard: if not completed and not admin, redirect to onboarding
+        if (user && !user.onboarding_completed && !user.is_staff && !user.is_superuser) {
+            router.push('/onboarding')
+            return
+        }
+
         // Sincronizar datos del usuario con el backend para reflejar cambios de rol
         api.get('/auth/user/').then(res => {
             updateUser(res.data)
         }).catch(() => { })
-    }, [_hasHydrated, isAuthenticated, router, updateUser])
+    }, [_hasHydrated, isAuthenticated, user, router, updateUser])
 
     // Load sidebar collapsed state from localStorage (solo después de hidratar)
     useEffect(() => {
@@ -221,7 +227,7 @@ export default function DashboardLayout({
                             Menú Principal
                         </span>
                     </div>
-                    {navItems.filter(item => !item.adminOnly || user?.user_type === 'admin').map((item, index) => {
+                    {navItems.filter(item => !item.adminOnly || user?.is_staff || user?.is_superuser).map((item, index) => {
                         const Icon = item.icon
                         const isActive = pathname === item.href
                         return (

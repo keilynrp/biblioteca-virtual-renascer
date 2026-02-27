@@ -143,6 +143,16 @@ class OnboardingView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request):
+        # Admins skip onboarding — mark as completed without requiring data
+        if request.user.is_staff or request.user.is_superuser:
+            if not request.user.onboarding_completed:
+                request.user.onboarding_completed = True
+                request.user.save(update_fields=['onboarding_completed'])
+            return Response(
+                UserSerializer(request.user, context={'request': request}).data,
+                status=status.HTTP_200_OK,
+            )
+
         serializer = OnboardingSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.update(request.user, serializer.validated_data)

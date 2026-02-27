@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { motion, AnimatePresence } from "framer-motion"
 import {
     User,
     GraduationCap,
@@ -19,6 +20,7 @@ import {
     Sparkles,
     Building2,
     Calendar,
+    ArrowRight,
 } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
@@ -36,28 +38,32 @@ interface OnboardingOptions {
 
 function StepIndicator({ current, total }: { current: number; total: number }) {
     return (
-        <div className="flex items-center justify-center gap-2 mb-8">
+        <div className="flex items-center justify-center gap-3 mb-12">
             {Array.from({ length: total }).map((_, i) => (
-                <div key={i} className="flex items-center gap-2">
-                    <div
+                <div key={i} className="flex items-center gap-3">
+                    <motion.div
+                        initial={false}
+                        animate={{
+                            backgroundColor: i <= current ? "var(--color-primary)" : "var(--color-muted)",
+                            scale: i === current ? 1.2 : 1,
+                            boxShadow: i === current ? "0 0 20px rgba(var(--primary-rgb), 0.4)" : "none"
+                        }}
                         className={cn(
-                            "h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300",
-                            i < current
-                                ? "bg-primary text-white shadow-lg shadow-primary/30"
-                                : i === current
-                                    ? "bg-primary text-white shadow-lg shadow-primary/30 scale-110"
-                                    : "bg-muted text-muted-foreground"
+                            "h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500",
+                            i < current ? "text-white" : i === current ? "text-white" : "text-muted-foreground"
                         )}
                     >
                         {i < current ? <Check className="h-5 w-5" /> : i + 1}
-                    </div>
+                    </motion.div>
                     {i < total - 1 && (
-                        <div
-                            className={cn(
-                                "w-12 h-1 rounded-full transition-all duration-300",
-                                i < current ? "bg-primary" : "bg-muted"
-                            )}
-                        />
+                        <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden relative">
+                            <motion.div
+                                initial={{ width: "0%" }}
+                                animate={{ width: i < current ? "100%" : "0%" }}
+                                transition={{ duration: 0.5, ease: "easeInOut" }}
+                                className="absolute inset-0 bg-primary"
+                            />
+                        </div>
                     )}
                 </div>
             ))}
@@ -115,6 +121,7 @@ export default function OnboardingPage() {
                 if (user?.first_name) setFirstName(user.first_name)
                 if (user?.last_name) setLastName(user.last_name)
                 if (user?.user_type) setUserType(user.user_type)
+                if (user?.age_range) setAgeRange(user.age_range)
             })
             .catch(() => toast.error("Error al cargar opciones"))
             .finally(() => setLoading(false))
@@ -129,6 +136,20 @@ export default function OnboardingPage() {
         setSelectedCategories(prev =>
             prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
         )
+    }
+
+    async function handleSkip() {
+        setSaving(true)
+        try {
+            const res = await api.post("/auth/onboarding/", {})
+            updateUser(res.data)
+            toast.info("Puedes completar tu perfil en Configuración")
+            router.push("/home")
+        } catch {
+            toast.error("Error al omitir el onboarding")
+        } finally {
+            setSaving(false)
+        }
     }
 
     async function handleFinish() {
@@ -164,269 +185,331 @@ export default function OnboardingPage() {
 
     if (loading || !options) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[80vh] gap-4">
-                <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                <p className="text-muted-foreground font-medium">Preparando tu experiencia...</p>
+            <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+                <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                >
+                    <Loader2 className="h-12 w-12 text-primary" />
+                </motion.div>
+                <p className="text-muted-foreground font-medium animate-pulse text-lg">Preparando tu experiencia personalizada...</p>
             </div>
         )
     }
 
+    const stepVariants = {
+        initial: { opacity: 0, x: 20 },
+        animate: { opacity: 1, x: 0 },
+        exit: { opacity: 0, x: -20 }
+    }
+
     return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-primary/5">
-            <div className="w-full max-w-2xl">
+        <div className="min-h-screen flex items-center justify-center p-6 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-background to-background">
+            <div className="w-full max-w-3xl">
                 {/* Header */}
-                <div className="text-center mb-6">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center mb-10"
+                >
+                    <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-primary/10 text-primary text-sm font-bold mb-6 backdrop-blur-md border border-primary/20 shadow-sm shadow-primary/10">
                         <Sparkles className="h-4 w-4" />
-                        Personaliza tu experiencia
+                        Paso {step + 1} de {TOTAL_STEPS}
                     </div>
-                    <h1 className="text-3xl font-black tracking-tight">
-                        {step === 0 && "Cuéntanos sobre ti"}
-                        {step === 1 && "Tu rango de edad"}
-                        {step === 2 && "Tu institución"}
-                        {step === 3 && "Temas que te interesan"}
+                    <h1 className="text-4xl font-black tracking-tight mb-4 bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">
+                        {step === 0 && "Personaliza tu Perfil"}
+                        {step === 1 && "¿Cuál es tu Rango de Edad?"}
+                        {step === 2 && "Vincular Institución"}
+                        {step === 3 && "Tus Intereses de Lectura"}
                     </h1>
-                    <p className="text-muted-foreground mt-2">
-                        {step === 0 && "Estos datos nos ayudan a personalizar tu biblioteca"}
-                        {step === 1 && "Nos permite recomendar contenido adecuado para ti"}
-                        {step === 2 && "Selecciona tu institución si perteneces a alguna"}
-                        {step === 3 && "Selecciona las categorías de libros que más te gustan"}
+                    <p className="text-slate-500 max-w-lg mx-auto text-lg">
+                        {step === 0 && "Queremos conocerte mejor para brindarte el mejor contenido académico y literario."}
+                        {step === 1 && "Esto nos ayuda a recomendarte libros y materiales acordes a tu etapa de aprendizaje."}
+                        {step === 2 && "Si perteneces a una institución asociada, tendrás acceso a contenidos exclusivos."}
+                        {step === 3 && "Selecciona al menos un tema que te apasione para entrenar a tu motor de recomendaciones."}
                     </p>
-                </div>
+                </motion.div>
 
                 <StepIndicator current={step} total={TOTAL_STEPS} />
 
-                <Card className="rounded-2xl border-none shadow-2xl shadow-primary/5 bg-card/80 backdrop-blur-sm">
-                    <CardContent className="p-8">
-                        {/* ── Step 0: Personal info + Role ────────────────── */}
-                        {step === 0 && (
-                            <div className="space-y-6">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label className="text-sm font-bold">Nombre</Label>
-                                        <Input
-                                            value={firstName}
-                                            onChange={e => setFirstName(e.target.value)}
-                                            placeholder="Tu nombre"
-                                            className="h-12 rounded-xl"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-sm font-bold">Apellido</Label>
-                                        <Input
-                                            value={lastName}
-                                            onChange={e => setLastName(e.target.value)}
-                                            placeholder="Tu apellido"
-                                            className="h-12 rounded-xl"
-                                        />
-                                    </div>
-                                </div>
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={step}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        variants={stepVariants}
+                        transition={{ duration: 0.4, ease: "easeOut" }}
+                    >
+                        <Card className="rounded-3xl border border-white/20 shadow-2xl bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl overflow-hidden ring-1 ring-slate-200/50 dark:ring-slate-800/50">
+                            <CardContent className="p-10">
+                                {/* ── Step 0: Personal info + Role ────────────────── */}
+                                {step === 0 && (
+                                    <div className="space-y-8">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                            <div className="space-y-2.5">
+                                                <Label className="text-sm font-bold ml-1">Nombre</Label>
+                                                <Input
+                                                    value={firstName}
+                                                    onChange={e => setFirstName(e.target.value)}
+                                                    placeholder="Tu nombre completo"
+                                                    className="h-14 rounded-2xl border-2 border-slate-200/50 focus:border-primary transition-all text-lg px-6"
+                                                />
+                                            </div>
+                                            <div className="space-y-2.5">
+                                                <Label className="text-sm font-bold ml-1">Apellido</Label>
+                                                <Input
+                                                    value={lastName}
+                                                    onChange={e => setLastName(e.target.value)}
+                                                    placeholder="Tus apellidos"
+                                                    className="h-14 rounded-2xl border-2 border-slate-200/50 focus:border-primary transition-all text-lg px-6"
+                                                />
+                                            </div>
+                                        </div>
 
-                                <div className="space-y-3">
-                                    <Label className="text-sm font-bold flex items-center gap-2">
-                                        <GraduationCap className="h-4 w-4 text-primary" />
-                                        ¿Cuál es tu perfil?
-                                    </Label>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                        {options.user_types.map(type => (
-                                            <button
-                                                key={type.value}
-                                                onClick={() => setUserType(type.value)}
+                                        <div className="space-y-4">
+                                            <Label className="text-sm font-bold flex items-center gap-2 ml-1">
+                                                <GraduationCap className="h-5 w-5 text-primary" />
+                                                ¿Cuál es tu rol principal?
+                                            </Label>
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                                {options.user_types.map(type => (
+                                                    <motion.button
+                                                        key={type.value}
+                                                        whileHover={{ scale: 1.03, y: -2 }}
+                                                        whileTap={{ scale: 0.98 }}
+                                                        onClick={() => setUserType(type.value)}
+                                                        className={cn(
+                                                            "flex flex-col items-center gap-3 p-6 rounded-2xl border-2 transition-all cursor-pointer relative",
+                                                            userType === type.value
+                                                                ? "border-primary bg-primary/5 shadow-lg shadow-primary/10 ring-2 ring-primary/20"
+                                                                : "border-slate-200/40 hover:border-primary/30 hover:bg-muted/30"
+                                                        )}
+                                                    >
+                                                        {userType === type.value && (
+                                                            <div className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-primary flex items-center justify-center shadow-lg">
+                                                                <Check className="h-3.5 w-3.5 text-white" />
+                                                            </div>
+                                                        )}
+                                                        <span className="text-4xl">
+                                                            {ROLE_ICONS[type.value] || "👤"}
+                                                        </span>
+                                                        <span className="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                                                            {type.label}
+                                                        </span>
+                                                    </motion.button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ── Step 1: Age range ──────────────────────────── */}
+                                {step === 1 && (
+                                    <div className="space-y-6">
+                                        <Label className="text-sm font-bold flex items-center gap-2 mb-2">
+                                            <Calendar className="h-5 w-5 text-primary" />
+                                            Selecciona tu rango de edad para filtrar contenido
+                                        </Label>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                            {options.age_ranges.map(range => (
+                                                <motion.button
+                                                    key={range.value}
+                                                    whileHover={{ scale: 1.05 }}
+                                                    whileTap={{ scale: 0.95 }}
+                                                    onClick={() => setAgeRange(range.value)}
+                                                    className={cn(
+                                                        "p-6 rounded-2xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1",
+                                                        ageRange === range.value
+                                                            ? "border-primary bg-primary text-primary-foreground shadow-xl shadow-primary/20 scale-105"
+                                                            : "border-slate-200/50 hover:border-primary/30 hover:bg-muted/40"
+                                                    )}
+                                                >
+                                                    <span className="text-lg font-black tracking-tight">{range.label}</span>
+                                                </motion.button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ── Step 2: Institution ────────────────────────── */}
+                                {step === 2 && (
+                                    <div className="space-y-6">
+                                        <Label className="text-sm font-bold flex items-center gap-2 mb-1">
+                                            <Building2 className="h-5 w-5 text-primary" />
+                                            Encuentra tu centro de formación
+                                        </Label>
+                                        <div className="relative">
+                                            <Input
+                                                placeholder="Escribe el nombre o código de tu institución..."
+                                                value={institutionSearch}
+                                                onChange={e => setInstitutionSearch(e.target.value)}
+                                                className="h-14 rounded-2xl border-2 border-slate-200/50 focus:border-primary transition-all text-lg pl-12"
+                                            />
+                                            <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                                        </div>
+                                        <div className="max-h-72 overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-primary/20">
+                                            <motion.button
+                                                whileHover={{ x: 5 }}
+                                                onClick={() => setInstitutionId(null)}
                                                 className={cn(
-                                                    "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all cursor-pointer",
-                                                    userType === type.value
-                                                        ? "border-primary bg-primary/5 shadow-md shadow-primary/10 scale-[1.02]"
-                                                        : "border-border/50 hover:border-primary/30 hover:bg-muted/30"
+                                                    "w-full text-left p-5 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between",
+                                                    institutionId === null
+                                                        ? "border-primary bg-primary/5 shadow-md"
+                                                        : "border-slate-200/50 hover:border-primary/30"
                                                 )}
                                             >
-                                                <span className="text-2xl">
-                                                    {ROLE_ICONS[type.value] || "👤"}
-                                                </span>
-                                                <span className="text-sm font-medium text-center">
-                                                    {type.label}
-                                                </span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* ── Step 1: Age range ──────────────────────────── */}
-                        {step === 1 && (
-                            <div className="space-y-4">
-                                <Label className="text-sm font-bold flex items-center gap-2">
-                                    <Calendar className="h-4 w-4 text-primary" />
-                                    Selecciona tu rango de edad
-                                </Label>
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                    {options.age_ranges.map(range => (
-                                        <button
-                                            key={range.value}
-                                            onClick={() => setAgeRange(range.value)}
-                                            className={cn(
-                                                "p-4 rounded-xl border-2 text-center transition-all cursor-pointer",
-                                                ageRange === range.value
-                                                    ? "border-primary bg-primary/5 shadow-md shadow-primary/10 scale-[1.02]"
-                                                    : "border-border/50 hover:border-primary/30 hover:bg-muted/30"
-                                            )}
-                                        >
-                                            <span className="text-sm font-bold">{range.label}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* ── Step 2: Institution ────────────────────────── */}
-                        {step === 2 && (
-                            <div className="space-y-4">
-                                <Label className="text-sm font-bold flex items-center gap-2">
-                                    <Building2 className="h-4 w-4 text-primary" />
-                                    ¿Perteneces a alguna institución?
-                                </Label>
-                                <Input
-                                    placeholder="Buscar institución..."
-                                    value={institutionSearch}
-                                    onChange={e => setInstitutionSearch(e.target.value)}
-                                    className="h-12 rounded-xl"
-                                />
-                                <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
-                                    <button
-                                        onClick={() => setInstitutionId(null)}
-                                        className={cn(
-                                            "w-full text-left p-3 rounded-xl border-2 transition-all cursor-pointer",
-                                            institutionId === null
-                                                ? "border-primary bg-primary/5"
-                                                : "border-border/50 hover:border-primary/30"
-                                        )}
-                                    >
-                                        <span className="text-sm font-medium">Ninguna / Independiente</span>
-                                    </button>
-                                    {filteredInstitutions.map(inst => (
-                                        <button
-                                            key={inst.id}
-                                            onClick={() => setInstitutionId(inst.id)}
-                                            className={cn(
-                                                "w-full text-left p-3 rounded-xl border-2 transition-all cursor-pointer",
-                                                institutionId === inst.id
-                                                    ? "border-primary bg-primary/5"
-                                                    : "border-border/50 hover:border-primary/30"
-                                            )}
-                                        >
-                                            <span className="text-sm font-medium">{inst.name}</span>
-                                            <span className="text-xs text-muted-foreground ml-2">({inst.code})</span>
-                                        </button>
-                                    ))}
-                                    {filteredInstitutions.length === 0 && institutionSearch && (
-                                        <p className="text-sm text-muted-foreground text-center py-4">
-                                            No se encontraron instituciones
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* ── Step 3: Book categories ────────────────────── */}
-                        {step === 3 && (
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <Label className="text-sm font-bold flex items-center gap-2">
-                                        <BookOpen className="h-4 w-4 text-primary" />
-                                        ¿Qué temas te interesan?
-                                    </Label>
-                                    <span className="text-xs text-muted-foreground">
-                                        {selectedCategories.length} seleccionada{selectedCategories.length !== 1 ? "s" : ""}
-                                    </span>
-                                </div>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-80 overflow-y-auto pr-1">
-                                    {options.categories.map(cat => (
-                                        <button
-                                            key={cat.id}
-                                            onClick={() => toggleCategory(cat.id)}
-                                            className={cn(
-                                                "relative p-4 rounded-xl border-2 text-left transition-all cursor-pointer group",
-                                                selectedCategories.includes(cat.id)
-                                                    ? "border-primary bg-primary/5 shadow-md shadow-primary/10"
-                                                    : "border-border/50 hover:border-primary/30 hover:bg-muted/30"
-                                            )}
-                                        >
-                                            {selectedCategories.includes(cat.id) && (
-                                                <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-primary flex items-center justify-center">
-                                                    <Check className="h-3 w-3 text-white" />
+                                                <div className="font-bold">Lector Independiente</div>
+                                                {institutionId === null && <Check className="h-5 w-5 text-primary" />}
+                                            </motion.button>
+                                            {filteredInstitutions.map(inst => (
+                                                <motion.button
+                                                    key={inst.id}
+                                                    whileHover={{ x: 5 }}
+                                                    onClick={() => setInstitutionId(inst.id)}
+                                                    className={cn(
+                                                        "w-full text-left p-5 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between",
+                                                        institutionId === inst.id
+                                                            ? "border-primary bg-primary/5 shadow-md"
+                                                            : "border-slate-200/50 hover:border-primary/30"
+                                                    )}
+                                                >
+                                                    <div>
+                                                        <span className="font-bold text-slate-800 dark:text-slate-200">{inst.name}</span>
+                                                        <span className="text-xs font-mono ml-2 px-2 py-0.5 rounded bg-muted text-muted-foreground">ID: {inst.code}</span>
+                                                    </div>
+                                                    {institutionId === inst.id && <Check className="h-5 w-5 text-primary" />}
+                                                </motion.button>
+                                            ))}
+                                            {filteredInstitutions.length === 0 && institutionSearch && (
+                                                <div className="text-center py-10">
+                                                    <p className="text-muted-foreground italic">No encontramos esa institución</p>
+                                                    <Button variant="link" size="sm" onClick={() => setInstitutionSearch('')}>Ver todas</Button>
                                                 </div>
                                             )}
-                                            <p className="text-sm font-bold pr-6">{cat.name}</p>
-                                            {cat.description && (
-                                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                                                    {cat.description}
-                                                </p>
-                                            )}
-                                        </button>
-                                    ))}
-                                </div>
-                                {options.categories.length === 0 && (
-                                    <p className="text-sm text-muted-foreground text-center py-8">
-                                        No hay categorías disponibles aún
-                                    </p>
+                                        </div>
+                                    </div>
                                 )}
-                            </div>
-                        )}
 
-                        {/* ── Navigation buttons ─────────────────────────── */}
-                        <div className="flex items-center justify-between mt-8 pt-6 border-t border-border/30">
-                            <div>
-                                {step > 0 ? (
-                                    <Button
-                                        variant="ghost"
-                                        onClick={() => setStep(s => s - 1)}
-                                        className="gap-2 rounded-xl"
-                                    >
-                                        <ChevronLeft className="h-4 w-4" />
-                                        Atrás
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        variant="ghost"
-                                        onClick={() => router.push("/home")}
-                                        className="rounded-xl text-muted-foreground"
-                                    >
-                                        Omitir por ahora
-                                    </Button>
+                                {/* ── Step 3: Book categories ────────────────────── */}
+                                {step === 3 && (
+                                    <div className="space-y-6">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <Label className="text-sm font-bold flex items-center gap-2">
+                                                <BookOpen className="h-5 w-5 text-primary" />
+                                                ¿Cuáles son tus pasiones?
+                                            </Label>
+                                            <div className="px-3 py-1 bg-primary text-white text-[10px] uppercase font-black tracking-widest rounded-full shadow-sm">
+                                                {selectedCategories.length} Seleccionado{selectedCategories.length !== 1 ? "s" : ""}
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto pr-3 scrollbar-thin scrollbar-thumb-primary/20">
+                                            {options.categories.map(cat => (
+                                                <motion.button
+                                                    key={cat.id}
+                                                    whileHover={{ scale: 1.02, y: -2 }}
+                                                    whileTap={{ scale: 0.98 }}
+                                                    onClick={() => toggleCategory(cat.id)}
+                                                    className={cn(
+                                                        "relative p-5 rounded-2xl border-2 text-left transition-all cursor-pointer overflow-hidden flex flex-col gap-1.5",
+                                                        selectedCategories.includes(cat.id)
+                                                            ? "border-primary bg-primary text-primary-foreground shadow-xl shadow-primary/10"
+                                                            : "border-slate-200/50 hover:border-primary/30 hover:bg-muted/50"
+                                                    )}
+                                                >
+                                                    {selectedCategories.includes(cat.id) && (
+                                                        <motion.div
+                                                            layoutId="cat-check"
+                                                            className="absolute top-2 right-2 h-6 w-6 rounded-full bg-white flex items-center justify-center shadow-lg"
+                                                        >
+                                                            <Check className="h-4 w-4 text-primary" />
+                                                        </motion.div>
+                                                    )}
+                                                    <p className="text-md font-black tracking-tight leading-tight pr-6">{cat.name}</p>
+                                                    {cat.description && (
+                                                        <p className={cn(
+                                                            "text-xs line-clamp-2 transition-colors",
+                                                            selectedCategories.includes(cat.id) ? "text-primary-foreground/80" : "text-muted-foreground"
+                                                        )}>
+                                                            {cat.description}
+                                                        </p>
+                                                    )}
+                                                </motion.button>
+                                            ))}
+                                        </div>
+                                    </div>
                                 )}
-                            </div>
 
-                            {step < TOTAL_STEPS - 1 ? (
-                                <Button
-                                    onClick={() => setStep(s => s + 1)}
-                                    disabled={!canAdvance()}
-                                    className="gap-2 rounded-xl px-8 shadow-lg shadow-primary/20"
-                                >
-                                    Continuar
-                                    <ChevronRight className="h-4 w-4" />
-                                </Button>
-                            ) : (
-                                <Button
-                                    onClick={handleFinish}
-                                    disabled={saving || !canAdvance()}
-                                    className="gap-2 rounded-xl px-8 shadow-lg shadow-primary/20"
-                                >
-                                    {saving ? (
-                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                {/* ── Navigation buttons ─────────────────────────── */}
+                                <div className="flex items-center justify-between mt-12 pt-8 border-t-2 border-slate-200/30 dark:border-slate-800/30">
+                                    <div>
+                                        {step > 0 ? (
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => setStep(s => s - 1)}
+                                                className="gap-2 rounded-2xl h-14 px-8 border-2 font-bold hover:bg-slate-100 transition-all"
+                                            >
+                                                <ChevronLeft className="h-5 w-5" />
+                                                Regresar
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                variant="ghost"
+                                                onClick={handleSkip}
+                                                disabled={saving}
+                                                className="rounded-2xl h-14 px-8 font-bold text-slate-400 hover:text-slate-600 transition-all hover:bg-slate-50"
+                                            >
+                                                Configurar luego
+                                            </Button>
+                                        )}
+                                    </div>
+
+                                    {step < TOTAL_STEPS - 1 ? (
+                                        <Button
+                                            onClick={() => setStep(s => s + 1)}
+                                            disabled={!canAdvance()}
+                                            className="gap-2 rounded-2xl h-14 px-12 font-black shadow-xl shadow-primary/30 transition-all hover:scale-[1.05] active:scale-[0.98] text-lg bg-primary hover:bg-primary/90"
+                                        >
+                                            Continuar
+                                            <ArrowRight className="h-5 w-5" />
+                                        </Button>
                                     ) : (
-                                        <Check className="h-4 w-4" />
+                                        <Button
+                                            onClick={handleFinish}
+                                            disabled={saving || !canAdvance()}
+                                            className="gap-3 rounded-2xl h-14 px-12 font-black shadow-2xl shadow-primary/40 transition-all hover:scale-[1.05] active:scale-[0.98] text-lg bg-primary hover:bg-primary/90 group"
+                                        >
+                                            {saving ? (
+                                                <Loader2 className="h-5 w-5 animate-spin" />
+                                            ) : (
+                                                <Sparkles className="h-5 w-5 group-hover:animate-sparkle" />
+                                            )}
+                                            Finalizar y Explorar
+                                        </Button>
                                     )}
-                                    Finalizar
-                                </Button>
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
+                </AnimatePresence>
 
-                {/* Skip link */}
-                <p className="text-center mt-4 text-xs text-muted-foreground">
-                    Puedes actualizar esta información desde tu perfil en cualquier momento
-                </p>
+                {/* Footer info */}
+                <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1 }}
+                    className="text-center mt-8 text-sm text-slate-400 font-medium"
+                >
+                    Tus datos están seguros y se usan exclusivamente para mejorar tu catálogo de lectura.
+                    <br />
+                    Puedes modificar estas preferencias en cualquier momento desde tu Configuración.
+                </motion.p>
+            </div>
+
+            {/* Background elements for premium feel */}
+            <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden">
+                <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px]" />
+                <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] rounded-full bg-blue-500/5 blur-[100px]" />
             </div>
         </div>
     )

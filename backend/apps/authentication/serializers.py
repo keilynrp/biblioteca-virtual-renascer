@@ -73,7 +73,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     confirm_password = serializers.CharField(write_only=True, required=True)
     first_name = serializers.CharField(required=True)
-    last_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = User
@@ -90,6 +90,12 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 class OnboardingSerializer(serializers.Serializer):
     """Accepts the multi-step onboarding data and persists it on the user."""
+
+    VALID_AGE_RANGES = [
+        '13-17', '18-24', '25-34', '35-44', '45-54', '55-64', '65+'
+    ]
+    MAX_PREFERRED_CATEGORIES = 10
+
     first_name = serializers.CharField(required=False, allow_blank=True)
     last_name = serializers.CharField(required=False, allow_blank=True)
     user_type = serializers.ChoiceField(choices=User.UserType.choices, required=False)
@@ -98,6 +104,32 @@ class OnboardingSerializer(serializers.Serializer):
     preferred_categories = serializers.ListField(
         child=serializers.IntegerField(), required=False, default=list
     )
+
+    def validate_age_range(self, value):
+        if value and value not in self.VALID_AGE_RANGES:
+            raise serializers.ValidationError(
+                f"Rango de edad inválido. Opciones: {', '.join(self.VALID_AGE_RANGES)}"
+            )
+        return value
+
+    def validate_institution_id(self, value):
+        if value is not None and not Institution.objects.filter(pk=value).exists():
+            raise serializers.ValidationError("Institución no encontrada.")
+        return value
+
+    def validate_preferred_categories(self, value):
+        if len(value) > self.MAX_PREFERRED_CATEGORIES:
+            raise serializers.ValidationError(
+                f"Máximo {self.MAX_PREFERRED_CATEGORIES} categorías permitidas."
+            )
+        if value:
+            from apps.content.models import Category
+            existing = Category.objects.filter(pk__in=value).count()
+            if existing != len(value):
+                raise serializers.ValidationError(
+                    "Algunas categorías seleccionadas no existen."
+                )
+        return value
 
     def update(self, user, validated_data):
         if 'first_name' in validated_data:
@@ -111,10 +143,7 @@ class OnboardingSerializer(serializers.Serializer):
         if 'institution_id' in validated_data:
             inst_id = validated_data['institution_id']
             if inst_id:
-                try:
-                    user.institution = Institution.objects.get(pk=inst_id)
-                except Institution.DoesNotExist:
-                    pass
+                user.institution = Institution.objects.get(pk=inst_id)
             else:
                 user.institution = None
 

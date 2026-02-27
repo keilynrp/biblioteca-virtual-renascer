@@ -6,6 +6,12 @@ class SiteSettings(models.Model):
     tagline = models.CharField(max_length=200, blank=True)
     logo = models.ImageField(upload_to='site_settings/', null=True, blank=True)
     favicon = models.ImageField(upload_to='site_settings/', null=True, blank=True)
+    
+    # Google Services
+    ga_id = models.CharField(max_length=50, blank=True, verbose_name='Google Analytics ID (G-XXXXX)')
+    gtm_id = models.CharField(max_length=50, blank=True, verbose_name='Google Tag Manager ID (GTM-XXXXX)')
+    gsc_id = models.CharField(max_length=200, blank=True, verbose_name='Google Search Console Verification')
+    
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

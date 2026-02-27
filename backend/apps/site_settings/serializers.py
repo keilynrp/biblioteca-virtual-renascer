@@ -8,7 +8,7 @@ class SiteSettingsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SiteSettings
-        fields = ('site_name', 'tagline', 'logo_url', 'favicon_url', 'updated_at')
+        fields = ('site_name', 'tagline', 'logo_url', 'favicon_url', 'ga_id', 'gtm_id', 'gsc_id', 'updated_at')
 
     def get_logo_url(self, obj):
         if not obj.logo:
@@ -30,4 +30,4 @@ class SiteSettingsSerializer(serializers.ModelSerializer):
 class SiteSettingsUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = SiteSettings
-        fields = ('site_name', 'tagline', 'logo', 'favicon')
+        fields = ('site_name', 'tagline', 'logo', 'favicon', 'ga_id', 'gtm_id', 'gsc_id')

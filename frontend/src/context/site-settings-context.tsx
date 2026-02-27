@@ -8,6 +8,9 @@ type SiteSettingsContextType = {
     tagline: string
     logo_url: string | null
     favicon_url: string | null
+    ga_id: string
+    gtm_id: string
+    gsc_id: string
     refresh: () => void
 }
 
@@ -16,7 +19,10 @@ const SiteSettingsContext = createContext<SiteSettingsContextType>({
     tagline: '',
     logo_url: null,
     favicon_url: null,
-    refresh: () => {},
+    ga_id: '',
+    gtm_id: '',
+    gsc_id: '',
+    refresh: () => { },
 })
 
 export function SiteSettingsProvider({ children }: { children: ReactNode }) {
@@ -25,6 +31,9 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
         tagline: '',
         logo_url: null,
         favicon_url: null,
+        ga_id: '',
+        gtm_id: '',
+        gsc_id: '',
         updated_at: '',
     })
 
@@ -45,6 +54,9 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
             tagline: settings.tagline,
             logo_url: settings.logo_url,
             favicon_url: settings.favicon_url,
+            ga_id: settings.ga_id,
+            gtm_id: settings.gtm_id,
+            gsc_id: settings.gsc_id,
             refresh: fetchSettings,
         }}>
             {children}

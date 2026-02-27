@@ -6,6 +6,9 @@ export interface SiteSettings {
     tagline: string
     logo_url: string | null
     favicon_url: string | null
+    ga_id: string
+    gtm_id: string
+    gsc_id: string
     updated_at: string
 }
 

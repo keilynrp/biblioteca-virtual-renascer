@@ -9,6 +9,8 @@ import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 
 import { NavigationProvider } from "@/context/navigation-context";
+import { GoogleServices } from "@/components/GoogleServices";
+import { SiteSettingsProvider } from "@/context/site-settings-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -60,11 +62,14 @@ export default async function RootLayout({
 
   return (
     <NextIntlClientProvider messages={messages} locale={locale}>
-      <NavigationProvider>
-        <PwaManager />
-        {children}
-        <Toaster />
-      </NavigationProvider>
+      <SiteSettingsProvider>
+        <NavigationProvider>
+          <GoogleServices />
+          <PwaManager />
+          {children}
+          <Toaster />
+        </NavigationProvider>
+      </SiteSettingsProvider>
     </NextIntlClientProvider>
   );
 }

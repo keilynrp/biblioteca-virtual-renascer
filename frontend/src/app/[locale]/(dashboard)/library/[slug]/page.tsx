@@ -279,6 +279,7 @@ export default function BookDetailPage() {
 
                             {/* Book Info Grid */}
                             <div className="grid grid-cols-2 gap-4">
+                                {book.category && (
                                 <Card>
                                     <CardHeader className="pb-3">
                                         <CardDescription>Categoría</CardDescription>
@@ -292,6 +293,7 @@ export default function BookDetailPage() {
                                         </Link>
                                     </CardContent>
                                 </Card>
+                                )}
 
                                 <Card>
                                     <CardHeader className="pb-3">

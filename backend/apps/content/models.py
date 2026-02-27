@@ -85,6 +85,14 @@ class Book(models.Model):
         help_text='Formato: PDF. Tamaño máximo: 50MB'
     )
     is_premium = models.BooleanField(default=False)
+    doi = models.CharField(max_length=255, blank=True, null=True, unique=True)
+    is_open_access = models.BooleanField(default=False)
+    source = models.CharField(
+        max_length=50,
+        choices=[('manual', 'Manual'), ('openlibrary', 'OpenLibrary'), ('doab', 'DOAB')],
+        default='manual'
+    )
+    external_url = models.URLField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -99,6 +107,9 @@ class Book(models.Model):
             models.Index(fields=['slug'], name='book_slug_idx'),
             models.Index(fields=['title'], name='book_title_idx'),
             models.Index(fields=['isbn'], name='book_isbn_idx'),  # PERF-002: ISBN searches
+            models.Index(fields=['doi'], name='book_doi_idx'),
+            models.Index(fields=['source', '-created_at'], name='book_source_created_idx'),
+            models.Index(fields=['is_open_access', '-created_at'], name='book_oa_created_idx'),
         ]
 
     def save(self, *args, **kwargs):

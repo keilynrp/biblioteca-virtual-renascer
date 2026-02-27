@@ -97,6 +97,8 @@ class MeilisearchClient:
             'author_id',
             'author_name',
             'is_premium',
+            'is_open_access',
+            'source',
             'publication_date',
             'created_at'
         ])
@@ -157,6 +159,10 @@ def index_book(book) -> Dict[str, Any]:
         'isbn': book.isbn or '',
         'publication_date': book.publication_date.isoformat() if book.publication_date else None,
         'is_premium': book.is_premium,
+        'is_open_access': book.is_open_access,
+        'source': book.source,
+        'doi': book.doi or '',
+        'external_url': book.external_url or '',
         'created_at': book.created_at.isoformat(),
         'slug': book.slug,
         'cover_image_url': book.cover_image.url if book.cover_image else ''
@@ -193,6 +199,10 @@ def index_books_bulk(books) -> Dict[str, Any]:
             'isbn': book.isbn or '',
             'publication_date': book.publication_date.isoformat() if book.publication_date else None,
             'is_premium': book.is_premium,
+            'is_open_access': book.is_open_access,
+            'source': book.source,
+            'doi': book.doi or '',
+            'external_url': book.external_url or '',
             'created_at': book.created_at.isoformat(),
             'slug': book.slug,
             'cover_image_url': book.cover_image.url if book.cover_image else ''
@@ -379,7 +389,7 @@ def get_facets() -> Dict[str, List[Dict[str, Any]]]:
         results = index.search(
             '',
             opt_params={
-                'facets': ['category_name', 'author_name', 'is_premium'],
+                'facets': ['category_name', 'author_name', 'is_premium', 'is_open_access', 'source'],
                 'limit': 0  # We only need facets, not documents
             }
         )
@@ -398,6 +408,14 @@ def get_facets() -> Dict[str, List[Dict[str, Any]]]:
             'is_premium': [
                 {'is_premium': value, 'count': count}
                 for value, count in facets.get('is_premium', {}).items()
+            ],
+            'is_open_access': [
+                {'is_open_access': value, 'count': count}
+                for value, count in facets.get('is_open_access', {}).items()
+            ],
+            'source': [
+                {'source': value, 'count': count}
+                for value, count in facets.get('source', {}).items()
             ]
         }
 
@@ -406,7 +424,9 @@ def get_facets() -> Dict[str, List[Dict[str, Any]]]:
         return {
             'categories': [],
             'authors': [],
-            'is_premium': []
+            'is_premium': [],
+            'is_open_access': [],
+            'source': []
         }
 
 

@@ -118,23 +118,9 @@ services:
       retries: 3
       start_period: 60s
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      # HTTPS — catch-all for the domain (lowest priority, frontend serves everything else)
-      - "traefik.http.routers.bvs-frontend.rule=Host(`bibliotecavirtual.renascerdosaber.com`)"
-      - "traefik.http.routers.bvs-frontend.entrypoints=websecure"
-      - "traefik.http.routers.bvs-frontend.tls=true"
-      - "traefik.http.routers.bvs-frontend.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.bvs-frontend.service=bvs-frontend"
-      - "traefik.http.routers.bvs-frontend.priority=1"
-      - "traefik.http.services.bvs-frontend.loadbalancer.server.port=3000"
-      # HTTP → HTTPS redirect
-      - "traefik.http.routers.bvs-http.rule=Host(`bibliotecavirtual.renascerdosaber.com`)"
-      - "traefik.http.routers.bvs-http.entrypoints=web"
-      - "traefik.http.routers.bvs-http.service=bvs-frontend"
-      - "traefik.http.routers.bvs-http.middlewares=bvs-redirect-https"
-      - "traefik.http.middlewares.bvs-redirect-https.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.bvs-redirect-https.redirectscheme.permanent=true"
+    # NOTE: No custom Traefik labels here — Dokploy auto-generates
+    # frontend routing (catch-all + HTTP→HTTPS redirect).
+    # Only the backend needs custom labels for /api, /admin, /media, /static.
     networks:
       - dokploy-network
 

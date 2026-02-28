@@ -56,20 +56,11 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = 'Lax'
 
-# Cache - Redis en producción
+# Cache - Redis en producción (using Django's native Redis backend)
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
         'LOCATION': os.getenv('REDIS_URL', 'redis://redis:6379/0'),
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'SOCKET_CONNECT_TIMEOUT': 5,
-            'SOCKET_TIMEOUT': 5,
-            'CONNECTION_POOL_KWARGS': {
-                'max_connections': 50,
-                'retry_on_timeout': True,
-            }
-        },
         'KEY_PREFIX': 'biblioteca',
         'TIMEOUT': 300,  # 5 minutes default
     }

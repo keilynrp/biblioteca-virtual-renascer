@@ -152,9 +152,7 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
 # Static files - usar WhiteNoise o S3
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
-# Media files - considerar usar S3 en producción
-# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-# AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-# AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-# AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
-# AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME', 'us-east-1')
+# Media files — override MEDIA_URL so cover image URLs are browser-accessible
+# (base.py sets it to http://minio:9000/... which is an internal Docker URL)
+if USE_MINIO:
+    MEDIA_URL = '/media/'

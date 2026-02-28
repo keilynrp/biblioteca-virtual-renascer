@@ -2,7 +2,9 @@
 # Core Views - BVS Backend
 # =============================================================================
 import logging
-from django.http import JsonResponse
+import mimetypes
+from django.conf import settings
+from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.http import require_http_methods
 from rest_framework import status
 
@@ -148,3 +150,40 @@ def health_check_detailed(request):
         return JsonResponse(health_status, status=200)  # Still return 200 for degraded
     else:
         return JsonResponse(health_status, status=503)
+
+
+# =============================================================================
+# MEDIA PROXY (Production — MinIO)
+# =============================================================================
+
+@require_http_methods(["GET"])
+def serve_media_from_minio(request, file_path):
+    """
+    Proxy media files from MinIO in production.
+    MinIO is internal-only (no public port), so Django proxies the files.
+    """
+    import boto3
+    from botocore.exceptions import ClientError
+
+    try:
+        s3 = boto3.client(
+            's3',
+            endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            region_name=getattr(settings, 'AWS_S3_REGION_NAME', 'us-east-1'),
+        )
+        obj = s3.get_object(
+            Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+            Key=file_path,
+        )
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'NoSuchKey':
+            raise Http404
+        logger.error(f"MinIO proxy error: {e}")
+        raise Http404
+
+    content_type = obj.get('ContentType') or mimetypes.guess_type(file_path)[0] or 'application/octet-stream'
+    response = HttpResponse(obj['Body'].read(), content_type=content_type)
+    response['Cache-Control'] = 'public, max-age=86400'
+    return response

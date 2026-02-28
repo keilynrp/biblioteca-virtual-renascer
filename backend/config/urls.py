@@ -40,10 +40,16 @@ urlpatterns = [
     path('api/blog/', include('apps.blog.urls')),
 ]
 
-# Development-only URLs
+# Media file serving
 if settings.DEBUG:
-    # Servir archivos media
+    # Development: serve from local filesystem
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+elif getattr(settings, 'USE_MINIO', False):
+    # Production with MinIO: proxy media files through Django
+    from apps.core.views import serve_media_from_minio
+    urlpatterns += [
+        path('media/<path:file_path>', serve_media_from_minio, name='media-proxy'),
+    ]
 
     # Django Debug Toolbar
     # Temporarily disabled due to Django 6.0 / Python 3.13 compatibility issues

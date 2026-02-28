@@ -79,13 +79,7 @@ services:
       - "traefik.http.routers.bvs-static.tls.certresolver=letsencrypt"
       - "traefik.http.routers.bvs-static.service=bvs-backend"
       - "traefik.http.routers.bvs-static.priority=8"
-      # Media files (priority 9)
-      - "traefik.http.routers.bvs-media.rule=Host(`bibliotecavirtual.renascerdosaber.com`) && PathPrefix(`/media`)"
-      - "traefik.http.routers.bvs-media.entrypoints=websecure"
-      - "traefik.http.routers.bvs-media.tls=true"
-      - "traefik.http.routers.bvs-media.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.bvs-media.service=bvs-backend"
-      - "traefik.http.routers.bvs-media.priority=9"
+      # Media files are served directly from MinIO (see minio service labels)
     networks:
       - dokploy-network
 
@@ -241,6 +235,19 @@ services:
       retries: 3
       start_period: 10s
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      # Serve /media/* directly from MinIO (rewrites /media/X → /biblioteca/X)
+      - "traefik.http.routers.bvs-media.rule=Host(`bibliotecavirtual.renascerdosaber.com`) && PathPrefix(`/media`)"
+      - "traefik.http.routers.bvs-media.entrypoints=websecure"
+      - "traefik.http.routers.bvs-media.tls=true"
+      - "traefik.http.routers.bvs-media.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.bvs-media.service=bvs-minio"
+      - "traefik.http.routers.bvs-media.priority=9"
+      - "traefik.http.routers.bvs-media.middlewares=media-rewrite"
+      - "traefik.http.middlewares.media-rewrite.replacepathregex.regex=^/media/(.*)"
+      - "traefik.http.middlewares.media-rewrite.replacepathregex.replacement=/${MINIO_BUCKET_NAME:-biblioteca}/$$1"
+      - "traefik.http.services.bvs-minio.loadbalancer.server.port=9000"
     networks:
       - dokploy-network
 
@@ -257,7 +264,7 @@ services:
       /bin/sh -c "
       mc alias set myminio http://minio:9000 $${MINIO_ACCESS_KEY} $${MINIO_SECRET_KEY} &&
       mc mb --ignore-existing myminio/$${MINIO_BUCKET_NAME} &&
-      mc anonymous set none myminio/$${MINIO_BUCKET_NAME} &&
+      mc anonymous set download myminio/$${MINIO_BUCKET_NAME} &&
       echo 'MinIO bucket ready.'
       "
     restart: "no"

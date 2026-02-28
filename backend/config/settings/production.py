@@ -149,10 +149,12 @@ MANAGERS = ADMINS
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
 
-# Static files - usar WhiteNoise o S3
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
-
-# Media files — override MEDIA_URL so cover image URLs are browser-accessible
-# (base.py sets it to http://minio:9000/... which is an internal Docker URL)
-if USE_MINIO:
-    MEDIA_URL = '/media/'
+# Static files — use ManifestStaticFilesStorage for cache busting
+STORAGES = {
+    "default": {
+        "BACKEND": "config.storage.MinIOProxyStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage",
+    },
+}

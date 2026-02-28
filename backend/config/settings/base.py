@@ -155,7 +155,15 @@ USE_MINIO = os.getenv('USE_MINIO', 'False') == 'True'
 if USE_MINIO:
     INSTALLED_APPS += ['storages']
 
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    # Use custom storage that stores to MinIO but returns /media/ URLs
+    STORAGES = {
+        "default": {
+            "BACKEND": "config.storage.MinIOProxyStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
 
     AWS_ACCESS_KEY_ID       = os.getenv('MINIO_ACCESS_KEY', 'minioadmin')
     AWS_SECRET_ACCESS_KEY   = os.getenv('MINIO_SECRET_KEY', 'minioadmin123')
@@ -168,8 +176,8 @@ if USE_MINIO:
     AWS_S3_SIGNATURE_VERSION = 's3v4'
     AWS_S3_ADDRESSING_STYLE  = 'path'        # obligatorio para MinIO
 
-    MEDIA_URL  = f"{os.getenv('MINIO_ENDPOINT_URL', 'http://localhost:9000')}/{os.getenv('MINIO_BUCKET_NAME', 'biblioteca')}/"
-    MEDIA_ROOT = BASE_DIR / 'media'          # fallback local (no se usa con MinIO)
+    MEDIA_URL  = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
 else:
     # Media files — almacenamiento local (desarrollo sin MinIO)
     MEDIA_URL  = 'media/'

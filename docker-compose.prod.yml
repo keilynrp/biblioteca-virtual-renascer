@@ -63,22 +63,22 @@ services:
       - "traefik.http.routers.bvs-api.tls=true"
       - "traefik.http.routers.bvs-api.tls.certresolver=letsencrypt"
       - "traefik.http.routers.bvs-api.service=bvs-backend"
-      - "traefik.http.routers.bvs-api.priority=10"
+      - "traefik.http.routers.bvs-api.priority=100"
       - "traefik.http.services.bvs-backend.loadbalancer.server.port=8000"
-      # Admin routing (priority 10)
+      # Admin routing (priority 100)
       - "traefik.http.routers.bvs-admin.rule=Host(`bibliotecavirtual.renascerdosaber.com`) && PathPrefix(`/admin`)"
       - "traefik.http.routers.bvs-admin.entrypoints=websecure"
       - "traefik.http.routers.bvs-admin.tls=true"
       - "traefik.http.routers.bvs-admin.tls.certresolver=letsencrypt"
       - "traefik.http.routers.bvs-admin.service=bvs-backend"
-      - "traefik.http.routers.bvs-admin.priority=10"
-      # Static files (priority 8)
+      - "traefik.http.routers.bvs-admin.priority=100"
+      # Static files (priority 100)
       - "traefik.http.routers.bvs-static.rule=Host(`bibliotecavirtual.renascerdosaber.com`) && PathPrefix(`/static`)"
       - "traefik.http.routers.bvs-static.entrypoints=websecure"
       - "traefik.http.routers.bvs-static.tls=true"
       - "traefik.http.routers.bvs-static.tls.certresolver=letsencrypt"
       - "traefik.http.routers.bvs-static.service=bvs-backend"
-      - "traefik.http.routers.bvs-static.priority=8"
+      - "traefik.http.routers.bvs-static.priority=100"
       # Media files are served directly from MinIO (see minio service labels)
     networks:
       - dokploy-network
@@ -243,7 +243,7 @@ services:
       - "traefik.http.routers.bvs-media.tls=true"
       - "traefik.http.routers.bvs-media.tls.certresolver=letsencrypt"
       - "traefik.http.routers.bvs-media.service=bvs-minio"
-      - "traefik.http.routers.bvs-media.priority=9"
+      - "traefik.http.routers.bvs-media.priority=100"
       - "traefik.http.routers.bvs-media.middlewares=media-rewrite"
       - "traefik.http.middlewares.media-rewrite.replacepathregex.regex=^/media/(.*)"
       - "traefik.http.middlewares.media-rewrite.replacepathregex.replacement=/${MINIO_BUCKET_NAME:-biblioteca}/$$1"

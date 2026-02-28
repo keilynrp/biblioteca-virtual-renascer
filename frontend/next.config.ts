@@ -90,8 +90,8 @@ const nextConfig: NextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     // Increase formats for better support
     formats: ['image/avif', 'image/webp'],
-    // Allow unoptimized as fallback during development
-    unoptimized: process.env.NODE_ENV === 'development',
+    // Skip Next.js image optimizer — images are served directly by MinIO/Traefik
+    unoptimized: true,
   },
 
   // Optimize output

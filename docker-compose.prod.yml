@@ -57,31 +57,35 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      # API routing
+      # API routing (priority 10 — highest)
       - "traefik.http.routers.bvs-api.rule=Host(`bibliotecavirtual.renascerdosaber.com`) && PathPrefix(`/api`)"
       - "traefik.http.routers.bvs-api.entrypoints=websecure"
       - "traefik.http.routers.bvs-api.tls=true"
       - "traefik.http.routers.bvs-api.tls.certresolver=letsencrypt"
       - "traefik.http.routers.bvs-api.service=bvs-backend"
+      - "traefik.http.routers.bvs-api.priority=10"
       - "traefik.http.services.bvs-backend.loadbalancer.server.port=8000"
-      # Admin routing
+      # Admin routing (priority 10)
       - "traefik.http.routers.bvs-admin.rule=Host(`bibliotecavirtual.renascerdosaber.com`) && PathPrefix(`/admin`)"
       - "traefik.http.routers.bvs-admin.entrypoints=websecure"
       - "traefik.http.routers.bvs-admin.tls=true"
       - "traefik.http.routers.bvs-admin.tls.certresolver=letsencrypt"
       - "traefik.http.routers.bvs-admin.service=bvs-backend"
-      # Static files
+      - "traefik.http.routers.bvs-admin.priority=10"
+      # Static files (priority 8)
       - "traefik.http.routers.bvs-static.rule=Host(`bibliotecavirtual.renascerdosaber.com`) && PathPrefix(`/static`)"
       - "traefik.http.routers.bvs-static.entrypoints=websecure"
       - "traefik.http.routers.bvs-static.tls=true"
       - "traefik.http.routers.bvs-static.tls.certresolver=letsencrypt"
       - "traefik.http.routers.bvs-static.service=bvs-backend"
-      # Media files
+      - "traefik.http.routers.bvs-static.priority=8"
+      # Media files (priority 9)
       - "traefik.http.routers.bvs-media.rule=Host(`bibliotecavirtual.renascerdosaber.com`) && PathPrefix(`/media`)"
       - "traefik.http.routers.bvs-media.entrypoints=websecure"
       - "traefik.http.routers.bvs-media.tls=true"
       - "traefik.http.routers.bvs-media.tls.certresolver=letsencrypt"
       - "traefik.http.routers.bvs-media.service=bvs-backend"
+      - "traefik.http.routers.bvs-media.priority=9"
     networks:
       - dokploy-network
 

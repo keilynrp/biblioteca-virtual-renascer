@@ -1,0 +1,290 @@
+# =============================================================================
+# BVS Framework — Production Docker Compose for Dokploy
+# =============================================================================
+# Deploy via Dokploy: set compose path to docker-compose.prod.yml
+# Paste .env.production.example values into Dokploy's environment editor.
+# Traefik (managed by Dokploy) handles SSL termination and routing.
+# =============================================================================
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    entrypoint: /app/entrypoint.prod.sh
+    command:
+      - gunicorn
+      - config.wsgi:application
+      - --bind=0.0.0.0:8000
+      - --workers=4
+      - --threads=4
+      - --timeout=120
+      - --max-requests=1000
+      - --max-requests-jitter=50
+      - --access-logfile=-
+      - --error-logfile=-
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - DJANGO_ENV=production
+    volumes:
+      - backend_static:/app/staticfiles
+      - backend_media:/app/media
+      - backend_logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/health/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    restart: unless-stopped
+    networks:
+      - dokploy-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.production
+      args:
+        - NEXT_PUBLIC_API_URL=/api
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+      - NEXT_PUBLIC_API_URL=/api
+      - API_INTERNAL_URL=http://backend:8000/api
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+    depends_on:
+      backend:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      # HTTPS entrypoint
+      - "traefik.http.routers.bvs-frontend.rule=Host(`bibliotecavirtual.renascerdosaber.com`)"
+      - "traefik.http.routers.bvs-frontend.entrypoints=websecure"
+      - "traefik.http.routers.bvs-frontend.tls=true"
+      - "traefik.http.routers.bvs-frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.bvs-frontend.loadbalancer.server.port=3000"
+      # API routing — forward /api/* to backend
+      - "traefik.http.routers.bvs-api.rule=Host(`bibliotecavirtual.renascerdosaber.com`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.bvs-api.entrypoints=websecure"
+      - "traefik.http.routers.bvs-api.tls=true"
+      - "traefik.http.routers.bvs-api.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.bvs-api.service=bvs-backend"
+      - "traefik.http.services.bvs-backend.loadbalancer.server.port=8000"
+      # Admin routing — forward /admin/* to backend
+      - "traefik.http.routers.bvs-admin.rule=Host(`bibliotecavirtual.renascerdosaber.com`) && PathPrefix(`/admin`)"
+      - "traefik.http.routers.bvs-admin.entrypoints=websecure"
+      - "traefik.http.routers.bvs-admin.tls=true"
+      - "traefik.http.routers.bvs-admin.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.bvs-admin.service=bvs-backend"
+      # Static files — forward /static/* to backend
+      - "traefik.http.routers.bvs-static.rule=Host(`bibliotecavirtual.renascerdosaber.com`) && PathPrefix(`/static`)"
+      - "traefik.http.routers.bvs-static.entrypoints=websecure"
+      - "traefik.http.routers.bvs-static.tls=true"
+      - "traefik.http.routers.bvs-static.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.bvs-static.service=bvs-backend"
+      # Media files — forward /media/* to backend
+      - "traefik.http.routers.bvs-media.rule=Host(`bibliotecavirtual.renascerdosaber.com`) && PathPrefix(`/media`)"
+      - "traefik.http.routers.bvs-media.entrypoints=websecure"
+      - "traefik.http.routers.bvs-media.tls=true"
+      - "traefik.http.routers.bvs-media.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.bvs-media.service=bvs-backend"
+      # HTTP → HTTPS redirect
+      - "traefik.http.routers.bvs-http.rule=Host(`bibliotecavirtual.renascerdosaber.com`)"
+      - "traefik.http.routers.bvs-http.entrypoints=web"
+      - "traefik.http.routers.bvs-http.middlewares=bvs-redirect-https"
+      - "traefik.http.middlewares.bvs-redirect-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.bvs-redirect-https.redirectscheme.permanent=true"
+    networks:
+      - dokploy-network
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-biblioteca}
+      - POSTGRES_USER=${POSTGRES_USER:-biblioteca_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    command: >
+      postgres
+      -c shared_buffers=128MB
+      -c effective_cache_size=384MB
+      -c max_connections=100
+      -c work_mem=4MB
+      -c maintenance_work_mem=64MB
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c wal_buffers=16MB
+      -c checkpoint_completion_target=0.9
+      -c max_wal_size=1GB
+      -c min_wal_size=80MB
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-biblioteca_user} -d ${POSTGRES_DB:-biblioteca}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    shm_size: 128mb
+    restart: unless-stopped
+    networks:
+      - dokploy-network
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    command: >
+      redis-server
+      --maxmemory 480mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1000
+      --appendonly yes
+      --appendfsync everysec
+      --tcp-backlog 511
+      --timeout 300
+      --tcp-keepalive 60
+      --maxclients 10000
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - dokploy-network
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.6
+    environment:
+      - MEILI_ENV=production
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+      - MEILI_NO_ANALYTICS=true
+      - MEILI_MAX_INDEXING_MEMORY=100mb
+      - MEILI_LOG_LEVEL=WARN
+    volumes:
+      - meilisearch_data:/meili_data
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:7700/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - dokploy-network
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
+    volumes:
+      - minio_data:/data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - dokploy-network
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-biblioteca}
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set myminio http://minio:9000 $${MINIO_ACCESS_KEY} $${MINIO_SECRET_KEY} &&
+      mc mb --ignore-existing myminio/$${MINIO_BUCKET_NAME} &&
+      mc anonymous set none myminio/$${MINIO_BUCKET_NAME} &&
+      echo 'MinIO bucket ready.'
+      "
+    restart: "no"
+    networks:
+      - dokploy-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  meilisearch_data:
+    driver: local
+  minio_data:
+    driver: local
+  backend_static:
+    driver: local
+  backend_media:
+    driver: local
+  backend_logs:
+    driver: local
+
+networks:
+  dokploy-network:
+    external: true

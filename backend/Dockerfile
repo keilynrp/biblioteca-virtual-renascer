@@ -37,6 +37,9 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
 # Copy project (this will be overridden by volume mount in development)
 COPY . .
 
+# Ensure entrypoint scripts are executable
+RUN chmod +x /app/entrypoint.prod.sh 2>/dev/null || true
+
 # Run as root in development to avoid permission issues with volume mounts
 # In production, you should create a non-root user
 # RUN addgroup --system django \

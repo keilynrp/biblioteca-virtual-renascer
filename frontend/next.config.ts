@@ -22,6 +22,9 @@ const nextConfig: NextConfig = {
   async rewrites() {
     const backendUrl =
       process.env.API_INTERNAL_URL || 'http://localhost:8000/api';
+    // Base URL without /api suffix for media proxying
+    const backendBase =
+      process.env.API_INTERNAL_URL?.replace(/\/api$/, '') || 'http://localhost:8000';
     return [
       {
         source: '/api/:path*/',
@@ -30,6 +33,10 @@ const nextConfig: NextConfig = {
       {
         source: '/api/:path*',
         destination: `${backendUrl}/:path*/`,
+      },
+      {
+        source: '/media/:path*',
+        destination: `${backendBase}/media/:path*`,
       },
     ];
   },

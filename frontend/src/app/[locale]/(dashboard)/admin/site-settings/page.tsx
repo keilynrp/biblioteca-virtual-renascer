@@ -43,8 +43,9 @@ export default function SiteSettingsPage() {
     }, [_hasHydrated, user, router])
 
     // Load current settings
+    const isAdmin = user?.user_type === 'admin'
     useEffect(() => {
-        if (!_hasHydrated || user?.user_type !== 'admin') return
+        if (!_hasHydrated || !isAdmin) return
         siteSettingsApi.get().then(data => {
             setSiteName(data.site_name)
             setTagline(data.tagline)
@@ -54,7 +55,7 @@ export default function SiteSettingsPage() {
             setGtmId(data.gtm_id || '')
             setGscId(data.gsc_id || '')
         }).catch(() => { }).finally(() => setLoading(false))
-    }, [_hasHydrated, user])
+    }, [_hasHydrated, isAdmin])
 
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]

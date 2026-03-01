@@ -29,7 +29,7 @@ import {
     Settings,
     User,
 } from "lucide-react"
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { SearchBar } from "@/components/search-bar"
 import { useTranslations } from "next-intl"
 import { LanguageSwitcher } from "@/components/language-switcher"
@@ -80,12 +80,18 @@ export default function DashboardLayout({
             router.push('/onboarding')
             return
         }
+    }, [_hasHydrated, isAuthenticated, user, router])
 
-        // Sincronizar datos del usuario con el backend para reflejar cambios de rol
+    // Sync user data from backend once after hydration
+    const hasSyncedUser = useRef(false)
+    useEffect(() => {
+        if (!_hasHydrated || !isAuthenticated || hasSyncedUser.current) return
+        hasSyncedUser.current = true
+
         api.get('/auth/user/').then(res => {
             updateUser(res.data)
         }).catch(() => { })
-    }, [_hasHydrated, isAuthenticated, user, router, updateUser])
+    }, [_hasHydrated, isAuthenticated, updateUser])
 
     // Load sidebar collapsed state from localStorage (solo después de hidratar)
     useEffect(() => {

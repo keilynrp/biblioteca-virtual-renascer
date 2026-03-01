@@ -38,8 +38,17 @@ import Link from "next/link"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { toast } from "sonner"
+import { AdminGuard } from "@/components/admin/admin-guard"
 
 export default function GestionNoticiasPage() {
+    return (
+        <AdminGuard>
+            <GestionNoticiasContent />
+        </AdminGuard>
+    )
+}
+
+function GestionNoticiasContent() {
     const [posts, setPosts] = useState<BlogPost[]>([])
     const [loading, setLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState("")

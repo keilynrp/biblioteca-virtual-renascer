@@ -32,8 +32,17 @@ import Link from "next/link"
 import { toast } from "sonner"
 import { Separator } from "@/components/ui/separator"
 import { TiptapEditor } from "@/components/ui/tiptap-editor"
+import { AdminGuard } from "@/components/admin/admin-guard"
 
 export default function EditPostPage() {
+    return (
+        <AdminGuard>
+            <EditPostContent />
+        </AdminGuard>
+    )
+}
+
+function EditPostContent() {
     const params = useParams()
     const router = useRouter()
     const isEditing = !!params.slug

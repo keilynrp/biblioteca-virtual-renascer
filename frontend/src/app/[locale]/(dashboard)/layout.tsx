@@ -129,14 +129,14 @@ export default function DashboardLayout({
                 href: item.url,
                 label: item.label,
                 icon: getIconForUrl(item.url),
-                adminOnly: item.url.startsWith('/admin') || item.url.startsWith('/users') || item.url.startsWith('/institutions')
+                adminOnly: item.url.startsWith('/admin') || item.url.startsWith('/users') || item.url.startsWith('/institutions') || item.url.startsWith('/gestion-de-noticias')
             }))
         }
 
         return [
             { href: "/home", label: t("dashboard"), icon: getIconForUrl("/home") },
             { href: "/library", label: t("library"), icon: getIconForUrl("/library") },
-            { href: "/gestion-de-noticias", label: "Gestión de noticias", icon: getIconForUrl("/gestion-de-noticias") },
+            { href: "/gestion-de-noticias", label: "Gestión de noticias", icon: getIconForUrl("/gestion-de-noticias"), adminOnly: true },
             { href: "/my-loans", label: t("loans"), icon: getIconForUrl("/my-loans") },
             { href: "/notifications", label: t("notifications"), icon: getIconForUrl("/notifications") },
             { href: "/favorites", label: t("favorites"), icon: getIconForUrl("/favorites") },

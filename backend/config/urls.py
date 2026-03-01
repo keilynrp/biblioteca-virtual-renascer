@@ -20,7 +20,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('djadmin/', admin.site.urls),
     path('api/', include('apps.core.urls')),  # Health checks and core endpoints
     path('api/auth/', include('apps.authentication.urls')),
     path('api/institutions/', include('apps.institutions.urls')),

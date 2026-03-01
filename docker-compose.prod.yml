@@ -65,8 +65,8 @@ services:
       - "traefik.http.routers.bvs-api.service=bvs-backend"
       - "traefik.http.routers.bvs-api.priority=100"
       - "traefik.http.services.bvs-backend.loadbalancer.server.port=8000"
-      # Admin routing (priority 100)
-      - "traefik.http.routers.bvs-admin.rule=Host(`bibliotecavirtual.renascerdosaber.com`) && PathPrefix(`/admin`)"
+      # Django admin routing (priority 100) — moved to /djadmin to free /admin for frontend
+      - "traefik.http.routers.bvs-admin.rule=Host(`bibliotecavirtual.renascerdosaber.com`) && PathPrefix(`/djadmin`)"
       - "traefik.http.routers.bvs-admin.entrypoints=websecure"
       - "traefik.http.routers.bvs-admin.tls=true"
       - "traefik.http.routers.bvs-admin.tls.certresolver=letsencrypt"

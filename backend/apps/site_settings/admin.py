@@ -14,6 +14,19 @@ class SiteSettingsAdmin(admin.ModelAdmin):
             'fields': ('ga_id', 'gtm_id', 'gsc_id'),
             'description': 'Configuración de herramientas de Google para análisis y SEO.'
         }),
+        ('Cookies y Privacidad', {
+            'fields': (
+                'cookie_consent_enabled',
+                'privacy_policy_url', 'terms_of_service_url', 'cookie_policy_url',
+                'cookies_analytics_enabled', 'cookies_marketing_enabled', 'cookies_functional_enabled',
+                'cookie_banner_title', 'cookie_banner_description',
+            ),
+            'description': 'Configuración del banner de consentimiento de cookies y enlaces de políticas.'
+        }),
+        ('Compliance', {
+            'fields': ('compliance_gdpr', 'compliance_lgpd', 'compliance_hipaa', 'compliance_ccpa'),
+            'description': 'Marcos regulatorios de privacidad aplicables.'
+        }),
         ('Metadatos', {
             'fields': ('updated_at',),
             'classes': ('collapse',)

@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Settings2, Upload, Loader2 } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Textarea } from "@/components/ui/textarea"
+import { Settings2, Upload, Loader2, Shield, Cookie } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 
 export default function SiteSettingsPage() {
@@ -30,6 +32,21 @@ export default function SiteSettingsPage() {
     const [gaId, setGaId] = useState('')
     const [gtmId, setGtmId] = useState('')
     const [gscId, setGscId] = useState('')
+
+    // Cookie & Privacy
+    const [cookieConsentEnabled, setCookieConsentEnabled] = useState(false)
+    const [privacyPolicyUrl, setPrivacyPolicyUrl] = useState('')
+    const [termsOfServiceUrl, setTermsOfServiceUrl] = useState('')
+    const [cookiePolicyUrl, setCookiePolicyUrl] = useState('')
+    const [cookiesAnalytics, setCookiesAnalytics] = useState(true)
+    const [cookiesMarketing, setCookiesMarketing] = useState(false)
+    const [cookiesFunctional, setCookiesFunctional] = useState(true)
+    const [complianceGdpr, setComplianceGdpr] = useState(false)
+    const [complianceLgpd, setComplianceLgpd] = useState(false)
+    const [complianceHipaa, setComplianceHipaa] = useState(false)
+    const [complianceCcpa, setComplianceCcpa] = useState(false)
+    const [cookieBannerTitle, setCookieBannerTitle] = useState('')
+    const [cookieBannerDescription, setCookieBannerDescription] = useState('')
 
     const logoInputRef = useRef<HTMLInputElement>(null)
     const faviconInputRef = useRef<HTMLInputElement>(null)
@@ -54,6 +71,19 @@ export default function SiteSettingsPage() {
             setGaId(data.ga_id || '')
             setGtmId(data.gtm_id || '')
             setGscId(data.gsc_id || '')
+            setCookieConsentEnabled(data.cookie_consent_enabled ?? false)
+            setPrivacyPolicyUrl(data.privacy_policy_url || '')
+            setTermsOfServiceUrl(data.terms_of_service_url || '')
+            setCookiePolicyUrl(data.cookie_policy_url || '')
+            setCookiesAnalytics(data.cookies_analytics_enabled ?? true)
+            setCookiesMarketing(data.cookies_marketing_enabled ?? false)
+            setCookiesFunctional(data.cookies_functional_enabled ?? true)
+            setComplianceGdpr(data.compliance_gdpr ?? false)
+            setComplianceLgpd(data.compliance_lgpd ?? false)
+            setComplianceHipaa(data.compliance_hipaa ?? false)
+            setComplianceCcpa(data.compliance_ccpa ?? false)
+            setCookieBannerTitle(data.cookie_banner_title || '')
+            setCookieBannerDescription(data.cookie_banner_description || '')
         }).catch(() => { }).finally(() => setLoading(false))
     }, [_hasHydrated, isAdmin])
 
@@ -82,6 +112,19 @@ export default function SiteSettingsPage() {
             formData.append('ga_id', gaId)
             formData.append('gtm_id', gtmId)
             formData.append('gsc_id', gscId)
+            formData.append('cookie_consent_enabled', String(cookieConsentEnabled))
+            formData.append('privacy_policy_url', privacyPolicyUrl)
+            formData.append('terms_of_service_url', termsOfServiceUrl)
+            formData.append('cookie_policy_url', cookiePolicyUrl)
+            formData.append('cookies_analytics_enabled', String(cookiesAnalytics))
+            formData.append('cookies_marketing_enabled', String(cookiesMarketing))
+            formData.append('cookies_functional_enabled', String(cookiesFunctional))
+            formData.append('compliance_gdpr', String(complianceGdpr))
+            formData.append('compliance_lgpd', String(complianceLgpd))
+            formData.append('compliance_hipaa', String(complianceHipaa))
+            formData.append('compliance_ccpa', String(complianceCcpa))
+            formData.append('cookie_banner_title', cookieBannerTitle)
+            formData.append('cookie_banner_description', cookieBannerDescription)
 
             await siteSettingsApi.update(formData)
             refresh()
@@ -254,6 +297,171 @@ export default function SiteSettingsPage() {
                         />
                         <p className="text-[10px] text-muted-foreground">Código de la etiqueta meta de verificación. Solo la parte del contenido.</p>
                     </div>
+                </CardContent>
+            </Card>
+
+            {/* Privacy Policies */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                        <Shield className="h-4 w-4 text-primary" />
+                        Políticas de Privacidad
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-1.5">
+                        <Label htmlFor="privacy_policy_url">URL Política de Privacidad</Label>
+                        <Input
+                            id="privacy_policy_url"
+                            type="url"
+                            value={privacyPolicyUrl}
+                            onChange={e => setPrivacyPolicyUrl(e.target.value)}
+                            placeholder="https://..."
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="terms_of_service_url">URL Términos de Servicio</Label>
+                        <Input
+                            id="terms_of_service_url"
+                            type="url"
+                            value={termsOfServiceUrl}
+                            onChange={e => setTermsOfServiceUrl(e.target.value)}
+                            placeholder="https://..."
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="cookie_policy_url">URL Política de Cookies</Label>
+                        <Input
+                            id="cookie_policy_url"
+                            type="url"
+                            value={cookiePolicyUrl}
+                            onChange={e => setCookiePolicyUrl(e.target.value)}
+                            placeholder="https://..."
+                        />
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Cookies & Compliance */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                        <Cookie className="h-4 w-4 text-primary" />
+                        Cookies y Compliance
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    {/* Master switch */}
+                    <div className="flex items-center gap-3">
+                        <Checkbox
+                            id="cookie_consent_enabled"
+                            checked={cookieConsentEnabled}
+                            onCheckedChange={(v) => setCookieConsentEnabled(v === true)}
+                        />
+                        <Label htmlFor="cookie_consent_enabled" className="font-medium">
+                            Habilitar banner de consentimiento de cookies
+                        </Label>
+                    </div>
+
+                    {cookieConsentEnabled && (
+                        <>
+                            {/* Categories */}
+                            <div className="space-y-3">
+                                <p className="text-sm font-medium text-muted-foreground">Categorías de Cookies</p>
+                                <div className="flex items-center gap-3">
+                                    <Checkbox id="cookies_essential" checked={true} disabled />
+                                    <Label htmlFor="cookies_essential" className="text-sm">
+                                        Esenciales <span className="text-xs text-muted-foreground">(siempre activas)</span>
+                                    </Label>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <Checkbox
+                                        id="cookies_analytics"
+                                        checked={cookiesAnalytics}
+                                        onCheckedChange={(v) => setCookiesAnalytics(v === true)}
+                                    />
+                                    <Label htmlFor="cookies_analytics" className="text-sm">Analítica</Label>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <Checkbox
+                                        id="cookies_marketing"
+                                        checked={cookiesMarketing}
+                                        onCheckedChange={(v) => setCookiesMarketing(v === true)}
+                                    />
+                                    <Label htmlFor="cookies_marketing" className="text-sm">Marketing</Label>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <Checkbox
+                                        id="cookies_functional"
+                                        checked={cookiesFunctional}
+                                        onCheckedChange={(v) => setCookiesFunctional(v === true)}
+                                    />
+                                    <Label htmlFor="cookies_functional" className="text-sm">Funcional</Label>
+                                </div>
+                            </div>
+
+                            {/* Compliance */}
+                            <div className="space-y-3">
+                                <p className="text-sm font-medium text-muted-foreground">Marcos de Compliance</p>
+                                <div className="flex items-center gap-3">
+                                    <Checkbox
+                                        id="compliance_gdpr"
+                                        checked={complianceGdpr}
+                                        onCheckedChange={(v) => setComplianceGdpr(v === true)}
+                                    />
+                                    <Label htmlFor="compliance_gdpr" className="text-sm">GDPR (Unión Europea)</Label>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <Checkbox
+                                        id="compliance_lgpd"
+                                        checked={complianceLgpd}
+                                        onCheckedChange={(v) => setComplianceLgpd(v === true)}
+                                    />
+                                    <Label htmlFor="compliance_lgpd" className="text-sm">LGPD (Brasil)</Label>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <Checkbox
+                                        id="compliance_hipaa"
+                                        checked={complianceHipaa}
+                                        onCheckedChange={(v) => setComplianceHipaa(v === true)}
+                                    />
+                                    <Label htmlFor="compliance_hipaa" className="text-sm">HIPAA (Salud - EE.UU.)</Label>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <Checkbox
+                                        id="compliance_ccpa"
+                                        checked={complianceCcpa}
+                                        onCheckedChange={(v) => setComplianceCcpa(v === true)}
+                                    />
+                                    <Label htmlFor="compliance_ccpa" className="text-sm">CCPA (California - EE.UU.)</Label>
+                                </div>
+                            </div>
+
+                            {/* Banner customization */}
+                            <div className="space-y-4 border-t pt-4">
+                                <p className="text-sm font-medium text-muted-foreground">Personalización del Banner</p>
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="cookie_banner_title">Título del banner</Label>
+                                    <Input
+                                        id="cookie_banner_title"
+                                        value={cookieBannerTitle}
+                                        onChange={e => setCookieBannerTitle(e.target.value)}
+                                        placeholder="Utilizamos cookies"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="cookie_banner_description">Descripción del banner</Label>
+                                    <Textarea
+                                        id="cookie_banner_description"
+                                        value={cookieBannerDescription}
+                                        onChange={e => setCookieBannerDescription(e.target.value)}
+                                        placeholder="Este sitio utiliza cookies..."
+                                        rows={3}
+                                    />
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </CardContent>
             </Card>
 

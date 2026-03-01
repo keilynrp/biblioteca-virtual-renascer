@@ -27,5 +27,25 @@
         "heading": "Looks like you're lost",
         "description": "The page you are looking for doesn't exist or has been moved.",
         "backHome": "Back to Home"
+    },
+    "CookieConsent": {
+        "defaultTitle": "We use cookies",
+        "defaultDescription": "This site uses cookies to improve your experience. You can customize your preferences or accept all cookies.",
+        "acceptAll": "Accept all",
+        "rejectOptional": "Reject optional",
+        "customize": "Customize",
+        "savePreferences": "Save preferences",
+        "close": "Close",
+        "privacyPolicy": "Privacy Policy",
+        "cookiePolicy": "Cookie Policy",
+        "termsOfService": "Terms of Service",
+        "categoryEssential": "Essential",
+        "categoryEssentialDesc": "Required for the site to function. Cannot be disabled.",
+        "categoryAnalytics": "Analytics",
+        "categoryAnalyticsDesc": "Help us understand how visitors use the site.",
+        "categoryMarketing": "Marketing",
+        "categoryMarketingDesc": "Used to deliver relevant ads and track campaigns.",
+        "categoryFunctional": "Functional",
+        "categoryFunctionalDesc": "Enable enhanced features and personalization."
     }
 }

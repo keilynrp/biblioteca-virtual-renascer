@@ -9,6 +9,22 @@ export interface SiteSettings {
     ga_id: string
     gtm_id: string
     gsc_id: string
+    // Cookie & Privacy
+    cookie_consent_enabled: boolean
+    privacy_policy_url: string
+    terms_of_service_url: string
+    cookie_policy_url: string
+    cookies_analytics_enabled: boolean
+    cookies_marketing_enabled: boolean
+    cookies_functional_enabled: boolean
+    // Compliance
+    compliance_gdpr: boolean
+    compliance_lgpd: boolean
+    compliance_hipaa: boolean
+    compliance_ccpa: boolean
+    // Banner
+    cookie_banner_title: string
+    cookie_banner_description: string
     updated_at: string
 }
 

@@ -10,6 +10,7 @@ import { routing } from '@/i18n/routing';
 
 import { NavigationProvider } from "@/context/navigation-context";
 import { GoogleServices } from "@/components/GoogleServices";
+import { CookieConsentBanner } from "@/components/cookie-consent-banner";
 import { SiteSettingsProvider } from "@/context/site-settings-context";
 
 const geistSans = Geist({
@@ -67,6 +68,7 @@ export default async function RootLayout({
           <GoogleServices />
           <PwaManager />
           {children}
+          <CookieConsentBanner />
           <Toaster />
         </NavigationProvider>
       </SiteSettingsProvider>

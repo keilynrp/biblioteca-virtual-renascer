@@ -27,5 +27,25 @@
         "heading": "Parece que você se perdeu",
         "description": "A página que você procura não existe ou foi movida.",
         "backHome": "Voltar ao início"
+    },
+    "CookieConsent": {
+        "defaultTitle": "Utilizamos cookies",
+        "defaultDescription": "Este site utiliza cookies para melhorar sua experiência. Você pode personalizar suas preferências ou aceitar todos os cookies.",
+        "acceptAll": "Aceitar todos",
+        "rejectOptional": "Rejeitar opcionais",
+        "customize": "Personalizar",
+        "savePreferences": "Salvar preferências",
+        "close": "Fechar",
+        "privacyPolicy": "Política de Privacidade",
+        "cookiePolicy": "Política de Cookies",
+        "termsOfService": "Termos de Serviço",
+        "categoryEssential": "Essenciais",
+        "categoryEssentialDesc": "Necessários para o funcionamento do site. Não podem ser desativados.",
+        "categoryAnalytics": "Analítica",
+        "categoryAnalyticsDesc": "Nos ajudam a entender como os visitantes usam o site.",
+        "categoryMarketing": "Marketing",
+        "categoryMarketingDesc": "Usados para exibir anúncios relevantes e rastrear campanhas.",
+        "categoryFunctional": "Funcionais",
+        "categoryFunctionalDesc": "Habilitam recursos avançados e personalização."
     }
 }

@@ -16,9 +16,18 @@ from .serializers import (
     ForcePasswordResetSerializer,
     UserPasswordStatusSerializer,
     OnboardingSerializer,
+    PasswordResetRequestSerializer,
+    PasswordResetConfirmSerializer,
 )
 from .models import PasswordPolicy, User as UserModel
 from rest_framework_simplejwt.views import TokenObtainPairView
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.conf import settings
+from django.core.mail import send_mail
+import os
+import logging
 from apps.core.decorators import (
     rate_limit_register,
     rate_limit_password_reset,
@@ -336,3 +345,155 @@ class CheckPasswordExpirationView(APIView):
         return Response(response_data)
 
 
+# =============================================================================
+# PASSWORD RESET VIEWS
+# =============================================================================
+
+logger = logging.getLogger(__name__)
+
+
+@method_decorator(rate_limit_password_reset, name='dispatch')
+class PasswordResetRequestView(APIView):
+    """
+    Request a password reset email.
+
+    Rate limit: 3 per hour per IP.
+    Always returns 200 to prevent email enumeration.
+    """
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+
+        try:
+            user = User.objects.get(email=email, is_active=True)
+        except User.DoesNotExist:
+            # Return success anyway to prevent email enumeration
+            return Response(
+                {"message": "Si el correo existe en nuestro sistema, recibirás un enlace de recuperación."},
+                status=status.HTTP_200_OK
+            )
+
+        # Generate token and uid
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+        # Build reset URL (frontend URL)
+        site_url = os.getenv('SITE_URL', 'http://localhost:3000')
+        reset_link = f"{site_url}/reset-password?uid={uid}&token={token}"
+
+        # Send email
+        self._send_reset_email(user, reset_link)
+
+        return Response(
+            {"message": "Si el correo existe en nuestro sistema, recibirás un enlace de recuperación."},
+            status=status.HTTP_200_OK
+        )
+
+    def _send_reset_email(self, user, reset_link):
+        """Send password reset email using the mailer service or Django fallback."""
+        display_name = user.first_name or user.username
+        subject = "Recuperación de contraseña - Biblioteca Virtual"
+        body_text = (
+            f"Hola {display_name},\n\n"
+            f"Recibimos una solicitud para restablecer tu contraseña.\n\n"
+            f"Haz clic en el siguiente enlace para crear una nueva contraseña:\n"
+            f"{reset_link}\n\n"
+            f"Este enlace expira en 24 horas.\n\n"
+            f"Si no solicitaste este cambio, ignora este correo.\n\n"
+            f"---\n"
+            f"Biblioteca Virtual Renascer"
+        )
+        body_html = f"""
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8" /></head>
+<body style="font-family:sans-serif;background:#f4f4f4;margin:0;padding:0;">
+  <div style="max-width:600px;margin:32px auto;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    <div style="background:#00576F;padding:24px 32px;text-align:center;">
+      <h1 style="color:#ffffff;margin:0;font-size:22px;">Biblioteca Virtual Renascer</h1>
+    </div>
+    <div style="padding:32px;">
+      <h2 style="color:#1a1a1a;margin-top:0;">Recuperación de contraseña</h2>
+      <p style="color:#444444;line-height:1.6;">Hola {display_name},</p>
+      <p style="color:#444444;line-height:1.6;">Recibimos una solicitud para restablecer tu contraseña. Haz clic en el botón de abajo para crear una nueva:</p>
+      <p style="text-align:center;margin:32px 0;">
+        <a href="{reset_link}" style="display:inline-block;padding:14px 32px;background:#00576F;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;font-size:16px;">
+          Restablecer contraseña
+        </a>
+      </p>
+      <p style="color:#888888;font-size:13px;line-height:1.5;">Este enlace expira en 24 horas. Si no solicitaste este cambio, puedes ignorar este correo de forma segura.</p>
+    </div>
+    <div style="background:#f9f9f9;padding:16px 32px;text-align:center;border-top:1px solid #eeeeee;">
+      <p style="color:#888888;font-size:12px;margin:0;">Biblioteca Virtual Renascer</p>
+    </div>
+  </div>
+</body>
+</html>
+""".strip()
+
+        # Try mailer service first, then fallback
+        try:
+            from apps.mailer.models import SMTPConfig
+            from apps.mailer import services as mailer_services
+            cfg = SMTPConfig.get_config()
+            if cfg.is_active:
+                mailer_services.send_email(
+                    to=user.email,
+                    subject=subject,
+                    body_text=body_text,
+                    body_html=body_html,
+                    template_key='password_reset',
+                )
+                return
+        except Exception as e:
+            logger.warning(f"Mailer service failed, falling back to Django mail: {e}")
+
+        try:
+            send_mail(
+                subject=subject,
+                message=body_text,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=True,
+                html_message=body_html,
+            )
+        except Exception as e:
+            logger.error(f"Failed to send password reset email: {e}")
+
+
+class PasswordResetConfirmView(APIView):
+    """
+    Confirm password reset with uid, token, and new password.
+    """
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            uid = force_str(urlsafe_base64_decode(serializer.validated_data['uid']))
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            return Response(
+                {"error": "Enlace inválido o expirado."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not default_token_generator.check_token(user, serializer.validated_data['token']):
+            return Response(
+                {"error": "Enlace inválido o expirado."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.set_password(serializer.validated_data['new_password'])
+        user.save()
+        user.update_password_changed_at()
+
+        return Response(
+            {"message": "Contraseña restablecida exitosamente."},
+            status=status.HTTP_200_OK
+        )

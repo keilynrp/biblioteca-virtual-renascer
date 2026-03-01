@@ -156,34 +156,33 @@ class OnboardingSerializer(serializers.Serializer):
         return user
 
 
+def validate_password_against_policy(value):
+    """Shared password validation against PasswordPolicy rules."""
+    policy = PasswordPolicy.get_policy()
+
+    if len(value) < policy.min_length:
+        raise serializers.ValidationError(
+            f"La contraseña debe tener al menos {policy.min_length} caracteres."
+        )
+    if policy.require_uppercase and not any(c.isupper() for c in value):
+        raise serializers.ValidationError("La contraseña debe contener al menos una letra mayúscula.")
+    if policy.require_lowercase and not any(c.islower() for c in value):
+        raise serializers.ValidationError("La contraseña debe contener al menos una letra minúscula.")
+    if policy.require_numbers and not any(c.isdigit() for c in value):
+        raise serializers.ValidationError("La contraseña debe contener al menos un número.")
+    if policy.require_special:
+        special_chars = "!@#$%^&*()_+-=[]{}|;:,.<>?"
+        if not any(c in special_chars for c in value):
+            raise serializers.ValidationError("La contraseña debe contener al menos un carácter especial.")
+    return value
+
+
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
 
     def validate_new_password(self, value):
-        # Validate against policy requirements
-        policy = PasswordPolicy.get_policy()
-        
-        if len(value) < policy.min_length:
-            raise serializers.ValidationError(
-                f"La contraseña debe tener al menos {policy.min_length} caracteres."
-            )
-        
-        if policy.require_uppercase and not any(c.isupper() for c in value):
-            raise serializers.ValidationError("La contraseña debe contener al menos una letra mayúscula.")
-        
-        if policy.require_lowercase and not any(c.islower() for c in value):
-            raise serializers.ValidationError("La contraseña debe contener al menos una letra minúscula.")
-        
-        if policy.require_numbers and not any(c.isdigit() for c in value):
-            raise serializers.ValidationError("La contraseña debe contener al menos un número.")
-        
-        if policy.require_special:
-            special_chars = "!@#$%^&*()_+-=[]{}|;:,.<>?"
-            if not any(c in special_chars for c in value):
-                raise serializers.ValidationError("La contraseña debe contener al menos un carácter especial.")
-        
-        return value
+        return validate_password_against_policy(value)
 
 
 class PasswordPolicySerializer(serializers.ModelSerializer):
@@ -245,4 +244,27 @@ class UserPasswordStatusSerializer(serializers.ModelSerializer):
         expiration_date = obj.password_changed_at + timezone.timedelta(days=policy.expiration_days)
         days_left = (expiration_date - timezone.now()).days
         return max(0, days_left)
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    """Serializer for requesting a password reset email."""
+    email = serializers.EmailField(required=True)
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    """Serializer for confirming a password reset with a new password."""
+    uid = serializers.CharField(required=True)
+    token = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+    confirm_password = serializers.CharField(required=True)
+
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs['confirm_password']:
+            raise serializers.ValidationError(
+                {"new_password": "Las contraseñas no coinciden."}
+            )
+        return attrs
+
+    def validate_new_password(self, value):
+        return validate_password_against_policy(value)
 

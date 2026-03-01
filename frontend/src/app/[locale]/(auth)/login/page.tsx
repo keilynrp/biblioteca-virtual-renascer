@@ -2,6 +2,7 @@
 "use client"
 
 import { useState } from "react"
+import { Eye, EyeOff, ArrowLeft } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -33,6 +34,7 @@ export default function LoginPage() {
     const router = useRouter()
     const login = useAuthStore((state) => state.login)
     const [isLoading, setIsLoading] = useState(false)
+    const [showPassword, setShowPassword] = useState(false)
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -148,22 +150,32 @@ export default function LoginPage() {
                                             <FormControl>
                                                 <div className="relative">
                                                     <Input
-                                                        type="password"
+                                                        type={showPassword ? "text" : "password"}
                                                         placeholder="*******************"
                                                         className="w-full rounded-lg border border-slate-200 bg-transparent py-6 pl-6 pr-10 text-slate-900 outline-none focus:border-primary focus-visible:shadow-none"
                                                         {...field}
                                                     />
-                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
-                                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                                        </svg>
-                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        tabIndex={-1}
+                                                        onClick={() => setShowPassword(!showPassword)}
+                                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                                        aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                                                    >
+                                                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                                    </button>
                                                 </div>
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}
                                 />
+
+                                <div className="text-right">
+                                    <Link href="/forgot-password" className="text-sm text-primary hover:underline">
+                                        ¿Olvidaste tu contraseña?
+                                    </Link>
+                                </div>
 
                                 <div className="mb-5">
                                     <Button
@@ -184,6 +196,16 @@ export default function LoginPage() {
                                     Regístrate ahora
                                 </Link>
                             </p>
+                        </div>
+
+                        <div className="mt-4 text-center">
+                            <Link
+                                href="/"
+                                className="inline-flex items-center gap-2 font-medium text-slate-500 hover:text-primary transition-colors"
+                            >
+                                <ArrowLeft className="h-4 w-4" />
+                                Volver al inicio
+                            </Link>
                         </div>
                     </div>
                 </div>

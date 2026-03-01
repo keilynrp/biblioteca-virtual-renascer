@@ -16,6 +16,8 @@ from .views import (
     CheckPasswordExpirationView,
     OnboardingView,
     OnboardingOptionsView,
+    PasswordResetRequestView,
+    PasswordResetConfirmView,
 )
 from rest_framework.routers import DefaultRouter
 from django.urls import include
@@ -35,6 +37,10 @@ urlpatterns = [
     # Onboarding
     path('onboarding/', OnboardingView.as_view(), name='onboarding'),
     path('onboarding/options/', OnboardingOptionsView.as_view(), name='onboarding_options'),
+
+    # Password Reset (self-service)
+    path('password/reset/', PasswordResetRequestView.as_view(), name='password_reset_request'),
+    path('password/reset/confirm/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
 
     # Password Policy endpoints
     path('password-policy/', PasswordPolicyView.as_view(), name='password_policy'),

@@ -2,6 +2,7 @@
 "use client"
 
 import { useState } from "react"
+import { Eye, EyeOff, ArrowLeft } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -19,6 +20,8 @@ import Link from "next/link"
 import api from "@/lib/api"
 import { useRouter } from "next/navigation"
 import { useAuthStore } from "@/store/authStore"
+import { calculatePasswordStrength } from "@/lib/password-strength"
+import { cn } from "@/lib/utils"
 
 const formSchema = z.object({
     username: z.string().min(2),
@@ -35,6 +38,8 @@ export default function RegisterPage() {
     const login = useAuthStore((state) => state.login)
     const [error, setError] = useState<string | null>(null)
     const [isLoading, setIsLoading] = useState(false)
+    const [showPassword, setShowPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -45,6 +50,9 @@ export default function RegisterPage() {
             confirmPassword: "",
         },
     })
+
+    const passwordValue = form.watch("password")
+    const strength = calculatePasswordStrength(passwordValue)
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         try {
@@ -193,19 +201,51 @@ export default function RegisterPage() {
                                             <FormControl>
                                                 <div className="relative">
                                                     <Input
-                                                        type="password"
+                                                        type={showPassword ? "text" : "password"}
                                                         placeholder="Ingresa tu contraseña"
                                                         className="w-full rounded-lg border border-slate-200 bg-transparent py-6 pl-6 pr-10 text-slate-900 outline-none focus:border-primary focus-visible:shadow-none"
                                                         {...field}
                                                     />
-                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
-                                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                                        </svg>
-                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        tabIndex={-1}
+                                                        onClick={() => setShowPassword(!showPassword)}
+                                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                                        aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                                                    >
+                                                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                                    </button>
                                                 </div>
                                             </FormControl>
                                             <FormMessage />
+                                            {passwordValue && (
+                                                <div className="mt-2 space-y-1">
+                                                    <div className="flex gap-1">
+                                                        {[1, 2, 3].map((bar) => (
+                                                            <div
+                                                                key={bar}
+                                                                className={cn(
+                                                                    "h-1.5 flex-1 rounded-full transition-colors",
+                                                                    strength.level === "weak" && bar <= 1 ? "bg-red-500" :
+                                                                    strength.level === "medium" && bar <= 2 ? "bg-amber-500" :
+                                                                    strength.level === "strong" ? "bg-green-500" :
+                                                                    "bg-slate-200"
+                                                                )}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                    <p className={cn(
+                                                        "text-xs",
+                                                        strength.level === "weak" && "text-red-600",
+                                                        strength.level === "medium" && "text-amber-600",
+                                                        strength.level === "strong" && "text-green-600"
+                                                    )}>
+                                                        {strength.level === "weak" && "Contraseña débil"}
+                                                        {strength.level === "medium" && "Contraseña moderada"}
+                                                        {strength.level === "strong" && "Contraseña fuerte"}
+                                                    </p>
+                                                </div>
+                                            )}
                                         </FormItem>
                                     )}
                                 />
@@ -218,16 +258,20 @@ export default function RegisterPage() {
                                             <FormControl>
                                                 <div className="relative">
                                                     <Input
-                                                        type="password"
+                                                        type={showConfirmPassword ? "text" : "password"}
                                                         placeholder="Confirma tu contraseña"
                                                         className="w-full rounded-lg border border-slate-200 bg-transparent py-6 pl-6 pr-10 text-slate-900 outline-none focus:border-primary focus-visible:shadow-none"
                                                         {...field}
                                                     />
-                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
-                                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                                        </svg>
-                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        tabIndex={-1}
+                                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                                        aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                                                    >
+                                                        {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                                    </button>
                                                 </div>
                                             </FormControl>
                                             <FormMessage />
@@ -256,6 +300,16 @@ export default function RegisterPage() {
                                     Inicia Sesión
                                 </Link>
                             </p>
+                        </div>
+
+                        <div className="mt-4 text-center">
+                            <Link
+                                href="/"
+                                className="inline-flex items-center gap-2 font-medium text-slate-500 hover:text-primary transition-colors"
+                            >
+                                <ArrowLeft className="h-4 w-4" />
+                                Volver al inicio
+                            </Link>
                         </div>
                     </div>
                 </div>

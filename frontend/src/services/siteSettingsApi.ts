@@ -55,4 +55,6 @@ export const siteSettingsApi = {
     get: () => publicAxios.get<SiteSettings>('/site-settings/').then(r => r.data),
     update: (data: FormData) =>
         api.patch<SiteSettings>('/site-settings/', data).then(r => r.data),
+    updateJson: (data: Record<string, string | boolean>) =>
+        api.patch<SiteSettings>('/site-settings/', data).then(r => r.data),
 }

@@ -70,9 +70,10 @@ function TurnstileWidget({ siteKey, onVerify }: { siteKey: string; onVerify: (to
 function RecaptchaV3Widget({ siteKey, onVerify }: { siteKey: string; onVerify: (token: string) => void }) {
     useEffect(() => {
         const loadAndExecute = () => {
-            if (!window.grecaptcha) return
-            window.grecaptcha.ready(() => {
-                window.grecaptcha.execute(siteKey, { action: 'submit' }).then((token: string) => {
+            const gr = window.grecaptcha
+            if (!gr) return
+            gr.ready(() => {
+                gr.execute(siteKey, { action: 'submit' }).then((token: string) => {
                     onVerify(token)
                 })
             })

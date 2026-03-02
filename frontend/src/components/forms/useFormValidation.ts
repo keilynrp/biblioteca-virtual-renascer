@@ -22,7 +22,7 @@ export function useFormValidation(fields: FormField[]) {
                     break
 
                 case 'number': {
-                    let numSchema = z.coerce.number({ invalid_type_error: 'Debe ser un número' })
+                    let numSchema = z.coerce.number({ message: 'Debe ser un número' })
                     if (field.validation_rules.min !== undefined)
                         numSchema = numSchema.min(field.validation_rules.min)
                     if (field.validation_rules.max !== undefined)

@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import BasePermission, AllowAny
@@ -30,3 +31,35 @@ class SiteSettingsView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(SiteSettingsSerializer(serializer.instance, context={'request': request}).data)
+
+
+class WebManifestView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        obj = SiteSettings.get_settings()
+
+        icons = []
+        if obj.android_chrome_192:
+            icons.append({
+                'src': request.build_absolute_uri(obj.android_chrome_192.url),
+                'sizes': '192x192',
+                'type': 'image/png',
+            })
+        if obj.android_chrome_512:
+            icons.append({
+                'src': request.build_absolute_uri(obj.android_chrome_512.url),
+                'sizes': '512x512',
+                'type': 'image/png',
+            })
+
+        manifest = {
+            'name': obj.site_name,
+            'short_name': obj.site_name[:12],
+            'icons': icons,
+            'theme_color': obj.theme_color or '#3b82f6',
+            'background_color': '#ffffff',
+            'display': 'standalone',
+            'start_url': '/',
+        }
+        return JsonResponse(manifest, content_type='application/manifest+json')

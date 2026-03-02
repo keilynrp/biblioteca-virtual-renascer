@@ -5,7 +5,18 @@ export interface SiteSettings {
     site_name: string
     tagline: string
     logo_url: string | null
+    logo_small_url: string | null
     favicon_url: string | null
+    // Favicon variants
+    favicon_16_url: string | null
+    favicon_32_url: string | null
+    apple_touch_icon_url: string | null
+    android_chrome_192_url: string | null
+    android_chrome_512_url: string | null
+    safari_pinned_tab_color: string
+    ms_tile_color: string
+    theme_color: string
+    // Google Services
     ga_id: string
     gtm_id: string
     gsc_id: string

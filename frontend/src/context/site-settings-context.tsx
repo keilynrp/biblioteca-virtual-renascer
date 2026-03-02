@@ -7,7 +7,16 @@ type SiteSettingsContextType = {
     site_name: string
     tagline: string
     logo_url: string | null
+    logo_small_url: string | null
     favicon_url: string | null
+    favicon_16_url: string | null
+    favicon_32_url: string | null
+    apple_touch_icon_url: string | null
+    android_chrome_192_url: string | null
+    android_chrome_512_url: string | null
+    safari_pinned_tab_color: string
+    ms_tile_color: string
+    theme_color: string
     ga_id: string
     gtm_id: string
     gsc_id: string
@@ -27,11 +36,20 @@ type SiteSettingsContextType = {
     refresh: () => void
 }
 
-const SiteSettingsContext = createContext<SiteSettingsContextType>({
+const defaults: Omit<SiteSettingsContextType, 'refresh'> = {
     site_name: 'BVS',
     tagline: '',
     logo_url: null,
+    logo_small_url: null,
     favicon_url: null,
+    favicon_16_url: null,
+    favicon_32_url: null,
+    apple_touch_icon_url: null,
+    android_chrome_192_url: null,
+    android_chrome_512_url: null,
+    safari_pinned_tab_color: '#3b82f6',
+    ms_tile_color: '#3b82f6',
+    theme_color: '#3b82f6',
     ga_id: '',
     gtm_id: '',
     gsc_id: '',
@@ -48,31 +66,16 @@ const SiteSettingsContext = createContext<SiteSettingsContextType>({
     compliance_ccpa: false,
     cookie_banner_title: '',
     cookie_banner_description: '',
+}
+
+const SiteSettingsContext = createContext<SiteSettingsContextType>({
+    ...defaults,
     refresh: () => { },
 })
 
 export function SiteSettingsProvider({ children }: { children: ReactNode }) {
     const [settings, setSettings] = useState<SiteSettings>({
-        site_name: 'BVS',
-        tagline: '',
-        logo_url: null,
-        favicon_url: null,
-        ga_id: '',
-        gtm_id: '',
-        gsc_id: '',
-        cookie_consent_enabled: false,
-        privacy_policy_url: '',
-        terms_of_service_url: '',
-        cookie_policy_url: '',
-        cookies_analytics_enabled: true,
-        cookies_marketing_enabled: false,
-        cookies_functional_enabled: true,
-        compliance_gdpr: false,
-        compliance_lgpd: false,
-        compliance_hipaa: false,
-        compliance_ccpa: false,
-        cookie_banner_title: '',
-        cookie_banner_description: '',
+        ...defaults,
         updated_at: '',
     })
 
@@ -92,7 +95,16 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
             site_name: settings.site_name,
             tagline: settings.tagline,
             logo_url: settings.logo_url,
+            logo_small_url: settings.logo_small_url,
             favicon_url: settings.favicon_url,
+            favicon_16_url: settings.favicon_16_url,
+            favicon_32_url: settings.favicon_32_url,
+            apple_touch_icon_url: settings.apple_touch_icon_url,
+            android_chrome_192_url: settings.android_chrome_192_url,
+            android_chrome_512_url: settings.android_chrome_512_url,
+            safari_pinned_tab_color: settings.safari_pinned_tab_color,
+            ms_tile_color: settings.ms_tile_color,
+            theme_color: settings.theme_color,
             ga_id: settings.ga_id,
             gtm_id: settings.gtm_id,
             gsc_id: settings.gsc_id,

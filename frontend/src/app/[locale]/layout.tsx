@@ -12,6 +12,7 @@ import { NavigationProvider } from "@/context/navigation-context";
 import { GoogleServices } from "@/components/GoogleServices";
 import { CookieConsentBanner } from "@/components/cookie-consent-banner";
 import { SiteSettingsProvider } from "@/context/site-settings-context";
+import { DynamicFavicon } from "@/components/dynamic-favicon";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -65,6 +66,7 @@ export default async function RootLayout({
     <NextIntlClientProvider messages={messages} locale={locale}>
       <SiteSettingsProvider>
         <NavigationProvider>
+          <DynamicFavicon />
           <GoogleServices />
           <PwaManager />
           {children}

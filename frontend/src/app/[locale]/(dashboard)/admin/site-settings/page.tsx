@@ -26,12 +26,28 @@ export default function SiteSettingsPage() {
     const [siteName, setSiteName] = useState('')
     const [tagline, setTagline] = useState('')
     const [logoFile, setLogoFile] = useState<File | null>(null)
+    const [logoSmallFile, setLogoSmallFile] = useState<File | null>(null)
     const [faviconFile, setFaviconFile] = useState<File | null>(null)
     const [logoPreview, setLogoPreview] = useState<string | null>(null)
+    const [logoSmallPreview, setLogoSmallPreview] = useState<string | null>(null)
     const [faviconPreview, setFaviconPreview] = useState<string | null>(null)
     const [gaId, setGaId] = useState('')
     const [gtmId, setGtmId] = useState('')
     const [gscId, setGscId] = useState('')
+
+    // Favicon variants (read-only, auto-generated)
+    const [faviconVariants, setFaviconVariants] = useState<{
+        favicon_16_url: string | null
+        favicon_32_url: string | null
+        apple_touch_icon_url: string | null
+        android_chrome_192_url: string | null
+        android_chrome_512_url: string | null
+    }>({ favicon_16_url: null, favicon_32_url: null, apple_touch_icon_url: null, android_chrome_192_url: null, android_chrome_512_url: null })
+
+    // Theme colors
+    const [safariPinnedTabColor, setSafariPinnedTabColor] = useState('#3b82f6')
+    const [msTileColor, setMsTileColor] = useState('#3b82f6')
+    const [themeColor, setThemeColor] = useState('#3b82f6')
 
     // Cookie & Privacy
     const [cookieConsentEnabled, setCookieConsentEnabled] = useState(false)
@@ -49,6 +65,7 @@ export default function SiteSettingsPage() {
     const [cookieBannerDescription, setCookieBannerDescription] = useState('')
 
     const logoInputRef = useRef<HTMLInputElement>(null)
+    const logoSmallInputRef = useRef<HTMLInputElement>(null)
     const faviconInputRef = useRef<HTMLInputElement>(null)
 
     // Auth check
@@ -67,10 +84,21 @@ export default function SiteSettingsPage() {
             setSiteName(data.site_name)
             setTagline(data.tagline)
             setLogoPreview(data.logo_url)
+            setLogoSmallPreview(data.logo_small_url)
             setFaviconPreview(data.favicon_url)
             setGaId(data.ga_id || '')
             setGtmId(data.gtm_id || '')
             setGscId(data.gsc_id || '')
+            setFaviconVariants({
+                favicon_16_url: data.favicon_16_url,
+                favicon_32_url: data.favicon_32_url,
+                apple_touch_icon_url: data.apple_touch_icon_url,
+                android_chrome_192_url: data.android_chrome_192_url,
+                android_chrome_512_url: data.android_chrome_512_url,
+            })
+            setSafariPinnedTabColor(data.safari_pinned_tab_color || '#3b82f6')
+            setMsTileColor(data.ms_tile_color || '#3b82f6')
+            setThemeColor(data.theme_color || '#3b82f6')
             setCookieConsentEnabled(data.cookie_consent_enabled ?? false)
             setPrivacyPolicyUrl(data.privacy_policy_url || '')
             setTermsOfServiceUrl(data.terms_of_service_url || '')
@@ -94,6 +122,13 @@ export default function SiteSettingsPage() {
         setLogoPreview(URL.createObjectURL(file))
     }
 
+    const handleLogoSmallChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+        setLogoSmallFile(file)
+        setLogoSmallPreview(URL.createObjectURL(file))
+    }
+
     const handleFaviconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (!file) return
@@ -108,7 +143,11 @@ export default function SiteSettingsPage() {
             formData.append('site_name', siteName)
             formData.append('tagline', tagline)
             if (logoFile) formData.append('logo', logoFile)
+            if (logoSmallFile) formData.append('logo_small', logoSmallFile)
             if (faviconFile) formData.append('favicon', faviconFile)
+            formData.append('safari_pinned_tab_color', safariPinnedTabColor)
+            formData.append('ms_tile_color', msTileColor)
+            formData.append('theme_color', themeColor)
             formData.append('ga_id', gaId)
             formData.append('gtm_id', gtmId)
             formData.append('gsc_id', gscId)
@@ -159,8 +198,8 @@ export default function SiteSettingsPage() {
                 </p>
             </div>
 
-            {/* Logo & Favicon */}
-            <div className="grid md:grid-cols-2 gap-6">
+            {/* Logo, Logo Small & Favicon */}
+            <div className="grid md:grid-cols-3 gap-6">
                 {/* Logo */}
                 <Card>
                     <CardHeader>
@@ -196,6 +235,44 @@ export default function SiteSettingsPage() {
                     </CardContent>
                 </Card>
 
+                {/* Logo Small */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base">Logo Reducido</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="flex items-center justify-center h-20 border rounded-lg bg-muted/30 overflow-hidden">
+                            {logoSmallPreview ? (
+                                <img
+                                    src={logoSmallPreview}
+                                    alt="Logo small preview"
+                                    className="h-10 w-10 object-contain"
+                                />
+                            ) : (
+                                <span className="text-sm text-muted-foreground text-center px-2">Sin logo reducido</span>
+                            )}
+                        </div>
+                        <input
+                            ref={logoSmallInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleLogoSmallChange}
+                        />
+                        <Button
+                            variant="outline"
+                            className="w-full gap-2"
+                            onClick={() => logoSmallInputRef.current?.click()}
+                        >
+                            <Upload className="h-4 w-4" />
+                            Subir imagen
+                        </Button>
+                        <p className="text-[10px] text-muted-foreground">
+                            Se muestra en el navbar al hacer scroll. Ideal: icono o versión compacta del logo.
+                        </p>
+                    </CardContent>
+                </Card>
+
                 {/* Favicon */}
                 <Card>
                     <CardHeader>
@@ -228,9 +305,118 @@ export default function SiteSettingsPage() {
                             <Upload className="h-4 w-4" />
                             Subir .ico/.png
                         </Button>
+
+                        {/* Generated variants preview */}
+                        {faviconVariants.favicon_16_url && (
+                            <div className="space-y-2 border-t pt-3">
+                                <p className="text-xs text-muted-foreground font-medium">Variantes generadas</p>
+                                <div className="flex items-end gap-3">
+                                    {faviconVariants.favicon_16_url && (
+                                        <div className="text-center">
+                                            <img src={faviconVariants.favicon_16_url} alt="16x16" className="h-4 w-4 mx-auto" />
+                                            <span className="text-[10px] text-muted-foreground">16px</span>
+                                        </div>
+                                    )}
+                                    {faviconVariants.favicon_32_url && (
+                                        <div className="text-center">
+                                            <img src={faviconVariants.favicon_32_url} alt="32x32" className="h-8 w-8 mx-auto" />
+                                            <span className="text-[10px] text-muted-foreground">32px</span>
+                                        </div>
+                                    )}
+                                    {faviconVariants.apple_touch_icon_url && (
+                                        <div className="text-center">
+                                            <img src={faviconVariants.apple_touch_icon_url} alt="180x180" className="h-10 w-10 mx-auto rounded-lg" />
+                                            <span className="text-[10px] text-muted-foreground">Apple</span>
+                                        </div>
+                                    )}
+                                </div>
+                                <p className="text-[10px] text-muted-foreground">
+                                    Se generan 5 variantes (16, 32, 180, 192, 512px) al subir un favicon.
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Browser tab preview */}
+                        {faviconPreview && (
+                            <div className="border rounded-lg p-2 bg-muted/20">
+                                <p className="text-[10px] text-muted-foreground mb-1">Vista previa en pestaña</p>
+                                <div className="flex items-center gap-2 bg-background rounded px-2 py-1 border text-sm">
+                                    <img src={faviconVariants.favicon_16_url || faviconPreview} alt="" className="h-4 w-4 shrink-0" />
+                                    <span className="truncate text-xs">{siteName || 'BVS'}</span>
+                                </div>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Theme Colors */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-base">Colores del Tema</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-1.5">
+                            <Label htmlFor="theme_color">Theme Color</Label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="color"
+                                    id="theme_color"
+                                    value={themeColor}
+                                    onChange={e => setThemeColor(e.target.value)}
+                                    className="h-9 w-9 rounded border cursor-pointer"
+                                />
+                                <Input
+                                    value={themeColor}
+                                    onChange={e => setThemeColor(e.target.value)}
+                                    className="font-mono text-xs"
+                                    maxLength={7}
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="ms_tile_color">MS Tile Color</Label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="color"
+                                    id="ms_tile_color"
+                                    value={msTileColor}
+                                    onChange={e => setMsTileColor(e.target.value)}
+                                    className="h-9 w-9 rounded border cursor-pointer"
+                                />
+                                <Input
+                                    value={msTileColor}
+                                    onChange={e => setMsTileColor(e.target.value)}
+                                    className="font-mono text-xs"
+                                    maxLength={7}
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="safari_pinned_tab_color">Safari Pinned Tab</Label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="color"
+                                    id="safari_pinned_tab_color"
+                                    value={safariPinnedTabColor}
+                                    onChange={e => setSafariPinnedTabColor(e.target.value)}
+                                    className="h-9 w-9 rounded border cursor-pointer"
+                                />
+                                <Input
+                                    value={safariPinnedTabColor}
+                                    onChange={e => setSafariPinnedTabColor(e.target.value)}
+                                    className="font-mono text-xs"
+                                    maxLength={7}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                        Estos colores se usan en el manifiesto PWA, tiles de Windows y pestañas fijadas de Safari.
+                    </p>
+                </CardContent>
+            </Card>
 
             {/* Text fields */}
             <Card>

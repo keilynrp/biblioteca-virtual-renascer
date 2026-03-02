@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,25 +15,47 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { BookOpen, User, LogOut, ChevronDown, Settings } from "lucide-react"
 import { useAuthStoreHydrated } from "@/store/authStore"
 import { useNavigation } from "@/context/navigation-context"
-import { useState, useEffect } from "react"
+import { useSiteSettings } from "@/context/site-settings-context"
+import { useState, useEffect, useCallback } from "react"
+
+const SCROLL_THRESHOLD = 100
 
 export function Navbar() {
     const router = useRouter()
     const { user, logout, isAuthenticated, _hasHydrated } = useAuthStoreHydrated()
     const { getZone } = useNavigation()
+    const { logo_url, logo_small_url, site_name } = useSiteSettings()
+
+    const [scrolled, setScrolled] = useState(false)
 
     const headerItems = getZone('header')?.items || []
+
+    const handleScroll = useCallback(() => {
+        setScrolled(window.scrollY >= SCROLL_THRESHOLD)
+    }, [])
+
+    useEffect(() => {
+        window.addEventListener('scroll', handleScroll, { passive: true })
+        return () => window.removeEventListener('scroll', handleScroll)
+    }, [handleScroll])
 
     const handleLogout = () => {
         logout()
         router.push("/login")
     }
 
+    const showSmallLogo = scrolled && logo_small_url
+    const currentLogo = showSmallLogo ? logo_small_url : (logo_url || '/Logo_renascerdosaber.png')
+
     return (
         <nav className="border-b bg-white/80 backdrop-blur-sm fixed top-0 w-full z-50">
-            <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <div className={`container mx-auto px-4 flex items-center justify-between transition-all duration-300 ${scrolled ? 'py-2' : 'py-4'}`}>
                 <Link href="/" className="flex items-center space-x-3 cursor-pointer">
-                    <Image src="/Logo_renascerdosaber.png" alt="Logo Renascer Saber" width={172} height={62} className="object-contain" priority />
+                    <img
+                        src={currentLogo}
+                        alt={site_name || 'Logo'}
+                        className={`object-contain transition-all duration-300 ${showSmallLogo ? 'h-8' : 'h-[62px] max-w-[172px]'}`}
+                    />
                 </Link>
                 <div className="hidden md:flex items-center space-x-8">
                     {headerItems.length > 0 ? (

@@ -1,11 +1,12 @@
 "use client"
 import Link from "next/link"
-import Image from "next/image"
 import { useNavigation } from "@/context/navigation-context"
+import { useSiteSettings } from "@/context/site-settings-context"
 import { useState, useEffect } from "react"
 
 export function Footer() {
     const { getZones } = useNavigation()
+    const { logo_url, site_name } = useSiteSettings()
     const footerZones = getZones('footer')
     const [year, setYear] = useState<number | null>(null)
 
@@ -19,7 +20,11 @@ export function Footer() {
                 <div className="grid md:grid-cols-4 gap-8">
                     <div className="col-span-2">
                         <div className="mb-4">
-                            <Image src="/Logo_renascerdosaber.png" alt="Logo Renascer Saber" width={172} height={62} className="object-contain" />
+                            <img
+                                src={logo_url || '/Logo_renascerdosaber.png'}
+                                alt={site_name || 'Logo'}
+                                className="object-contain h-[62px] max-w-[172px]"
+                            />
                         </div>
                         <p className="text-base text-gray-400 max-w-sm">
                             Plataforma digital de conocimiento para instituciones educativas.

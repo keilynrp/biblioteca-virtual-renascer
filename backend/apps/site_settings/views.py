@@ -1,9 +1,14 @@
+import logging
+
 from django.http import JsonResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import BasePermission, AllowAny
+from rest_framework import status
 from .models import SiteSettings
 from .serializers import SiteSettingsSerializer, SiteSettingsUpdateSerializer
+
+logger = logging.getLogger(__name__)
 
 
 class IsAdminType(BasePermission):
@@ -29,7 +34,14 @@ class SiteSettingsView(APIView):
         obj = SiteSettings.get_settings()
         serializer = SiteSettingsUpdateSerializer(obj, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        try:
+            serializer.save()
+        except Exception as e:
+            logger.error('SiteSettings save failed: %s: %s', e.__class__.__name__, e, exc_info=True)
+            return Response(
+                {'error': {'code': 'save_failed', 'message': str(e)}},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
         return Response(SiteSettingsSerializer(serializer.instance, context={'request': request}).data)
 
 

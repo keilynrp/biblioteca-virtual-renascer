@@ -31,15 +31,20 @@ class SiteSettingsView(APIView):
         return Response(serializer.data)
 
     def patch(self, request):
-        obj = SiteSettings.get_settings()
-        serializer = SiteSettingsUpdateSerializer(obj, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
         try:
+            obj = SiteSettings.get_settings()
+            serializer = SiteSettingsUpdateSerializer(obj, data=request.data, partial=True)
+            if not serializer.is_valid():
+                logger.warning('SiteSettings validation errors: %s', serializer.errors)
+                return Response(
+                    {'error': {'code': 'validation_error', 'message': str(serializer.errors)}},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             serializer.save()
         except Exception as e:
-            logger.error('SiteSettings save failed: %s: %s', e.__class__.__name__, e, exc_info=True)
+            logger.error('SiteSettings PATCH failed: %s: %s', e.__class__.__name__, e, exc_info=True)
             return Response(
-                {'error': {'code': 'save_failed', 'message': str(e)}},
+                {'error': {'code': 'save_failed', 'message': f'{e.__class__.__name__}: {e}'}},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         return Response(SiteSettingsSerializer(serializer.instance, context={'request': request}).data)

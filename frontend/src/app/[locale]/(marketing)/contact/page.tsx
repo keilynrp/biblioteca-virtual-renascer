@@ -1,11 +1,9 @@
 import type { Metadata } from "next"
-import { Button } from "@/components/ui/button"
+import { Mail, Phone, MapPin } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Mail, Phone, MapPin, Send } from "lucide-react"
 import { fetchSiteSettings } from "@/lib/fetch-site-settings"
 import { buildMetadata } from "@/lib/metadata"
+import { ContactForm } from "./contact-form"
 
 export async function generateMetadata(): Promise<Metadata> {
     const settings = await fetchSiteSettings()
@@ -25,8 +23,12 @@ export default function ContactPage() {
             <section className="py-20 px-4">
                 <div className="container mx-auto max-w-6xl">
                     <div className="text-center mb-16">
-                        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Contacta con <span className="text-[#00576F]">Nosotros</span></h1>
-                        <p className="text-xl text-gray-600 max-w-2xl mx-auto">Estamos aquí para ayudarte. Déjanos un mensaje y te responderemos lo antes posible.</p>
+                        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                            Contacta con <span className="text-[#00576F]">Nosotros</span>
+                        </h1>
+                        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                            Estamos aquí para ayudarte. Déjanos un mensaje y te responderemos lo antes posible.
+                        </p>
                     </div>
 
                     <div className="grid lg:grid-cols-3 gap-8">
@@ -62,34 +64,11 @@ export default function ContactPage() {
                             </Card>
                         </div>
 
-                        {/* Contact Form */}
+                        {/* Contact Form — dynamic */}
                         <div className="lg:col-span-2">
                             <Card className="border-none shadow-xl">
                                 <CardContent className="p-8">
-                                    <form className="space-y-6">
-                                        <div className="grid md:grid-cols-2 gap-6">
-                                            <div className="space-y-2">
-                                                <label className="text-sm font-medium text-gray-700">Nombre</label>
-                                                <Input placeholder="Tu nombre" className="rounded-xl border-gray-200" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-sm font-medium text-gray-700">Email</label>
-                                                <Input type="email" placeholder="tu@email.com" className="rounded-xl border-gray-200" />
-                                            </div>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium text-gray-700">Asunto</label>
-                                            <Input placeholder="¿En qué podemos ayudarte?" className="rounded-xl border-gray-200" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium text-gray-700">Mensaje</label>
-                                            <Textarea placeholder="Escribe tu mensaje aquí..." className="rounded-xl border-gray-200 min-h-[150px]" />
-                                        </div>
-                                        <Button className="w-full bg-[#00576F] hover:bg-[#004558] text-white py-6 text-lg rounded-xl transition-all">
-                                            Enviar Mensaje
-                                            <Send className="ml-2 h-5 w-5" />
-                                        </Button>
-                                    </form>
+                                    <ContactForm />
                                 </CardContent>
                             </Card>
                         </div>

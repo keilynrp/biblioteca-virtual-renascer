@@ -20,6 +20,7 @@ import {
     User,
     BookOpen,
     FileText,
+    ClipboardList,
 } from "lucide-react"
 
 export const ICON_MAP: Record<string, any> = {
@@ -42,6 +43,7 @@ export const ICON_MAP: Record<string, any> = {
     "/admin/notifications": BellDot,
     "/admin/navigation": Map,
     "/admin/page-builder": LayoutTemplate,
+    "/admin/forms": ClipboardList,
     "/admin/site-settings": Settings2,
     "/users": Users,
     "/profile": User,
@@ -56,6 +58,7 @@ export function getIconForUrl(url: string) {
     if (url.startsWith('/admin/authors')) return Users
     if (url.startsWith('/admin/categories')) return FolderOpen
     if (url.startsWith('/admin/invoices')) return FileText
+    if (url.startsWith('/admin/forms')) return ClipboardList
     if (url.startsWith('/admin')) return Shield
 
     return BookOpen

@@ -151,6 +151,7 @@ export default function DashboardLayout({
             { href: "/institutions", label: "Instituciones", icon: getIconForUrl("/institutions"), adminOnly: true },
             { href: "/admin/notifications", label: "Notificaciones Admin", icon: getIconForUrl("/admin/notifications"), adminOnly: true },
             { href: "/admin/navigation", label: "Mapa del Sitio", icon: getIconForUrl("/admin/navigation"), adminOnly: true },
+            { href: "/admin/forms", label: "Formularios", icon: getIconForUrl("/admin/forms"), adminOnly: true },
             { href: "/admin/page-builder", label: "Constructor de Páginas", icon: getIconForUrl("/admin/page-builder"), adminOnly: true },
             { href: "/admin/site-settings", label: "Ajustes del Sitio", icon: getIconForUrl("/admin/site-settings"), adminOnly: true },
             { href: "/users", label: "Usuarios", icon: getIconForUrl("/users"), adminOnly: true },

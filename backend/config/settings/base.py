@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'apps.navigation',
     'apps.billing',
     'apps.blog',
+    'apps.forms',
 ]
 
 AUTH_USER_MODEL = 'authentication.User'

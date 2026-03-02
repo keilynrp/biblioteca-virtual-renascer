@@ -43,3 +43,11 @@ export interface StatsBlockProps {
   items: StatItem[]
   backgroundColor: 'white' | 'gray' | 'primary'
 }
+
+export interface FormBlockProps {
+  formUuid: string
+  title: string
+  showTitle: boolean
+  backgroundColor: 'white' | 'gray' | 'primary'
+  maxWidth: 'sm' | 'md' | 'lg' | 'xl'
+}

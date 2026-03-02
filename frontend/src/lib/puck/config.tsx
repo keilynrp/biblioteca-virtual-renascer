@@ -3,12 +3,14 @@ import { HeroBlockConfig }         from './blocks/HeroBlock'
 import { RichTextBlockConfig }     from './blocks/RichTextBlock'
 import { FeaturesGridBlockConfig } from './blocks/FeaturesGridBlock'
 import { StatsBlockConfig }        from './blocks/StatsBlock'
+import { FormBlockConfig }         from './blocks/FormBlock'
 
 import type {
     HeroBlockProps,
     RichTextBlockProps,
     FeaturesGridBlockProps,
     StatsBlockProps,
+    FormBlockProps,
 } from './types'
 
 type BlockProps = {
@@ -16,6 +18,7 @@ type BlockProps = {
     RichTextBlock:     RichTextBlockProps
     FeaturesGridBlock: FeaturesGridBlockProps
     StatsBlock:        StatsBlockProps
+    FormBlock:         FormBlockProps
 }
 
 export const puckConfig: Config<BlockProps> = {
@@ -24,5 +27,6 @@ export const puckConfig: Config<BlockProps> = {
         RichTextBlock:     RichTextBlockConfig,
         FeaturesGridBlock: FeaturesGridBlockConfig,
         StatsBlock:        StatsBlockConfig,
+        FormBlock:         FormBlockConfig,
     },
 }

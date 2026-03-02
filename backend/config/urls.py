@@ -38,6 +38,7 @@ urlpatterns = [
     path('api/navigation/', include('apps.navigation.urls')),
     path('api/billing/', include('apps.billing.urls')),
     path('api/blog/', include('apps.blog.urls')),
+    path('api/forms/', include('apps.forms.urls')),
 ]
 
 # Media file serving

@@ -34,6 +34,12 @@ class SiteSettings(models.Model):
     ms_tile_color = models.CharField(max_length=7, default='#3b82f6', blank=True)
     theme_color = models.CharField(max_length=7, default='#3b82f6', blank=True)
 
+    # Open Graph / Social
+    og_image = models.ImageField(upload_to='site_settings/', null=True, blank=True,
+                                 verbose_name='Imagen Open Graph (1200x630)')
+    og_description = models.TextField(blank=True, verbose_name='Descripción para redes sociales')
+    twitter_handle = models.CharField(max_length=50, blank=True, verbose_name='Handle de Twitter/X (@usuario)')
+
     # Google Services
     ga_id = models.CharField(max_length=50, blank=True, verbose_name='Google Analytics ID (G-XXXXX)')
     gtm_id = models.CharField(max_length=50, blank=True, verbose_name='Google Tag Manager ID (GTM-XXXXX)')

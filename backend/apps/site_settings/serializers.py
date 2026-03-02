@@ -11,6 +11,7 @@ class SiteSettingsSerializer(serializers.ModelSerializer):
     apple_touch_icon_url = serializers.SerializerMethodField()
     android_chrome_192_url = serializers.SerializerMethodField()
     android_chrome_512_url = serializers.SerializerMethodField()
+    og_image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = SiteSettings
@@ -18,6 +19,7 @@ class SiteSettingsSerializer(serializers.ModelSerializer):
             'site_name', 'tagline', 'logo_url', 'logo_small_url', 'favicon_url',
             'favicon_16_url', 'favicon_32_url', 'apple_touch_icon_url',
             'android_chrome_192_url', 'android_chrome_512_url',
+            'og_image_url', 'og_description', 'twitter_handle',
             'safari_pinned_tab_color', 'ms_tile_color', 'theme_color',
             'ga_id', 'gtm_id', 'gsc_id',
             'cookie_consent_enabled', 'privacy_policy_url', 'terms_of_service_url', 'cookie_policy_url',
@@ -59,12 +61,16 @@ class SiteSettingsSerializer(serializers.ModelSerializer):
     def get_android_chrome_512_url(self, obj):
         return self._build_url(obj.android_chrome_512)
 
+    def get_og_image_url(self, obj):
+        return self._build_url(obj.og_image)
+
 
 class SiteSettingsUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = SiteSettings
         fields = (
             'site_name', 'tagline', 'logo', 'logo_small', 'favicon',
+            'og_image', 'og_description', 'twitter_handle',
             'safari_pinned_tab_color', 'ms_tile_color', 'theme_color',
             'ga_id', 'gtm_id', 'gsc_id',
             'cookie_consent_enabled', 'privacy_policy_url', 'terms_of_service_url', 'cookie_policy_url',

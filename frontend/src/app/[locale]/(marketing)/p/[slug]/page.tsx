@@ -1,6 +1,9 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { PageRenderer } from '@/components/page-builder/page-renderer'
 import { fetchPage } from '@/lib/fetch-page'
+import { fetchSiteSettings } from '@/lib/fetch-site-settings'
+import { buildMetadata } from '@/lib/metadata'
 
 interface Props {
     params: Promise<{ locale: string; slug: string }>
@@ -17,11 +20,24 @@ export default async function CustomLandingPage({ params }: Props) {
     return <PageRenderer data={page.content} />
 }
 
-export async function generateMetadata({ params }: Props) {
-    const { slug } = await params
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const { slug, locale } = await params
     try {
-        const page = await fetchPage(slug)
-        if (page?.title) return { title: page.title }
+        const [page, settings] = await Promise.all([
+            fetchPage(slug),
+            fetchSiteSettings(),
+        ])
+        if (page?.title) {
+            return buildMetadata({
+                title: page.title,
+                description: `${page.title} — ${settings?.site_name || 'BVS'}`,
+                url: `/${locale}/p/${slug}`,
+                locale,
+                siteName: settings?.site_name,
+                ogImage: settings?.og_image_url,
+                twitterHandle: settings?.twitter_handle,
+            })
+        }
     } catch {}
     return {}
 }

@@ -10,6 +10,10 @@ class SiteSettingsAdmin(admin.ModelAdmin):
         (None, {
             'fields': ('site_name', 'tagline', 'logo', 'favicon')
         }),
+        ('Open Graph / Redes Sociales', {
+            'fields': ('og_image', 'og_description', 'twitter_handle'),
+            'description': 'Imagen y descripción que se muestran al compartir en redes sociales (Facebook, X, WhatsApp, etc.). La imagen debe ser de 1200x630 px.'
+        }),
         ('Google Services', {
             'fields': ('ga_id', 'gtm_id', 'gsc_id'),
             'description': 'Configuración de herramientas de Google para análisis y SEO.'

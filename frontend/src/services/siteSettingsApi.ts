@@ -13,6 +13,10 @@ export interface SiteSettings {
     apple_touch_icon_url: string | null
     android_chrome_192_url: string | null
     android_chrome_512_url: string | null
+    // Open Graph / Social
+    og_image_url: string | null
+    og_description: string
+    twitter_handle: string
     safari_pinned_tab_color: string
     ms_tile_color: string
     theme_color: string

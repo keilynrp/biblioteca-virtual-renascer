@@ -14,6 +14,9 @@ type SiteSettingsContextType = {
     apple_touch_icon_url: string | null
     android_chrome_192_url: string | null
     android_chrome_512_url: string | null
+    og_image_url: string | null
+    og_description: string
+    twitter_handle: string
     safari_pinned_tab_color: string
     ms_tile_color: string
     theme_color: string
@@ -47,6 +50,9 @@ const defaults: Omit<SiteSettingsContextType, 'refresh'> = {
     apple_touch_icon_url: null,
     android_chrome_192_url: null,
     android_chrome_512_url: null,
+    og_image_url: null,
+    og_description: '',
+    twitter_handle: '',
     safari_pinned_tab_color: '#3b82f6',
     ms_tile_color: '#3b82f6',
     theme_color: '#3b82f6',
@@ -102,6 +108,9 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
             apple_touch_icon_url: settings.apple_touch_icon_url,
             android_chrome_192_url: settings.android_chrome_192_url,
             android_chrome_512_url: settings.android_chrome_512_url,
+            og_image_url: settings.og_image_url,
+            og_description: settings.og_description,
+            twitter_handle: settings.twitter_handle,
             safari_pinned_tab_color: settings.safari_pinned_tab_color,
             ms_tile_color: settings.ms_tile_color,
             theme_color: settings.theme_color,

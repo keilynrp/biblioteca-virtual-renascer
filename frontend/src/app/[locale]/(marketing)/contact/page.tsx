@@ -1,8 +1,23 @@
+import type { Metadata } from "next"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Mail, Phone, MapPin, Send } from "lucide-react"
+import { fetchSiteSettings } from "@/lib/fetch-site-settings"
+import { buildMetadata } from "@/lib/metadata"
+
+export async function generateMetadata(): Promise<Metadata> {
+    const settings = await fetchSiteSettings()
+    return buildMetadata({
+        title: 'Contacto',
+        description: 'Ponte en contacto con nuestro equipo. Estamos aquí para ayudarte con cualquier consulta sobre la plataforma.',
+        url: '/es/contact',
+        siteName: settings?.site_name,
+        ogImage: settings?.og_image_url,
+        twitterHandle: settings?.twitter_handle,
+    })
+}
 
 export default function ContactPage() {
     return (

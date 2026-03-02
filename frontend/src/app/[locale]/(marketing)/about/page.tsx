@@ -1,5 +1,20 @@
+import type { Metadata } from "next"
 import { Card, CardContent } from "@/components/ui/card"
 import { BookOpen, Users, Shield, GraduationCap, Globe, Mail } from "lucide-react"
+import { fetchSiteSettings } from "@/lib/fetch-site-settings"
+import { buildMetadata } from "@/lib/metadata"
+
+export async function generateMetadata(): Promise<Metadata> {
+    const settings = await fetchSiteSettings()
+    return buildMetadata({
+        title: 'Sobre Nosotros',
+        description: 'Conoce nuestra misión de hacer el conocimiento accesible para todos. Plataforma digital líder para instituciones educativas.',
+        url: '/es/about',
+        siteName: settings?.site_name,
+        ogImage: settings?.og_image_url,
+        twitterHandle: settings?.twitter_handle,
+    })
+}
 
 export default function AboutPage() {
     return (

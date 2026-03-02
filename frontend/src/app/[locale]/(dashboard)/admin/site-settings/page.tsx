@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
-import { Settings2, Upload, Loader2, Shield, Cookie } from "lucide-react"
+import { Settings2, Upload, Loader2, Shield, Cookie, Share2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 
 export default function SiteSettingsPage() {
@@ -64,9 +64,16 @@ export default function SiteSettingsPage() {
     const [cookieBannerTitle, setCookieBannerTitle] = useState('')
     const [cookieBannerDescription, setCookieBannerDescription] = useState('')
 
+    // OG / Social
+    const [ogImageFile, setOgImageFile] = useState<File | null>(null)
+    const [ogImagePreview, setOgImagePreview] = useState<string | null>(null)
+    const [ogDescription, setOgDescription] = useState('')
+    const [twitterHandle, setTwitterHandle] = useState('')
+
     const logoInputRef = useRef<HTMLInputElement>(null)
     const logoSmallInputRef = useRef<HTMLInputElement>(null)
     const faviconInputRef = useRef<HTMLInputElement>(null)
+    const ogImageInputRef = useRef<HTMLInputElement>(null)
 
     // Auth check
     useEffect(() => {
@@ -112,6 +119,9 @@ export default function SiteSettingsPage() {
             setComplianceCcpa(data.compliance_ccpa ?? false)
             setCookieBannerTitle(data.cookie_banner_title || '')
             setCookieBannerDescription(data.cookie_banner_description || '')
+            setOgImagePreview(data.og_image_url || null)
+            setOgDescription(data.og_description || '')
+            setTwitterHandle(data.twitter_handle || '')
         }).catch(() => { }).finally(() => setLoading(false))
     }, [_hasHydrated, isAdmin])
 
@@ -136,6 +146,13 @@ export default function SiteSettingsPage() {
         setFaviconPreview(URL.createObjectURL(file))
     }
 
+    const handleOgImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+        setOgImageFile(file)
+        setOgImagePreview(URL.createObjectURL(file))
+    }
+
     const handleSave = async () => {
         setSaving(true)
         try {
@@ -145,6 +162,9 @@ export default function SiteSettingsPage() {
             if (logoFile) formData.append('logo', logoFile)
             if (logoSmallFile) formData.append('logo_small', logoSmallFile)
             if (faviconFile) formData.append('favicon', faviconFile)
+            if (ogImageFile) formData.append('og_image', ogImageFile)
+            formData.append('og_description', ogDescription)
+            formData.append('twitter_handle', twitterHandle)
             formData.append('safari_pinned_tab_color', safariPinnedTabColor)
             formData.append('ms_tile_color', msTileColor)
             formData.append('theme_color', themeColor)
@@ -415,6 +435,85 @@ export default function SiteSettingsPage() {
                     <p className="text-[10px] text-muted-foreground">
                         Estos colores se usan en el manifiesto PWA, tiles de Windows y pestañas fijadas de Safari.
                     </p>
+                </CardContent>
+            </Card>
+
+            {/* Open Graph / Social */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                        <Share2 className="h-4 w-4 text-primary" />
+                        Open Graph / Redes Sociales
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-1.5">
+                        <Label>Imagen OG</Label>
+                        <div className="flex items-center justify-center h-32 border rounded-lg bg-muted/30 overflow-hidden">
+                            {ogImagePreview ? (
+                                <img
+                                    src={ogImagePreview}
+                                    alt="OG image preview"
+                                    className="h-full w-full object-cover"
+                                />
+                            ) : (
+                                <span className="text-sm text-muted-foreground">Sin imagen OG</span>
+                            )}
+                        </div>
+                        <input
+                            ref={ogImageInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleOgImageChange}
+                        />
+                        <Button
+                            variant="outline"
+                            className="w-full gap-2"
+                            onClick={() => ogImageInputRef.current?.click()}
+                        >
+                            <Upload className="h-4 w-4" />
+                            Subir imagen (1200x630 recomendado)
+                        </Button>
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="og_description">Descripción para redes sociales</Label>
+                        <Textarea
+                            id="og_description"
+                            value={ogDescription}
+                            onChange={e => setOgDescription(e.target.value)}
+                            placeholder="Descripción que aparece al compartir el sitio en redes sociales..."
+                            rows={3}
+                        />
+                        <p className="text-[10px] text-muted-foreground">Se usa como descripción por defecto en Open Graph y Twitter Cards.</p>
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="twitter_handle">Handle de Twitter/X</Label>
+                        <Input
+                            id="twitter_handle"
+                            value={twitterHandle}
+                            onChange={e => setTwitterHandle(e.target.value)}
+                            placeholder="@usuario"
+                        />
+                        <p className="text-[10px] text-muted-foreground">Se usa en la meta tag twitter:site y twitter:creator.</p>
+                    </div>
+
+                    {/* Share preview */}
+                    {(ogImagePreview || ogDescription || siteName) && (
+                        <div className="border rounded-lg overflow-hidden bg-white">
+                            <p className="text-[10px] text-muted-foreground px-3 pt-2">Vista previa al compartir</p>
+                            {ogImagePreview && (
+                                <div className="h-36 overflow-hidden">
+                                    <img src={ogImagePreview} alt="" className="w-full h-full object-cover" />
+                                </div>
+                            )}
+                            <div className="px-3 py-2 space-y-0.5">
+                                <p className="text-xs text-muted-foreground uppercase tracking-wide">{typeof window !== 'undefined' ? window.location.hostname : 'tu-sitio.com'}</p>
+                                <p className="text-sm font-semibold truncate">{siteName || 'BVS'}</p>
+                                <p className="text-xs text-muted-foreground line-clamp-2">{ogDescription || 'Sin descripción'}</p>
+                            </div>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 

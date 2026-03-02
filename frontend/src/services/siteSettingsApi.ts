@@ -54,7 +54,5 @@ const publicAxios = axios.create({
 export const siteSettingsApi = {
     get: () => publicAxios.get<SiteSettings>('/site-settings/').then(r => r.data),
     update: (data: FormData) =>
-        api.patch<SiteSettings>('/site-settings/', data, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        }).then(r => r.data),
+        api.patch<SiteSettings>('/site-settings/', data).then(r => r.data),
 }

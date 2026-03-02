@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useAuthStoreHydrated } from "@/store/authStore"
 import { siteSettingsApi, type SiteSettings } from "@/services/siteSettingsApi"
+import { getErrorMessage } from "@/lib/api"
 import { useSiteSettings } from "@/context/site-settings-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -188,8 +189,9 @@ export default function SiteSettingsPage() {
             await siteSettingsApi.update(formData)
             refresh()
             toast({ title: 'Ajustes guardados', description: 'Los cambios se han aplicado correctamente.' })
-        } catch {
-            toast({ title: 'Error', description: 'No se pudieron guardar los ajustes.', variant: 'destructive' })
+        } catch (err) {
+            console.error('[SiteSettings] Save failed:', err)
+            toast({ title: 'Error', description: getErrorMessage(err), variant: 'destructive' })
         } finally {
             setSaving(false)
         }

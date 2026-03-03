@@ -26,7 +26,13 @@
       "Bash(cmd.exe:*)",
       "Bash(powershell.exe:*)",
       "Bash(docker rm:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(cd D:/bvs_framework/frontend && npx next build 2>&1)",
+      "Bash(grep:*)",
+      "Bash(sed:*)",
+      "Bash(cd D:/bvs_framework/backend && python manage.py makemigrations content 2>&1)",
+      "Bash(cd D:/bvs_framework && docker compose down db backend 2>&1 && docker compose up -d db 2>&1)",
+      "Bash(docker inspect --format='{{json .State.Health}}' bvs_framework-db-1 2>&1 | python -m json.tool 2>/dev/null || docker inspect --format='{{json .State.Health}}' bvs_framework-db-1 2>&1)"
     ]
   }
 }

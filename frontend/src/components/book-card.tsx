@@ -103,7 +103,7 @@ export function BookCard({ book, index = 0 }: BookCardProps) {
 
                     {/* Shine effect on hover */}
                     <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 transform -translate-x-full group-hover:translate-x-full"
-                         style={{ transition: 'transform 0.7s ease-out, opacity 0.7s ease-out' }} />
+                        style={{ transition: 'transform 0.7s ease-out, opacity 0.7s ease-out' }} />
                 </div>
 
                 {/* Enhanced shadow effect */}
@@ -114,7 +114,7 @@ export function BookCard({ book, index = 0 }: BookCardProps) {
             <div className="flex-grow flex flex-col space-y-2">
                 {/* Title with Better Typography */}
                 <Link href={`/library/${book.slug}`} className="cursor-pointer">
-                    <h3 className="text-sm font-bold text-foreground line-clamp-2 leading-tight group-hover:text-primary transition-colors duration-300">
+                    <h3 className="text-sm md:text-base font-bold text-foreground line-clamp-2 leading-tight group-hover:text-primary transition-colors duration-300">
                         {book.title}
                     </h3>
                 </Link>
@@ -127,7 +127,7 @@ export function BookCard({ book, index = 0 }: BookCardProps) {
 
                 {/* Category Badge - Enhanced */}
                 <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center text-[10px] font-semibold text-primary bg-gradient-to-r from-primary/15 to-primary/10 px-2.5 py-1 rounded-full border border-primary/20">
+                    <span className="inline-flex items-center text-[10px] sm:text-xs font-semibold text-primary bg-gradient-to-r from-primary/15 to-primary/10 px-2.5 py-1 rounded-full border border-primary/20">
                         {book.category?.name || "General"}
                     </span>
                 </div>
@@ -139,11 +139,10 @@ export function BookCard({ book, index = 0 }: BookCardProps) {
                             {[1, 2, 3, 4, 5].map((star) => (
                                 <Star
                                     key={star}
-                                    className={`h-3 w-3 ${
-                                        star <= Math.round(book.average_rating!)
+                                    className={`h-3 w-3 ${star <= Math.round(book.average_rating!)
                                             ? 'fill-yellow-400 text-yellow-400'
                                             : 'fill-gray-200 text-gray-200 dark:fill-gray-700 dark:text-gray-700'
-                                    }`}
+                                        }`}
                                 />
                             ))}
                         </div>
@@ -181,7 +180,7 @@ export function BookCard({ book, index = 0 }: BookCardProps) {
                             <span>Ver Detalles</span>
                             <ChevronRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover/btn:translate-x-1" />
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500 transform -translate-x-full group-hover/btn:translate-x-full"
-                                 style={{ transition: 'transform 0.7s ease-out, opacity 0.7s ease-out' }} />
+                                style={{ transition: 'transform 0.7s ease-out, opacity 0.7s ease-out' }} />
                         </Link>
                     </Button>
                 </div>

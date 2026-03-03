@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 import { bookmarksApi } from '@/services/annotations-api';
 import type { Bookmark } from '@/types/annotations';
-import { toast } from 'sonner';
+import { userToast } from '@/lib/toast-utils';
 
 interface BookmarkEditDialogProps {
   bookmark: Bookmark | null;
@@ -56,12 +56,12 @@ export function BookmarkEditDialog({
         notes: notes.trim(),
       });
 
-      toast.success('Marcador actualizado exitosamente');
+      userToast.success('Marcador actualizado exitosamente');
       onBookmarkUpdated(updatedBookmark);
       onClose();
     } catch (error) {
       console.error('Error updating bookmark:', error);
-      toast.error('Error al actualizar el marcador');
+      userToast.error('Error al actualizar el marcador');
     } finally {
       setIsLoading(false);
     }

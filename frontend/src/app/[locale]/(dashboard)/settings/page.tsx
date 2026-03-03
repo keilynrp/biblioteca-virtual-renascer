@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 import { LoanCard } from '@/components/loans/loan-card'
 import api from '@/lib/api'
-import { useToast } from '@/hooks/use-toast'
+import { userToast } from '@/lib/toast-utils'
 import { PasswordPolicySection } from '@/components/settings/password-policy-section'
 import { CurrenciesSection } from '@/components/settings/currencies-section'
 import { EmailSection } from '@/components/settings/email-section'

@@ -50,11 +50,11 @@ export default function LandingPage() {
                                 ✨ Plataforma de Conocimiento Digital
                             </span>
                         </div>
-                        <h1 className="text-[3.85rem] font-bold text-white leading-tight">
+                        <h1 className="text-4xl md:text-[3.85rem] font-bold text-white leading-tight">
                             Aumenta tu
                             <span className="text-cyan-400"> desempeño educacional</span>
                         </h1>
-                        <p className="text-[1.55rem] text-gray-200 leading-relaxed max-w-2xl ml-auto">
+                        <p className="text-xl md:text-[1.55rem] text-gray-200 leading-relaxed max-w-2xl ml-auto">
                             Accede a miles de libros digitales, recursos académicos y contenido premium.
                             Disponible 24/7 para tu institución educativa.
                         </p>
@@ -75,15 +75,15 @@ export default function LandingPage() {
 
                         <div className="flex items-center gap-12 pt-8 justify-end">
                             <div className="text-white text-right">
-                                <p className="text-4xl font-bold text-cyan-400">10,000+</p>
+                                <p className="text-3xl md:text-4xl font-bold text-cyan-400">10,000+</p>
                                 <p className="text-sm text-gray-300">Libros Digitales</p>
                             </div>
                             <div className="text-white text-right">
-                                <p className="text-4xl font-bold text-cyan-400">500+</p>
+                                <p className="text-3xl md:text-4xl font-bold text-cyan-400">500+</p>
                                 <p className="text-sm text-gray-300">Instituciones</p>
                             </div>
                             <div className="text-white text-right">
-                                <p className="text-4xl font-bold text-cyan-400">24/7</p>
+                                <p className="text-3xl md:text-4xl font-bold text-cyan-400">24/7</p>
                                 <p className="text-sm text-gray-300">Acceso Total</p>
                             </div>
                         </div>
@@ -96,10 +96,10 @@ export default function LandingPage() {
             <section className="py-20 bg-white">
                 <div className="container mx-auto max-w-6xl px-4">
                     <div className="text-center mb-16">
-                        <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
                             Todo lo que necesitas en una plataforma
                         </h2>
-                        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                        <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
                             Diseñada para instituciones educativas que buscan excelencia académica
                         </p>
                     </div>
@@ -183,10 +183,10 @@ export default function LandingPage() {
             {/* CTA Section */}
             <section className="py-20 bg-gradient-to-br from-[#00576F] to-[#003d4d]">
                 <div className="container mx-auto max-w-4xl px-4 text-center">
-                    <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
+                    <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
                         ¿Listo para transformar tu biblioteca?
                     </h2>
-                    <p className="text-xl text-cyan-100 mb-8 max-w-2xl mx-auto">
+                    <p className="text-lg md:text-xl text-cyan-100 mb-8 max-w-2xl mx-auto">
                         Únete a cientos de instituciones que ya están mejorando su desempeño educacional
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -12,7 +12,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
-import { toast } from "@/hooks/use-toast"
+import { userToast } from '@/lib/toast-utils'
 import { AlertCircle, CreditCard, Loader2 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -67,7 +67,7 @@ function CardSetupForm({
             return
         }
 
-        toast({ title: "Card saved", description: "Your payment method was added successfully." })
+        userToast.success("Your payment method was added successfully.", "Card saved")
         onSuccess()
     }
 

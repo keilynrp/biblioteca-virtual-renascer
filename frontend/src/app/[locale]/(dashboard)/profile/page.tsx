@@ -30,7 +30,7 @@ import {
 import Link from "next/link"
 import { useAuthStore } from "@/store/authStore"
 import { AvatarUpload } from "@/components/ui/avatar-upload"
-import { toast } from "@/hooks/use-toast"
+import { userToast } from '@/lib/toast-utils'
 import { Camera, Mail, Phone, Building2, Edit2, Lock, CreditCard, User2 } from "lucide-react"
 import { SubscriptionInfo } from "@/components/subscriptions/subscription-info"
 import Image from "next/image"

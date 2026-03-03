@@ -29,7 +29,7 @@ import {
     Upload
 } from "lucide-react"
 import Link from "next/link"
-import { toast } from "sonner"
+import { userToast } from '@/lib/toast-utils'
 import { Separator } from "@/components/ui/separator"
 import { TiptapEditor } from "@/components/ui/tiptap-editor"
 import { AdminGuard } from "@/components/admin/admin-guard"
@@ -94,7 +94,7 @@ function EditPostContent() {
                 })
                 if (post.featured_image) setPreviewUrl(post.featured_image)
             } catch (error) {
-                toast.error("Error al cargar la publicación")
+                userToast.error("Error al cargar la publicación")
                 router.push("/gestion-de-noticias")
             } finally {
                 setLoading(false)
@@ -116,7 +116,7 @@ function EditPostContent() {
 
     const handleSave = async () => {
         if (!formData.title) {
-            toast.error("El título es obligatorio")
+            userToast.error("El título es obligatorio")
             return
         }
 
@@ -135,15 +135,15 @@ function EditPostContent() {
 
             if (isEditing) {
                 await blogService.updatePost(params.slug as string, dataToSend)
-                toast.success("Publicación actualizada")
+                userToast.success("Publicación actualizada")
             } else {
                 await blogService.createPost(dataToSend)
-                toast.success("Publicación creada")
+                userToast.success("Publicación creada")
             }
             router.push("/gestion-de-noticias")
         } catch (error) {
             console.error("Save error:", error)
-            toast.error("Error al guardar la publicación")
+            userToast.error("Error al guardar la publicación")
         } finally {
             setSaving(false)
         }

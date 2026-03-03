@@ -24,7 +24,7 @@ import { ArrowLeft, Download, Loader2, Inbox, Trash2 } from 'lucide-react'
 import { AdminGuard } from '@/components/admin/admin-guard'
 import { formsApi } from '@/services/formsApi'
 import type { FormSubmission } from '@/types/form'
-import { toast } from 'sonner'
+import { userToast } from '@/lib/toast-utils'
 
 function SubmissionsContent({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = use(params)
@@ -45,7 +45,7 @@ function SubmissionsContent({ params }: { params: Promise<{ slug: string }> }) {
             setSubmissions(data)
             setSelected(new Set())
         } catch {
-            toast.error('Error al cargar envíos')
+            userToast.error('Error al cargar envíos')
         } finally {
             setLoading(false)
         }
@@ -63,7 +63,7 @@ function SubmissionsContent({ params }: { params: Promise<{ slug: string }> }) {
             a.click()
             window.URL.revokeObjectURL(url)
         } catch {
-            toast.error('Error al exportar')
+            userToast.error('Error al exportar')
         }
     }
 
@@ -92,10 +92,10 @@ function SubmissionsContent({ params }: { params: Promise<{ slug: string }> }) {
         setDeleting(true)
         try {
             await formsApi.bulkDeleteSubmissions(slug, Array.from(selected))
-            toast.success(`${count} envío${count > 1 ? 's' : ''} eliminado${count > 1 ? 's' : ''}`)
+            userToast.success(`${count} envío${count > 1 ? 's' : ''} eliminado${count > 1 ? 's' : ''}`)
             fetchSubmissions()
         } catch {
-            toast.error('Error al eliminar')
+            userToast.error('Error al eliminar')
         } finally {
             setDeleting(false)
         }

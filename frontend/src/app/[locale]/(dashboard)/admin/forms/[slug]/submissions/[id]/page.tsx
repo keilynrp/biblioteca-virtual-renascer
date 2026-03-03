@@ -9,7 +9,7 @@ import { ArrowLeft, Loader2, Eye, ShieldAlert, ShieldCheck } from 'lucide-react'
 import { AdminGuard } from '@/components/admin/admin-guard'
 import { formsApi } from '@/services/formsApi'
 import type { FormSubmission } from '@/types/form'
-import { toast } from 'sonner'
+import { userToast } from '@/lib/toast-utils'
 
 function SubmissionDetailContent({
     params,
@@ -31,7 +31,7 @@ function SubmissionDetailContent({
                     formsApi.markRead(slug, data.id).catch(() => {})
                 }
             })
-            .catch(() => toast.error('Error al cargar el envío'))
+            .catch(() => userToast.error('Error al cargar el envío'))
             .finally(() => setLoading(false))
     }, [slug, id])
 
@@ -40,9 +40,9 @@ function SubmissionDetailContent({
         try {
             const result = await formsApi.markSpam(slug, submission.id)
             setSubmission(prev => prev ? { ...prev, is_spam: result.is_spam } : null)
-            toast.success(result.is_spam ? 'Marcado como spam' : 'Desmarcado como spam')
+            userToast.success(result.is_spam ? 'Marcado como spam' : 'Desmarcado como spam')
         } catch {
-            toast.error('Error')
+            userToast.error('Error')
         }
     }
 

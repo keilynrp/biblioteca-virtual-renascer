@@ -18,7 +18,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { toast } from "@/hooks/use-toast"
+import { userToast } from '@/lib/toast-utils'
 import {
     CreditCard,
     Plus,
@@ -88,7 +88,7 @@ export function PaymentMethodsPanel() {
             const data = await billingApi.getPaymentMethods()
             setMethods(data)
         } catch {
-            toast({ title: "Error", description: "No se pudieron cargar los métodos de pago.", variant: "destructive" })
+            userToast.error("No se pudieron cargar los métodos de pago.", "Error")
         } finally {
             setLoading(false)
         }

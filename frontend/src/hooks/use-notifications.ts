@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { notificationsApi } from '@/services/notificationsApi'
 import type { Notification } from '@/types/notification'
 import { isImportantNotification } from '@/types/notification'
-import { useToast } from '@/hooks/use-toast'
+import { useToast } from '@/components/ui/use-toast'
 
 const POLLING_INTERVAL = 30000 // 30 seconds
 

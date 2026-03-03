@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Plus, Save, Loader2, Trash2, Send, Archive } from 'lucide-react'
-import { toast } from 'sonner'
+import { userToast } from '@/lib/toast-utils'
 
 import { formsApi } from '@/services/formsApi'
 import {
@@ -162,7 +162,7 @@ export function FormEditor({ initialData, onSaved }: FormEditorProps) {
     function addRecipient() {
         if (!newRecipientEmail.trim()) return
         if (recipients.some(r => r.email === newRecipientEmail.trim())) {
-            toast.error('Este email ya fue agregado')
+            userToast.error('Este email ya fue agregado')
             return
         }
         setRecipients(prev => [
@@ -181,7 +181,7 @@ export function FormEditor({ initialData, onSaved }: FormEditorProps) {
 
     async function handleSave() {
         if (!title.trim()) {
-            toast.error('El título es requerido')
+            userToast.error('El título es requerido')
             return
         }
         setSaving(true)
@@ -209,10 +209,10 @@ export function FormEditor({ initialData, onSaved }: FormEditorProps) {
                 saved = await formsApi.updateForm(initialData.slug, payload)
             }
 
-            toast.success('Formulario guardado')
+            userToast.success('Formulario guardado')
             onSaved?.(saved)
         } catch {
-            toast.error('Error al guardar el formulario')
+            userToast.error('Error al guardar el formulario')
         } finally {
             setSaving(false)
         }
@@ -223,10 +223,10 @@ export function FormEditor({ initialData, onSaved }: FormEditorProps) {
         setPublishing(true)
         try {
             const result = await formsApi.publishForm(initialData.slug)
-            toast.success('Formulario publicado')
+            userToast.success('Formulario publicado')
             onSaved?.(result)
         } catch {
-            toast.error('Error al publicar. Asegúrate de tener al menos un campo.')
+            userToast.error('Error al publicar. Asegúrate de tener al menos un campo.')
         } finally {
             setPublishing(false)
         }
@@ -237,10 +237,10 @@ export function FormEditor({ initialData, onSaved }: FormEditorProps) {
         setArchiving(true)
         try {
             const result = await formsApi.archiveForm(initialData.slug)
-            toast.success('Formulario archivado')
+            userToast.success('Formulario archivado')
             onSaved?.(result)
         } catch {
-            toast.error('Error al archivar')
+            userToast.error('Error al archivar')
         } finally {
             setArchiving(false)
         }

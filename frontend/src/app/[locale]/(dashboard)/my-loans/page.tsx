@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { PageHeader } from '@/components/page-header'
 import { LoanCard } from '@/components/loans/loan-card'
 import { useLoans } from '@/hooks/use-loans'
-import { useToast } from '@/hooks/use-toast'
+import { userToast } from '@/lib/toast-utils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { BookOpen, Clock, CheckCircle, AlertCircle } from 'lucide-react'
 

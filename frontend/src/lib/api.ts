@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { toast } from '@/hooks/use-toast';
+import { userToast } from '@/lib/toast-utils';
 import { useAuthStore } from '@/store/authStore';
 
 const api = axios.create({
@@ -86,7 +86,7 @@ api.interceptors.response.use(
 // Utility function to extract error message
 export function getErrorMessage(error: unknown): string {
     if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<{ error?: { message?: string }; detail?: string; message?: string; [key: string]: unknown }>;
+        const axiosError = error as AxiosError<{ error?: { message?: string }; detail?: string; message?: string;[key: string]: unknown }>;
 
         // Check for standardized error format from backend
         if (axiosError.response?.data?.error) {
@@ -144,20 +144,12 @@ export function getErrorMessage(error: unknown): string {
 export function handleApiError(error: unknown, customMessage?: string) {
     const message = customMessage || getErrorMessage(error);
 
-    toast({
-        variant: 'error',
-        title: 'Error',
-        description: message,
-    });
+    userToast.error(message);
 }
 
 // Utility function to show success toast
 export function showSuccess(message: string, title = 'Éxito') {
-    toast({
-        variant: 'success',
-        title,
-        description: message,
-    });
+    userToast.success(message, title);
 }
 
 export default api;

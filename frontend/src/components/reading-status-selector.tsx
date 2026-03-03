@@ -9,7 +9,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { toast } from "@/hooks/use-toast";
+import { userToast } from '@/lib/toast-utils';
 import { useBookStore } from "@/store/bookStore";
 
 interface ReadingStatusSelectorProps {

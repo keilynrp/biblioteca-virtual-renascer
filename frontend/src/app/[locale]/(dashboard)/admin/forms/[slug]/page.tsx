@@ -7,7 +7,7 @@ import { AdminGuard } from '@/components/admin/admin-guard'
 import { FormEditor } from '@/components/forms/admin/FormEditor'
 import { formsApi } from '@/services/formsApi'
 import type { FormRecord } from '@/types/form'
-import { toast } from 'sonner'
+import { userToast } from '@/lib/toast-utils'
 
 function EditFormContent({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = use(params)
@@ -19,7 +19,7 @@ function EditFormContent({ params }: { params: Promise<{ slug: string }> }) {
         formsApi
             .getForm(slug)
             .then(setForm)
-            .catch(() => toast.error('Error al cargar el formulario'))
+            .catch(() => userToast.error('Error al cargar el formulario'))
             .finally(() => setLoading(false))
     }, [slug])
 

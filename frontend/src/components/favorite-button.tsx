@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";
+import { userToast } from '@/lib/toast-utils';
 import { useBookStore } from "@/store/bookStore";
 import { cn } from "@/lib/utils";
 
@@ -38,12 +38,12 @@ export function FavoriteButton({
             const favorited = await toggleFavorite(bookId);
             setIsFavorited(favorited);
 
-            toast({
-                title: favorited ? "Añadido a favoritos" : "Eliminado de favoritos",
-                description: favorited
+            userToast.success(
+                favorited
                     ? "El libro ha sido añadido a tu lista de favoritos"
                     : "El libro ha sido eliminado de tu lista de favoritos",
-            });
+                favorited ? "Añadido a favoritos" : "Eliminado de favoritos"
+            );
         } catch (error: any) {
             const errorMessage =
                 error.response?.data?.detail ||

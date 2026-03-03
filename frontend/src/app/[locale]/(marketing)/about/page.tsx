@@ -22,10 +22,10 @@ export default function AboutPage() {
             {/* Hero Section */}
             <section className="bg-gradient-to-b from-cyan-50 to-white py-20 px-4">
                 <div className="container mx-auto max-w-6xl text-center">
-                    <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+                    <h1 className="text-3xl md:text-4xl lg:text-6xl font-bold text-gray-900 mb-6">
                         Nuestra Misión: <span className="text-[#00576F]">Conocimiento sin Límites</span>
                     </h1>
-                    <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                    <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
                         En Biblioteca Virtual Renascer saber, creemos que el acceso a la educación de calidad
                         debe ser universal, instantáneo y gratificante. Estamos transformando la forma en que
                         las instituciones y los estudiantes interactúan con el conocimiento.
@@ -38,8 +38,8 @@ export default function AboutPage() {
                 <div className="container mx-auto max-w-6xl">
                     <div className="grid lg:grid-cols-2 gap-16 items-center">
                         <div className="space-y-6">
-                            <h2 className="text-3xl font-bold text-gray-900">¿Quiénes somos?</h2>
-                            <p className="text-lg text-gray-600">
+                            <h2 className="text-2xl md:text-3xl font-bold text-gray-900">¿Quiénes somos?</h2>
+                            <p className="text-base md:text-lg text-gray-600">
                                 Somos una plataforma digital líder diseñada específicamente para satisfacer las
                                 necesidades de instituciones educativas modernas. Nuestro ecosistema integra
                                 tecnología de vanguardia con una vasta colección de recursos académicos.
@@ -70,7 +70,7 @@ export default function AboutPage() {
                             <img
                                 src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&q=80&w=1000"
                                 alt="Biblioteca Moderna"
-                                className="relative rounded-3xl shadow-2xl object-cover h-[400px] w-full"
+                                className="relative rounded-3xl shadow-2xl object-cover h-[300px] md:h-[400px] w-full"
                             />
                         </div>
                     </div>
@@ -85,21 +85,21 @@ export default function AboutPage() {
                             <div className="mx-auto w-16 h-16 bg-white rounded-full shadow-lg flex items-center justify-center">
                                 <BookOpen className="h-8 w-8 text-[#00576F]" />
                             </div>
-                            <h3 className="text-4xl font-bold text-gray-900">10k+</h3>
+                            <h3 className="text-3xl md:text-4xl font-bold text-gray-900">10k+</h3>
                             <p className="text-gray-600 font-medium">Libros Digitales</p>
                         </div>
                         <div className="space-y-4">
                             <div className="mx-auto w-16 h-16 bg-white rounded-full shadow-lg flex items-center justify-center">
                                 <Users className="h-8 w-8 text-[#00576F]" />
                             </div>
-                            <h3 className="text-4xl font-bold text-gray-900">500+</h3>
+                            <h3 className="text-3xl md:text-4xl font-bold text-gray-900">500+</h3>
                             <p className="text-gray-600 font-medium">Instituciones Activas</p>
                         </div>
                         <div className="space-y-4">
                             <div className="mx-auto w-16 h-16 bg-white rounded-full shadow-lg flex items-center justify-center">
                                 <GraduationCap className="h-8 w-8 text-[#00576F]" />
                             </div>
-                            <h3 className="text-4xl font-bold text-gray-900">50k+</h3>
+                            <h3 className="text-3xl md:text-4xl font-bold text-gray-900">50k+</h3>
                             <p className="text-gray-600 font-medium">Estudiantes Empoderados</p>
                         </div>
                     </div>

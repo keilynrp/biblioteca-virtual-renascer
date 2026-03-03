@@ -14,7 +14,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { toast } from "@/hooks/use-toast"
+import { userToast } from '@/lib/toast-utils'
 import { Download, FileText, RotateCcw, Search, ChevronLeft, ChevronRight } from "lucide-react"
 import { RefundDialog } from "./refund-dialog"
 import { InvoiceStatsCards } from "./invoice-stats-cards"
@@ -80,7 +80,7 @@ export function InvoiceTable() {
             const list = Array.isArray(data) ? data : (data as any).results ?? []
             setInvoices(list)
         } catch {
-            toast({ title: "Error", description: "Failed to load invoices.", variant: "destructive" })
+            userToast.error("Failed to load invoices.", "Error")
         } finally {
             setLoading(false)
         }

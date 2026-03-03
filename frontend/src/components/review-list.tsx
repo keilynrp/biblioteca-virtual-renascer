@@ -5,7 +5,7 @@ import { Star, ThumbsUp, BadgeCheck } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
+import { userToast } from '@/lib/toast-utils';
 import { useBookStore } from "@/store/bookStore";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";

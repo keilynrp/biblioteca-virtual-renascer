@@ -10,7 +10,7 @@ import { MessageSquare, Pin, ArrowLeft, Send, Heart } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { clubsApi, Thread, Post } from '@/services/clubsApi'
-import { useToast } from '@/hooks/use-toast'
+import { userToast } from '@/lib/toast-utils'
 
 interface DiscussionBoardProps {
     clubId: number

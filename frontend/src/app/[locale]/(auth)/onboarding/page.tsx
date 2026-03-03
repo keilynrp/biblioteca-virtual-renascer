@@ -22,7 +22,7 @@ import {
     Calendar,
     ArrowRight,
 } from "lucide-react"
-import { toast } from "sonner"
+import { userToast } from '@/lib/toast-utils'
 import { cn } from "@/lib/utils"
 
 // ── Types ───────────────────────────────────────────────────────────
@@ -123,7 +123,7 @@ export default function OnboardingPage() {
                 if (user?.user_type) setUserType(user.user_type)
                 if (user?.age_range) setAgeRange(user.age_range)
             })
-            .catch(() => toast.error("Error al cargar opciones"))
+            .catch(() => userToast.error("Error al cargar opciones"))
             .finally(() => setLoading(false))
     }, [isAuthenticated, user])
 
@@ -146,7 +146,7 @@ export default function OnboardingPage() {
             toast.info("Puedes completar tu perfil en Configuración")
             router.push("/home")
         } catch {
-            toast.error("Error al omitir el onboarding")
+            userToast.error("Error al omitir el onboarding")
         } finally {
             setSaving(false)
         }
@@ -164,10 +164,10 @@ export default function OnboardingPage() {
                 preferred_categories: selectedCategories,
             })
             updateUser(res.data)
-            toast.success("Perfil completado correctamente")
+            userToast.success("Perfil completado correctamente")
             router.push("/home")
         } catch {
-            toast.error("Error al guardar tu perfil")
+            userToast.error("Error al guardar tu perfil")
         } finally {
             setSaving(false)
         }
@@ -204,7 +204,7 @@ export default function OnboardingPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-6 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-background to-background">
+        <div className="min-h-screen flex items-center justify-center p-6">
             <div className="w-full max-w-3xl">
                 {/* Header */}
                 <motion.div
@@ -212,11 +212,11 @@ export default function OnboardingPage() {
                     animate={{ opacity: 1, y: 0 }}
                     className="text-center mb-10"
                 >
-                    <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-primary/10 text-primary text-sm font-bold mb-6 backdrop-blur-md border border-primary/20 shadow-sm shadow-primary/10">
+                    <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-primary/10 text-primary text-sm font-bold mb-6 border border-primary/20 shadow-sm shadow-primary/10">
                         <Sparkles className="h-4 w-4" />
                         Paso {step + 1} de {TOTAL_STEPS}
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight mb-4 bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">
+                    <h1 className="text-4xl font-black tracking-tight mb-4 text-slate-900">
                         {step === 0 && "Personaliza tu Perfil"}
                         {step === 1 && "¿Cuál es tu Rango de Edad?"}
                         {step === 2 && "Vincular Institución"}
@@ -241,7 +241,7 @@ export default function OnboardingPage() {
                         variants={stepVariants}
                         transition={{ duration: 0.4, ease: "easeOut" }}
                     >
-                        <Card className="rounded-3xl border border-white/20 shadow-2xl bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl overflow-hidden ring-1 ring-slate-200/50 dark:ring-slate-800/50">
+                        <Card className="rounded-2xl border border-slate-200 shadow-lg bg-white">
                             <CardContent className="p-10">
                                 {/* ── Step 0: Personal info + Role ────────────────── */}
                                 {step === 0 && (
@@ -253,7 +253,7 @@ export default function OnboardingPage() {
                                                     value={firstName}
                                                     onChange={e => setFirstName(e.target.value)}
                                                     placeholder="Tu nombre completo"
-                                                    className="h-14 rounded-2xl border-2 border-slate-200/50 focus:border-primary transition-all text-lg px-6"
+                                                    className="h-14 rounded-2xl border-2 border-slate-200 focus:border-primary transition-all text-lg px-6"
                                                 />
                                             </div>
                                             <div className="space-y-2.5">
@@ -262,7 +262,7 @@ export default function OnboardingPage() {
                                                     value={lastName}
                                                     onChange={e => setLastName(e.target.value)}
                                                     placeholder="Tus apellidos"
-                                                    className="h-14 rounded-2xl border-2 border-slate-200/50 focus:border-primary transition-all text-lg px-6"
+                                                    className="h-14 rounded-2xl border-2 border-slate-200 focus:border-primary transition-all text-lg px-6"
                                                 />
                                             </div>
                                         </div>
@@ -283,7 +283,7 @@ export default function OnboardingPage() {
                                                             "flex flex-col items-center gap-3 p-6 rounded-2xl border-2 transition-all cursor-pointer relative",
                                                             userType === type.value
                                                                 ? "border-primary bg-primary/5 shadow-lg shadow-primary/10 ring-2 ring-primary/20"
-                                                                : "border-slate-200/40 hover:border-primary/30 hover:bg-muted/30"
+                                                                : "border-slate-200 hover:border-primary/30 hover:bg-muted/30"
                                                         )}
                                                     >
                                                         {userType === type.value && (
@@ -294,7 +294,7 @@ export default function OnboardingPage() {
                                                         <span className="text-4xl">
                                                             {ROLE_ICONS[type.value] || "👤"}
                                                         </span>
-                                                        <span className="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                                                        <span className="text-sm font-black uppercase tracking-wider text-slate-700">
                                                             {type.label}
                                                         </span>
                                                     </motion.button>
@@ -322,7 +322,7 @@ export default function OnboardingPage() {
                                                         "p-6 rounded-2xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1",
                                                         ageRange === range.value
                                                             ? "border-primary bg-primary text-primary-foreground shadow-xl shadow-primary/20 scale-105"
-                                                            : "border-slate-200/50 hover:border-primary/30 hover:bg-muted/40"
+                                                            : "border-slate-200 hover:border-primary/30 hover:bg-muted/40"
                                                     )}
                                                 >
                                                     <span className="text-lg font-black tracking-tight">{range.label}</span>
@@ -344,7 +344,7 @@ export default function OnboardingPage() {
                                                 placeholder="Escribe el nombre o código de tu institución..."
                                                 value={institutionSearch}
                                                 onChange={e => setInstitutionSearch(e.target.value)}
-                                                className="h-14 rounded-2xl border-2 border-slate-200/50 focus:border-primary transition-all text-lg pl-12"
+                                                className="h-14 rounded-2xl border-2 border-slate-200 focus:border-primary transition-all text-lg pl-12"
                                             />
                                             <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                                         </div>
@@ -356,7 +356,7 @@ export default function OnboardingPage() {
                                                     "w-full text-left p-5 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between",
                                                     institutionId === null
                                                         ? "border-primary bg-primary/5 shadow-md"
-                                                        : "border-slate-200/50 hover:border-primary/30"
+                                                        : "border-slate-200 hover:border-primary/30"
                                                 )}
                                             >
                                                 <div className="font-bold">Lector Independiente</div>
@@ -371,11 +371,11 @@ export default function OnboardingPage() {
                                                         "w-full text-left p-5 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between",
                                                         institutionId === inst.id
                                                             ? "border-primary bg-primary/5 shadow-md"
-                                                            : "border-slate-200/50 hover:border-primary/30"
+                                                            : "border-slate-200 hover:border-primary/30"
                                                     )}
                                                 >
                                                     <div>
-                                                        <span className="font-bold text-slate-800 dark:text-slate-200">{inst.name}</span>
+                                                        <span className="font-bold text-slate-800">{inst.name}</span>
                                                         <span className="text-xs font-mono ml-2 px-2 py-0.5 rounded bg-muted text-muted-foreground">ID: {inst.code}</span>
                                                     </div>
                                                     {institutionId === inst.id && <Check className="h-5 w-5 text-primary" />}
@@ -414,7 +414,7 @@ export default function OnboardingPage() {
                                                         "relative p-5 rounded-2xl border-2 text-left transition-all cursor-pointer overflow-hidden flex flex-col gap-1.5",
                                                         selectedCategories.includes(cat.id)
                                                             ? "border-primary bg-primary text-primary-foreground shadow-xl shadow-primary/10"
-                                                            : "border-slate-200/50 hover:border-primary/30 hover:bg-muted/50"
+                                                            : "border-slate-200 hover:border-primary/30 hover:bg-muted/50"
                                                     )}
                                                 >
                                                     {selectedCategories.includes(cat.id) && (
@@ -441,7 +441,7 @@ export default function OnboardingPage() {
                                 )}
 
                                 {/* ── Navigation buttons ─────────────────────────── */}
-                                <div className="flex items-center justify-between mt-12 pt-8 border-t-2 border-slate-200/30 dark:border-slate-800/30">
+                                <div className="flex items-center justify-between mt-12 pt-8 border-t-2 border-slate-200">
                                     <div>
                                         {step > 0 ? (
                                             <Button
@@ -506,11 +506,6 @@ export default function OnboardingPage() {
                 </motion.p>
             </div>
 
-            {/* Background elements for premium feel */}
-            <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden">
-                <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px]" />
-                <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] rounded-full bg-blue-500/5 blur-[100px]" />
-            </div>
         </div>
     )
 }

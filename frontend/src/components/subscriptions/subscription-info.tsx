@@ -12,7 +12,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import Link from "next/link"
-import { toast } from "@/hooks/use-toast"
+import { userToast } from '@/lib/toast-utils'
 import { CreditCard } from "lucide-react"
 
 export function SubscriptionInfo() {

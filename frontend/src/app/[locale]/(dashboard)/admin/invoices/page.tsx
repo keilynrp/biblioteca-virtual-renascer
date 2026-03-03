@@ -47,7 +47,7 @@ import {
     CircleCheck,
     Loader2,
 } from "lucide-react"
-import { toast } from "sonner"
+import { userToast } from '@/lib/toast-utils'
 
 const STATUS_OPTIONS = [
     { value: "all", label: "Todas las facturas" },
@@ -136,7 +136,7 @@ export default function AdminInvoicesPage() {
             setInvoices(data.results)
             setTotalCount(data.count)
         } catch {
-            toast.error("Error al cargar las facturas")
+            userToast.error("Error al cargar las facturas")
         } finally {
             setLoading(false)
         }
@@ -165,14 +165,14 @@ export default function AdminInvoicesPage() {
                 amount: refundAmount ? parseFloat(refundAmount) : undefined,
                 reason: refundReason,
             })
-            toast.success(`Factura ${refundInvoice.invoice_number} reembolsada`)
+            userToast.success(`Factura ${refundInvoice.invoice_number} reembolsada`)
             setRefundInvoice(null)
             setRefundAmount("")
             fetchInvoices()
             fetchSummary()
         } catch (err: any) {
             const detail = err?.response?.data?.detail || "Error al procesar el reembolso"
-            toast.error(detail)
+            userToast.error(detail)
         } finally {
             setRefundLoading(false)
         }

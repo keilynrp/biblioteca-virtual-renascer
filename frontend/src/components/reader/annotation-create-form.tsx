@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Plus, Loader2 } from 'lucide-react';
 import { annotationsApi } from '@/services/annotations-api';
 import type { Annotation } from '@/types/annotations';
-import { toast } from 'sonner';
+import { userToast } from '@/lib/toast-utils';
 
 interface AnnotationCreateFormProps {
   bookId: number;
@@ -32,12 +32,12 @@ export function AnnotationCreateForm({
     e.preventDefault();
 
     if (!content.trim()) {
-      toast.error('El contenido de la nota es requerido');
+      userToast.error('El contenido de la nota es requerido');
       return;
     }
 
     if (pageNumber < 1) {
-      toast.error('El número de página debe ser mayor a 0');
+      userToast.error('El número de página debe ser mayor a 0');
       return;
     }
 
@@ -51,7 +51,7 @@ export function AnnotationCreateForm({
         is_private: isPrivate,
       });
 
-      toast.success('Nota creada exitosamente');
+      userToast.success('Nota creada exitosamente');
       onAnnotationCreated(newAnnotation);
 
       // Reset form
@@ -60,7 +60,7 @@ export function AnnotationCreateForm({
       setIsExpanded(false);
     } catch (error) {
       console.error('Error creating annotation:', error);
-      toast.error('Error al crear la nota');
+      userToast.error('Error al crear la nota');
     } finally {
       setIsLoading(false);
     }

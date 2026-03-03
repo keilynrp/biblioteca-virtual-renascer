@@ -40,7 +40,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { toast } from "sonner"
+import { userToast } from '@/lib/toast-utils'
 import {
     GripVertical,
     Plus,
@@ -408,7 +408,7 @@ function NavigationAdminPageContent() {
                 ...itemsToAdd.map((it, idx) => ({ ...it, order: prev.length + idx }))
             ])
             setSelectedResources([])
-            toast.success(`${itemsToAdd.length} ítem(s) añadido(s)`)
+            userToast.success(`${itemsToAdd.length} ítem(s) añadido(s)`)
         }
     }
 
@@ -425,9 +425,9 @@ function NavigationAdminPageContent() {
             }))
             await navigationApi.saveItems(selectedZoneId, itemsWithOrder)
             await refresh()
-            toast.success("Navegación guardada correctamente")
+            userToast.success("Navegación guardada correctamente")
         } catch {
-            toast.error("Error al guardar la navegación")
+            userToast.error("Error al guardar la navegación")
         } finally {
             setSaving(false)
         }
@@ -448,9 +448,9 @@ function NavigationAdminPageContent() {
             setSelectedZoneId(zone.id)
             setNewZoneOpen(false)
             setNewZoneLabel('')
-            toast.success("Zona creada")
+            userToast.success("Zona creada")
         } catch {
-            toast.error("Error al crear la zona")
+            userToast.error("Error al crear la zona")
         } finally {
             setCreatingZone(false)
         }
@@ -462,9 +462,9 @@ function NavigationAdminPageContent() {
             await navigationApi.updateZone(selectedZoneId, { label: renameLabel.trim() })
             await refresh()
             setRenameOpen(false)
-            toast.success("Zona renombrada")
+            userToast.success("Zona renombrada")
         } catch {
-            toast.error("Error al renombrar la zona")
+            userToast.error("Error al renombrar la zona")
         }
     }
 
@@ -475,9 +475,9 @@ function NavigationAdminPageContent() {
             await navigationApi.deleteZone(selectedZoneId)
             await refresh()
             setSelectedZoneId(zones.find(z => z.id !== selectedZoneId)?.id ?? null)
-            toast.success("Zona eliminada")
+            userToast.success("Zona eliminada")
         } catch {
-            toast.error("Error al eliminar la zona")
+            userToast.error("Error al eliminar la zona")
         }
     }
 
@@ -648,7 +648,7 @@ function NavigationAdminPageContent() {
                                                             is_visible: true,
                                                             children: []
                                                         }])
-                                                        toast.success("Enlace añadido")
+                                                        userToast.success("Enlace añadido")
                                                             ; (e.target as HTMLInputElement).value = ''
                                                             ; (document.getElementById('custom-label') as HTMLInputElement).value = ''
                                                     }
@@ -683,7 +683,7 @@ function NavigationAdminPageContent() {
                                                     is_visible: true,
                                                     children: []
                                                 }])
-                                                toast.success("Enlace añadido")
+                                                userToast.success("Enlace añadido")
                                                     ; (document.getElementById('custom-url') as HTMLInputElement).value = ''
                                                     ; (document.getElementById('custom-label') as HTMLInputElement).value = ''
                                             }

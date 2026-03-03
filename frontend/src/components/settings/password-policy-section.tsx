@@ -26,7 +26,7 @@ import {
     Lock
 } from 'lucide-react'
 import { passwordPolicyApi, PasswordPolicy, UserPasswordStatus } from '@/lib/api/password-policy'
-import { useToast } from '@/hooks/use-toast'
+import { userToast } from '@/lib/toast-utils'
 import {
     AlertDialog,
     AlertDialogAction,

@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
 import { Settings2, Upload, Loader2, Shield, Cookie, Share2, Check } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { userToast } from '@/lib/toast-utils'
 
 type SectionKey = 'branding' | 'colors' | 'social' | 'identity' | 'google' | 'privacy' | 'cookies'
 

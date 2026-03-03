@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { toast } from "@/hooks/use-toast"
+import { userToast } from '@/lib/toast-utils'
 import { MapPin } from "lucide-react"
 
 const COUNTRIES = [
@@ -109,7 +109,7 @@ export function BillingAddressForm() {
         setLoading(true)
         try {
             await billingApi.updateProfile(values)
-            toast({ title: "Saved", description: "Billing address updated successfully." })
+            userToast.success("Billing address updated successfully.", "Saved")
         } catch {
             toast({ title: "Error", description: "Failed to update billing address.", variant: "destructive" })
         } finally {

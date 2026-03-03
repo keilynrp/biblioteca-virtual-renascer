@@ -22,7 +22,7 @@ import { Plus, MoreHorizontal, Pencil, Inbox, Trash2, Loader2 } from 'lucide-rea
 import { AdminGuard } from '@/components/admin/admin-guard'
 import { formsApi } from '@/services/formsApi'
 import type { FormListItem } from '@/types/form'
-import { toast } from 'sonner'
+import { userToast } from '@/lib/toast-utils'
 
 const STATUS_BADGE: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
     draft: { label: 'Borrador', variant: 'secondary' },
@@ -40,7 +40,7 @@ function FormsListContent() {
             const data = await formsApi.listForms()
             setForms(data)
         } catch {
-            toast.error('Error al cargar formularios')
+            userToast.error('Error al cargar formularios')
         } finally {
             setLoading(false)
         }
@@ -52,10 +52,10 @@ function FormsListContent() {
         if (!confirm('¿Estás seguro de eliminar este formulario?')) return
         try {
             await formsApi.deleteForm(slug)
-            toast.success('Formulario eliminado')
+            userToast.success('Formulario eliminado')
             fetchForms()
         } catch {
-            toast.error('Error al eliminar')
+            userToast.error('Error al eliminar')
         }
     }
 

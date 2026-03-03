@@ -13,7 +13,7 @@ import { AnnotationsList } from './annotations-list';
 import { AnnotationCreateForm } from './annotation-create-form';
 import { BookmarkEditDialog } from './bookmark-edit-dialog';
 import { AnnotationEditDialog } from './annotation-edit-dialog';
-import { toast } from 'sonner';
+import { userToast } from '@/lib/toast-utils';
 
 interface AnnotationsSidebarProps {
   bookId: number;
@@ -78,10 +78,10 @@ export function AnnotationsSidebar({
     try {
       await bookmarksApi.delete(id);
       setBookmarks(bookmarks.filter((b) => b.id !== id));
-      toast.success('Marcador eliminado');
+      userToast.success('Marcador eliminado');
     } catch (error) {
       console.error('Error deleting bookmark:', error);
-      toast.error('Error al eliminar el marcador');
+      userToast.error('Error al eliminar el marcador');
     }
   };
 
@@ -89,10 +89,10 @@ export function AnnotationsSidebar({
     try {
       await highlightsApi.delete(id);
       setHighlights(highlights.filter((h) => h.id !== id));
-      toast.success('Resaltado eliminado');
+      userToast.success('Resaltado eliminado');
     } catch (error) {
       console.error('Error deleting highlight:', error);
-      toast.error('Error al eliminar el resaltado');
+      userToast.error('Error al eliminar el resaltado');
     }
   };
 
@@ -100,10 +100,10 @@ export function AnnotationsSidebar({
     try {
       await annotationsApi.delete(id);
       setAnnotations(annotations.filter((a) => a.id !== id));
-      toast.success('Nota eliminada');
+      userToast.success('Nota eliminada');
     } catch (error) {
       console.error('Error deleting annotation:', error);
-      toast.error('Error al eliminar la nota');
+      userToast.error('Error al eliminar la nota');
     }
   };
 
@@ -127,10 +127,10 @@ export function AnnotationsSidebar({
     setIsExporting(true);
     try {
       await notesExportApi.downloadBookNotes(bookId, bookTitle);
-      toast.success('Notas exportadas exitosamente');
+      userToast.success('Notas exportadas exitosamente');
     } catch (error) {
       console.error('Error exporting notes:', error);
-      toast.error('Error al exportar las notas');
+      userToast.error('Error al exportar las notas');
     } finally {
       setIsExporting(false);
     }

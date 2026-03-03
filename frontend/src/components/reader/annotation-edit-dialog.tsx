@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 import { annotationsApi } from '@/services/annotations-api';
 import type { Annotation } from '@/types/annotations';
-import { toast } from 'sonner';
+import { userToast } from '@/lib/toast-utils';
 
 interface AnnotationEditDialogProps {
   annotation: Annotation | null;
@@ -49,7 +49,7 @@ export function AnnotationEditDialog({
     if (!annotation) return;
 
     if (!content.trim()) {
-      toast.error('El contenido de la nota es requerido');
+      userToast.error('El contenido de la nota es requerido');
       return;
     }
 
@@ -61,12 +61,12 @@ export function AnnotationEditDialog({
         is_private: isPrivate,
       });
 
-      toast.success('Nota actualizada exitosamente');
+      userToast.success('Nota actualizada exitosamente');
       onAnnotationUpdated(updatedAnnotation);
       onClose();
     } catch (error) {
       console.error('Error updating annotation:', error);
-      toast.error('Error al actualizar la nota');
+      userToast.error('Error al actualizar la nota');
     } finally {
       setIsLoading(false);
     }

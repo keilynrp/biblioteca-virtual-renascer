@@ -12,7 +12,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { BookOpen, User, LogOut, ChevronDown, Settings } from "lucide-react"
+import { BookOpen, User, LogOut, ChevronDown, Settings, Menu, LogIn, UserPlus } from "lucide-react"
 import { useAuthStoreHydrated } from "@/store/authStore"
 import { useNavigation } from "@/context/navigation-context"
 import { useSiteSettings } from "@/context/site-settings-context"
@@ -86,7 +86,48 @@ export function Navbar() {
                         </>
                     )}
                 </div>
-                <div className="flex items-center space-x-4">
+
+                <div className="flex items-center space-x-2 md:space-x-4">
+                    {/* Mobile Menu Toggle */}
+                    <div className="md:hidden">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-9 w-9">
+                                    <Menu className="h-5 w-5 text-gray-600" />
+                                    <span className="sr-only">Toggle menu</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56 mt-2">
+                                <DropdownMenuLabel>Menú</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                {headerItems.length > 0 ? (
+                                    headerItems.map((item) => (
+                                        <DropdownMenuItem key={item.id ?? item.url} asChild>
+                                            <Link href={item.url} target={item.open_in_new_tab ? "_blank" : undefined} className="w-full cursor-pointer">
+                                                {item.label}
+                                            </Link>
+                                        </DropdownMenuItem>
+                                    ))
+                                ) : (
+                                    <>
+                                        <DropdownMenuItem asChild>
+                                            <Link href="/about" className="w-full cursor-pointer">Acerca de</Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem asChild>
+                                            <Link href="/es/blog" className="w-full cursor-pointer">Noticias</Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem asChild>
+                                            <Link href="/pricing" className="w-full cursor-pointer">Precios</Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem asChild>
+                                            <Link href="/contact" className="w-full cursor-pointer">Contacto</Link>
+                                        </DropdownMenuItem>
+                                    </>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+
                     {!_hasHydrated ? (
                         <div className="h-10 w-32 bg-gray-100 animate-pulse rounded-lg" />
                     ) : isAuthenticated ? (
@@ -144,11 +185,15 @@ export function Navbar() {
                     ) : (
                         <>
                             <Link href="/login">
-                                <Button variant="ghost">Iniciar Sesión</Button>
+                                <Button variant="ghost" className="px-2 md:px-4">
+                                    <LogIn className="h-4 w-4 md:mr-2" />
+                                    <span className="hidden md:inline">Iniciar Sesión</span>
+                                </Button>
                             </Link>
                             <Link href="/register">
-                                <Button className="bg-[#00576F] hover:bg-[#004558] text-white">
-                                    Registrarse
+                                <Button className="bg-[#00576F] hover:bg-[#004558] text-white px-3 md:px-4">
+                                    <UserPlus className="h-4 w-4 md:mr-2" />
+                                    <span className="hidden md:inline">Registrarse</span>
                                 </Button>
                             </Link>
                         </>

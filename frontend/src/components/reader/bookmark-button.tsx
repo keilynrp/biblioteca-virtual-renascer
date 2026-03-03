@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { bookmarksApi } from '@/services/annotations-api';
 import type { Bookmark as BookmarkType } from '@/types/annotations';
-import { useToast } from '@/components/ui/use-toast';
+import { userToast } from '@/lib/toast-utils';
 
 interface BookmarkButtonProps {
   bookId: number;

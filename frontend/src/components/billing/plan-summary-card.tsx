@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { CreditCard, CalendarDays, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
-import { toast } from "@/hooks/use-toast"
+import { userToast } from '@/lib/toast-utils'
 
 export function PlanSummaryCard() {
     const [subscription, setSubscription] = useState<any>(null)
@@ -43,7 +43,7 @@ export function PlanSummaryCard() {
         setCanceling(true)
         try {
             await api.post('/subscriptions/cancel/')
-            toast({ title: "Cancelled", description: "Subscription cancelled successfully." })
+            userToast.success("Subscription cancelled successfully.", "Cancelled")
             setShowCancelDialog(false)
             fetchSubscription()
         } catch {

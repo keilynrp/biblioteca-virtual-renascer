@@ -5,7 +5,7 @@ import { useRouter } from "@/i18n/routing"
 import api from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { toast } from "@/hooks/use-toast"
+import { userToast } from '@/lib/toast-utils'
 import { Check, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 
 // Import steps

@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { toast } from "@/hooks/use-toast"
+import { userToast } from '@/lib/toast-utils'
 
 const schema = z.object({
     amount: z.string().optional(),
@@ -67,7 +67,7 @@ export function RefundDialog({ invoice, open, onOpenChange, onRefunded }: Refund
                 payload.amount = parseFloat(values.amount)
             }
             await billingApi.refundInvoice(invoice.id, payload)
-            toast({ title: "Refund issued", description: `Invoice ${invoice.invoice_number} has been refunded.` })
+            userToast.success(`Invoice ${invoice.invoice_number} has been refunded.`, "Refund issued")
             form.reset()
             onOpenChange(false)
             onRefunded()

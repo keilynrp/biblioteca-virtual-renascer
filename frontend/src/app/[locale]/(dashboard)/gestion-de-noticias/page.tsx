@@ -37,7 +37,7 @@ import {
 import Link from "next/link"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { toast } from "sonner"
+import { userToast } from '@/lib/toast-utils'
 import { AdminGuard } from "@/components/admin/admin-guard"
 
 export default function GestionNoticiasPage() {
@@ -60,7 +60,7 @@ function GestionNoticiasContent() {
             setPosts(data)
         } catch (error) {
             console.error("Error fetching admin posts:", error)
-            toast.error("No se pudieron cargar las noticias")
+            userToast.error("No se pudieron cargar las noticias")
         } finally {
             setLoading(false)
         }
@@ -75,10 +75,10 @@ function GestionNoticiasContent() {
 
         try {
             await blogService.deletePost(slug)
-            toast.success("Publicación eliminada correctamente")
+            userToast.success("Publicación eliminada correctamente")
             fetchPosts()
         } catch (error) {
-            toast.error("Error al eliminar la publicación")
+            userToast.error("Error al eliminar la publicación")
         }
     }
 

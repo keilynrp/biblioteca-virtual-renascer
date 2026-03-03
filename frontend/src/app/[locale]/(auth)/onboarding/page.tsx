@@ -143,7 +143,7 @@ export default function OnboardingPage() {
         try {
             const res = await api.post("/auth/onboarding/", {})
             updateUser(res.data)
-            toast.info("Puedes completar tu perfil en Configuración")
+            userToast.info("Puedes completar tu perfil en Configuración")
             router.push("/home")
         } catch {
             userToast.error("Error al omitir el onboarding")

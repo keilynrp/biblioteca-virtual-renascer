@@ -1,12 +1,12 @@
-import { toast } from '@/hooks/use-toast'
+import { toast } from 'sonner'
 
 export const userToast = {
     success: (message: string, title = 'Éxito') =>
-        toast({ variant: 'success', title, description: message }),
+        toast.success(title, { description: message }),
     error: (message: string, title = 'Error') =>
-        toast({ variant: 'error', title, description: message }),
+        toast.error(title, { description: message }),
     warning: (message: string, title = 'Advertencia') =>
-        toast({ variant: 'warning', title, description: message }),
+        toast.warning(title, { description: message }),
     info: (message: string, title = 'Info') =>
-        toast({ variant: 'info', title, description: message }),
+        toast.info(title, { description: message }),
 }

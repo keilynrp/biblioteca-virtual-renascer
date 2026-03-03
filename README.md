@@ -12,6 +12,10 @@
 
 [Demo en vivo](https://bibliotecavirtual.renascerdosaber.com) · [Documentación](docs/README.md) · [Roadmap](docs/roadmap/README.md) · [Reportar bug](https://github.com/keilynrp/biblioteca-virtual-renascer/issues)
 
+<br/>
+
+<img src="docs/images/screenshots/library/library-catalog.png" alt="Biblioteca Virtual — catálogo de libros" width="900" />
+
 </div>
 
 ---

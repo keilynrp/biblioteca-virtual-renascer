@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { userToast } from '@/lib/toast-utils';
+import { toast } from '@/hooks/use-toast';
 import { useBookStore } from "@/store/bookStore";
 import { cn } from "@/lib/utils";
 
@@ -84,8 +85,8 @@ export function FavoriteButton({
                     {isLoading
                         ? "Actualizando..."
                         : isFavorited
-                        ? "En favoritos"
-                        : "Añadir a favoritos"}
+                            ? "En favoritos"
+                            : "Añadir a favoritos"}
                 </span>
             )}
         </Button>

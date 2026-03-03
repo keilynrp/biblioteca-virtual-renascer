@@ -17,6 +17,7 @@ import {
 import { CreditCard, CalendarDays, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
 import { userToast } from '@/lib/toast-utils'
+import { toast } from '@/hooks/use-toast'
 
 export function PlanSummaryCard() {
     const [subscription, setSubscription] = useState<any>(null)

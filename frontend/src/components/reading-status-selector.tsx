@@ -10,6 +10,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { userToast } from '@/lib/toast-utils';
+import { toast } from '@/hooks/use-toast';
 import { useBookStore } from "@/store/bookStore";
 
 interface ReadingStatusSelectorProps {

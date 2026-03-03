@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { userToast } from '@/lib/toast-utils';
+import { toast } from '@/hooks/use-toast';
 import { useBookStore } from "@/store/bookStore";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
@@ -80,11 +81,10 @@ export function ReviewList({ bookSlug }: ReviewListProps) {
                 {[1, 2, 3, 4, 5].map((star) => (
                     <Star
                         key={star}
-                        className={`h-4 w-4 ${
-                            star <= rating
+                        className={`h-4 w-4 ${star <= rating
                                 ? "fill-yellow-400 text-yellow-400"
                                 : "text-gray-300"
-                        }`}
+                            }`}
                     />
                 ))}
             </div>

@@ -31,7 +31,6 @@ export function useNotifications() {
                         title: "Aviso Importante",
                         description: n.title,
                         variant: "destructive",
-                        duration: 6000,
                     })
                 }
                 knownNotificationIds.current.add(n.id)

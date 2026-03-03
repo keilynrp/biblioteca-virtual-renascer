@@ -13,6 +13,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { userToast } from '@/lib/toast-utils'
+import { toast } from '@/hooks/use-toast'
 import { AlertCircle, CreditCard, Loader2 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -166,7 +167,7 @@ export function AddPaymentMethodDialog({ open, onOpenChange, onAdded }: AddPayme
                         <div className="space-y-1">
                             <p className="font-semibold text-sm">Configuración incompleta</p>
                             <p className="text-xs text-muted-foreground px-4">
-                                La clave pública de Stripe no está configurada correctamente. 
+                                La clave pública de Stripe no está configurada correctamente.
                                 Por favor, contacta al administrador.
                             </p>
                         </div>
@@ -188,9 +189,9 @@ export function AddPaymentMethodDialog({ open, onOpenChange, onAdded }: AddPayme
                             <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-500" />
                         </div>
                         <p className="text-sm font-medium">Error al inicializar</p>
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
+                        <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => {
                                 setClientSecret(null)
                                 handleOpen(true)

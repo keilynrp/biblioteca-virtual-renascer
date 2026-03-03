@@ -136,7 +136,7 @@ export function useOfflineSync() {
             toast({
                 title: 'Sincronización completada',
                 description: `${successCount} cambio${successCount !== 1 ? 's' : ''} guardado${successCount !== 1 ? 's' : ''} correctamente.`,
-                variant: 'success',
+                variant: 'default',
             })
         } else if (successCount > 0 && failed.length > 0) {
             toast({

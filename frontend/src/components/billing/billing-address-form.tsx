@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { userToast } from '@/lib/toast-utils'
+import { toast } from '@/hooks/use-toast'
 import { MapPin } from "lucide-react"
 
 const COUNTRIES = [
@@ -101,7 +102,7 @@ export function BillingAddressForm() {
                     vat_number: profile.vat_number,
                 })
             })
-            .catch(() => {})
+            .catch(() => { })
             .finally(() => setInitialLoading(false))
     }, [form])
 

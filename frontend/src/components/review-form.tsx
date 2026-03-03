@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { userToast } from '@/lib/toast-utils';
+import { toast } from '@/hooks/use-toast';
 import { useBookStore } from "@/store/bookStore";
 
 interface ReviewFormProps {
@@ -113,11 +114,10 @@ export function ReviewForm({ bookSlug, onSuccess }: ReviewFormProps) {
                                     className="focus:outline-none focus:ring-2 focus:ring-primary rounded"
                                 >
                                     <Star
-                                        className={`h-8 w-8 transition-colors ${
-                                            star <= (hoveredRating || rating)
+                                        className={`h-8 w-8 transition-colors ${star <= (hoveredRating || rating)
                                                 ? "fill-yellow-400 text-yellow-400"
                                                 : "text-gray-300"
-                                        }`}
+                                            }`}
                                     />
                                 </button>
                             ))}

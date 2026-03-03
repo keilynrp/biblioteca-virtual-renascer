@@ -108,6 +108,7 @@ class FormWriteSerializer(serializers.ModelSerializer):
 
         for idx, field_data in enumerate(fields_data):
             field_id = field_data.pop('id', None)
+            field_data.pop('order', None)  # order is determined by position
             if field_id and field_id in existing_ids:
                 form.fields.filter(id=field_id).update(order=idx, **field_data)
             else:
@@ -128,6 +129,7 @@ class FormWriteSerializer(serializers.ModelSerializer):
 
         for idx, fd in enumerate(fields_data):
             fd.pop('id', None)
+            fd.pop('order', None)  # order is determined by position
             FormField.objects.create(form=form, order=idx, **fd)
 
         for r in recipients_data:

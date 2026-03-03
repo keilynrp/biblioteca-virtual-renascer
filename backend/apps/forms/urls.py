@@ -42,8 +42,13 @@ urlpatterns = [
         name='form-submissions-export',
     ),
     path(
+        '<slug:form_slug>/submissions/bulk-delete/',
+        FormSubmissionViewSet.as_view({'post': 'bulk_delete'}),
+        name='form-submissions-bulk-delete',
+    ),
+    path(
         '<slug:form_slug>/submissions/<int:pk>/',
-        FormSubmissionViewSet.as_view({'get': 'retrieve'}),
+        FormSubmissionViewSet.as_view({'get': 'retrieve', 'delete': 'destroy'}),
         name='form-submission-detail',
     ),
     path(

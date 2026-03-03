@@ -154,6 +154,19 @@ class FormSubmissionViewSet(viewsets.GenericViewSet):
         submission.save(update_fields=['is_spam'])
         return Response({'is_spam': submission.is_spam})
 
+    def destroy(self, request, **kwargs):
+        submission = get_object_or_404(self.get_queryset(), pk=kwargs['pk'])
+        submission.delete()
+        return Response(status=204)
+
+    @action(detail=False, methods=['post'], url_path='bulk-delete')
+    def bulk_delete(self, request, **kwargs):
+        ids = request.data.get('ids', [])
+        if not ids:
+            return Response({'error': 'No IDs provided'}, status=400)
+        deleted, _ = self.get_queryset().filter(id__in=ids).delete()
+        return Response({'deleted': deleted})
+
     @action(detail=False, methods=['get'])
     def export(self, request, **kwargs):
         qs = self.get_queryset().filter(is_spam=False)

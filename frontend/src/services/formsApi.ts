@@ -57,6 +57,12 @@ export const formsApi = {
     markSpam: (formSlug: string, id: number): Promise<{ is_spam: boolean }> =>
         api.patch(`/forms/${formSlug}/submissions/${id}/mark-spam/`).then(r => r.data),
 
+    deleteSubmission: (formSlug: string, id: number): Promise<void> =>
+        api.delete(`/forms/${formSlug}/submissions/${id}/`).then(() => undefined),
+
+    bulkDeleteSubmissions: (formSlug: string, ids: number[]): Promise<{ deleted: number }> =>
+        api.post(`/forms/${formSlug}/submissions/bulk-delete/`, { ids }).then(r => r.data),
+
     exportCsv: (formSlug: string): Promise<Blob> =>
         api.get(`/forms/${formSlug}/submissions/export/`, { responseType: 'blob' })
             .then(r => r.data),

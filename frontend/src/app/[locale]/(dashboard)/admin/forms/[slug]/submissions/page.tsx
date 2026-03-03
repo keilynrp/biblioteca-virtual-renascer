@@ -4,6 +4,7 @@ import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
     Table,
     TableBody,
@@ -19,7 +20,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
-import { ArrowLeft, Download, Loader2, Inbox } from 'lucide-react'
+import { ArrowLeft, Download, Loader2, Inbox, Trash2 } from 'lucide-react'
 import { AdminGuard } from '@/components/admin/admin-guard'
 import { formsApi } from '@/services/formsApi'
 import type { FormSubmission } from '@/types/form'
@@ -31,6 +32,8 @@ function SubmissionsContent({ params }: { params: Promise<{ slug: string }> }) {
     const [submissions, setSubmissions] = useState<FormSubmission[]>([])
     const [loading, setLoading] = useState(true)
     const [filter, setFilter] = useState<string>('all')
+    const [selected, setSelected] = useState<Set<number>>(new Set())
+    const [deleting, setDeleting] = useState(false)
 
     const fetchSubmissions = async () => {
         setLoading(true)
@@ -40,6 +43,7 @@ function SubmissionsContent({ params }: { params: Promise<{ slug: string }> }) {
                 filter !== 'all' ? filter : undefined,
             )
             setSubmissions(data)
+            setSelected(new Set())
         } catch {
             toast.error('Error al cargar envíos')
         } finally {
@@ -63,6 +67,40 @@ function SubmissionsContent({ params }: { params: Promise<{ slug: string }> }) {
         }
     }
 
+    function toggleSelect(id: number) {
+        setSelected(prev => {
+            const next = new Set(prev)
+            if (next.has(id)) next.delete(id)
+            else next.add(id)
+            return next
+        })
+    }
+
+    function toggleSelectAll() {
+        if (selected.size === submissions.length) {
+            setSelected(new Set())
+        } else {
+            setSelected(new Set(submissions.map(s => s.id)))
+        }
+    }
+
+    async function handleBulkDelete() {
+        if (selected.size === 0) return
+        const count = selected.size
+        if (!confirm(`¿Eliminar ${count} envío${count > 1 ? 's' : ''}? Esta acción no se puede deshacer.`)) return
+
+        setDeleting(true)
+        try {
+            await formsApi.bulkDeleteSubmissions(slug, Array.from(selected))
+            toast.success(`${count} envío${count > 1 ? 's' : ''} eliminado${count > 1 ? 's' : ''}`)
+            fetchSubmissions()
+        } catch {
+            toast.error('Error al eliminar')
+        } finally {
+            setDeleting(false)
+        }
+    }
+
     // Get first 3 field keys from the first submission for table columns
     const dataKeys = submissions.length > 0
         ? Object.keys(submissions[0].data).slice(0, 3)
@@ -83,6 +121,20 @@ function SubmissionsContent({ params }: { params: Promise<{ slug: string }> }) {
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
+                    {selected.size > 0 && (
+                        <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={handleBulkDelete}
+                            disabled={deleting}
+                        >
+                            {deleting
+                                ? <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                : <Trash2 className="h-4 w-4 mr-2" />
+                            }
+                            Eliminar ({selected.size})
+                        </Button>
+                    )}
                     <Select value={filter} onValueChange={setFilter}>
                         <SelectTrigger className="w-40">
                             <SelectValue />
@@ -112,6 +164,12 @@ function SubmissionsContent({ params }: { params: Promise<{ slug: string }> }) {
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHead className="w-10">
+                                <Checkbox
+                                    checked={selected.size === submissions.length}
+                                    onCheckedChange={toggleSelectAll}
+                                />
+                            </TableHead>
                             <TableHead>Fecha</TableHead>
                             {dataKeys.map(key => (
                                 <TableHead key={key}>{key}</TableHead>
@@ -125,17 +183,29 @@ function SubmissionsContent({ params }: { params: Promise<{ slug: string }> }) {
                             <TableRow
                                 key={sub.id}
                                 className="cursor-pointer hover:bg-muted/50"
-                                onClick={() => router.push(`../${slug}/submissions/${sub.id}`)}
                             >
-                                <TableCell className="text-sm">
+                                <TableCell onClick={e => e.stopPropagation()}>
+                                    <Checkbox
+                                        checked={selected.has(sub.id)}
+                                        onCheckedChange={() => toggleSelect(sub.id)}
+                                    />
+                                </TableCell>
+                                <TableCell
+                                    className="text-sm"
+                                    onClick={() => router.push(`../${slug}/submissions/${sub.id}`)}
+                                >
                                     {new Date(sub.created_at).toLocaleString()}
                                 </TableCell>
                                 {dataKeys.map(key => (
-                                    <TableCell key={key} className="text-sm max-w-[200px] truncate">
+                                    <TableCell
+                                        key={key}
+                                        className="text-sm max-w-[200px] truncate"
+                                        onClick={() => router.push(`../${slug}/submissions/${sub.id}`)}
+                                    >
                                         {sub.data[key] || '—'}
                                     </TableCell>
                                 ))}
-                                <TableCell>
+                                <TableCell onClick={() => router.push(`../${slug}/submissions/${sub.id}`)}>
                                     <div className="flex gap-1">
                                         {sub.is_spam && (
                                             <Badge variant="destructive" className="text-xs">Spam</Badge>
@@ -148,7 +218,10 @@ function SubmissionsContent({ params }: { params: Promise<{ slug: string }> }) {
                                         )}
                                     </div>
                                 </TableCell>
-                                <TableCell className="text-xs text-muted-foreground">
+                                <TableCell
+                                    className="text-xs text-muted-foreground"
+                                    onClick={() => router.push(`../${slug}/submissions/${sub.id}`)}
+                                >
                                     {sub.ip_address || '—'}
                                 </TableCell>
                             </TableRow>

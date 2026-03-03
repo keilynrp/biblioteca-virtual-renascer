@@ -1911,3 +1911,88 @@ class BookImportView(generics.GenericAPIView):
         except Exception as e:
             logger.error(f"Error importing books: {str(e)}")
             return Response({'error': f'Error al importar: {str(e)}'}, status=500)
+
+
+class BookImportTemplateView(generics.GenericAPIView):
+    """
+    Download an import template with headers + one example row.
+
+    GET /api/content/books/import-template/?format=csv|xlsx
+    """
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request, *args, **kwargs):
+        format_type = request.query_params.get('format', 'xlsx').lower()
+        if format_type not in ('csv', 'xlsx'):
+            return Response({'error': 'Usa format=csv o format=xlsx'}, status=400)
+
+        try:
+            content = BookImportExport.generate_template(format_type)
+            if format_type == 'csv':
+                content_type = 'text/csv; charset=utf-8'
+                ext = 'csv'
+            else:
+                content_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                ext = 'xlsx'
+
+            response = HttpResponse(content, content_type=content_type)
+            response['Content-Disposition'] = f'attachment; filename="plantilla_importacion.{ext}"'
+            return response
+        except Exception as e:
+            logger.error(f"Error generating template: {e}")
+            return Response({'error': f'Error al generar plantilla: {e}'}, status=500)
+
+
+class ResetCatalogView(APIView):
+    """
+    Delete ALL books, authors, categories and clear the search index.
+
+    POST /api/content/admin/reset-catalog/
+    Body: {"confirmation": "CONFIRMAR"}
+    """
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request, *args, **kwargs):
+        if request.data.get('confirmation') != 'CONFIRMAR':
+            return Response(
+                {'error': 'Debes enviar {"confirmation": "CONFIRMAR"} para ejecutar el reset.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        from django.db import transaction
+        from .models import Author, Category
+
+        try:
+            with transaction.atomic():
+                books_count = Book.objects.count()
+                Book.objects.all().delete()
+
+                authors_count = Author.objects.count()
+                Author.objects.all().delete()
+
+                categories_count = Category.objects.count()
+                Category.objects.all().delete()
+
+            try:
+                clear_index()
+            except Exception as e:
+                logger.warning(f"Could not clear Meilisearch index: {e}")
+
+            logger.info(
+                f"Catalog reset by {request.user}: "
+                f"{books_count} books, {authors_count} authors, {categories_count} categories deleted."
+            )
+
+            return Response({
+                'success': True,
+                'deleted': {
+                    'books': books_count,
+                    'authors': authors_count,
+                    'categories': categories_count,
+                },
+                'message': 'Catálogo reiniciado correctamente.',
+            })
+
+        except Exception as e:
+            logger.error(f"Error resetting catalog: {e}")
+            return Response({'error': f'Error al resetear: {e}'}, status=500)

@@ -1,6 +1,7 @@
 "use client"
 
 import { AdminGuard } from "@/components/admin/admin-guard"
+import { userToast } from "@/lib/toast-utils"
 import { useEffect, useState, useMemo } from "react"
 import { useSearchParams } from "next/navigation"
 import api from "@/lib/api"
@@ -40,7 +41,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { BookOpen, Plus, Search, MoreVertical, Edit, Trash2, Eye, Download, FileSpreadsheet, FileText, Upload } from "lucide-react"
+import { BookOpen, Plus, Search, MoreVertical, Edit, Trash2, Eye, Download, FileSpreadsheet, FileText, Upload, AlertTriangle, RotateCcw, FileDown } from "lucide-react"
 import Link from "next/link"
 import { YearPicker } from "@/components/ui/year-picker"
 import { TaxonomySelector } from "@/components/ui/taxonomy-selector"
@@ -142,6 +143,9 @@ function AdminBooksPageContent() {
     const [importing, setImporting] = useState(false)
     const [importResult, setImportResult] = useState<{ imported: number, skipped: number, errors: string[] } | null>(null)
     const [importFile, setImportFile] = useState<File | null>(null)
+    const [isResetDialogOpen, setIsResetDialogOpen] = useState(false)
+    const [resetConfirmText, setResetConfirmText] = useState("")
+    const [resetting, setResetting] = useState(false)
     const searchParams = useSearchParams()
     const editSlug = searchParams.get("edit")
 
@@ -493,6 +497,43 @@ function AdminBooksPageContent() {
         }
     }
 
+    const downloadTemplate = async (fmt: 'csv' | 'xlsx') => {
+        try {
+            const response = await api.get(`/content/books/import-template/?format=${fmt}`, {
+                responseType: 'blob',
+            })
+            const url = window.URL.createObjectURL(new Blob([response.data]))
+            const link = document.createElement('a')
+            link.href = url
+            link.setAttribute('download', `plantilla_importacion.${fmt}`)
+            document.body.appendChild(link)
+            link.click()
+            link.remove()
+        } catch {
+            userToast.error('No se pudo descargar la plantilla')
+        }
+    }
+
+    const handleReset = async () => {
+        if (resetConfirmText !== 'CONFIRMAR') return
+        setResetting(true)
+        try {
+            const res = await api.post('/content/admin/reset-catalog/', { confirmation: 'CONFIRMAR' })
+            const { deleted } = res.data
+            userToast.success(
+                `${deleted.books} libros, ${deleted.authors} autores y ${deleted.categories} categorías eliminados.`,
+                'Catálogo reiniciado'
+            )
+            setIsResetDialogOpen(false)
+            setResetConfirmText('')
+            await fetchData()
+        } catch {
+            userToast.error('No se pudo reiniciar el catálogo')
+        } finally {
+            setResetting(false)
+        }
+    }
+
     if (loading) {
         return (
             <div className="space-y-6">
@@ -539,6 +580,14 @@ function AdminBooksPageContent() {
                         }}>
                             <Download className="mr-2 h-4 w-4" />
                             Exportar {selectedBooks.size > 0 && `(${selectedBooks.size})`}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                            onClick={() => { setResetConfirmText(''); setIsResetDialogOpen(true) }}
+                        >
+                            <RotateCcw className="mr-2 h-4 w-4" />
+                            Resetear catálogo
                         </Button>
                         <Button
                             className="bg-gradient-to-r from-primary to-primary-dark"
@@ -1049,8 +1098,35 @@ function AdminBooksPageContent() {
 
                     {!importResult ? (
                         <form onSubmit={handleImport} className="space-y-4 py-4">
+                            <div className="rounded-lg border bg-muted/40 p-3 space-y-2">
+                                <p className="text-xs font-medium text-muted-foreground">
+                                    ¿Primera vez? Descarga la plantilla con todos los campos y un ejemplo:
+                                </p>
+                                <div className="flex gap-2">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1 text-xs"
+                                        onClick={() => downloadTemplate('xlsx')}
+                                    >
+                                        <FileDown className="mr-1 h-3 w-3" />
+                                        Plantilla Excel
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1 text-xs"
+                                        onClick={() => downloadTemplate('csv')}
+                                    >
+                                        <FileDown className="mr-1 h-3 w-3" />
+                                        Plantilla CSV
+                                    </Button>
+                                </div>
+                            </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="import-file">Archivo (CSV o XLSX)</Label>
+                                <Label htmlFor="import-file">Archivo a importar (CSV o XLSX)</Label>
                                 <Input
                                     id="import-file"
                                     type="file"
@@ -1059,7 +1135,7 @@ function AdminBooksPageContent() {
                                     required
                                 />
                                 <p className="text-xs text-muted-foreground">
-                                    Asegúrate de que las columnas coincidan: Título, Autor, Categoría, Descripción, ISBN, Es Premium.
+                                    Los campos obligatorios son: Título y Autor. Los libros con slug duplicado serán omitidos.
                                 </p>
                             </div>
                             <DialogFooter>
@@ -1102,6 +1178,54 @@ function AdminBooksPageContent() {
                             </DialogFooter>
                         </div>
                     )}
+                </DialogContent>
+            </Dialog>
+            {/* Reset Catalog Dialog */}
+            <Dialog open={isResetDialogOpen} onOpenChange={(open) => { setIsResetDialogOpen(open); if (!open) setResetConfirmText('') }}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-destructive">
+                            <AlertTriangle className="h-5 w-5" />
+                            Resetear catálogo completo
+                        </DialogTitle>
+                        <DialogDescription>
+                            Esta acción es <strong>irreversible</strong>. Se eliminarán permanentemente:
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-2 space-y-3">
+                        <ul className="text-sm space-y-1 text-muted-foreground list-disc list-inside bg-destructive/5 border border-destructive/20 rounded-lg p-3">
+                            <li>Todos los libros del catálogo</li>
+                            <li>Todos los autores y categorías</li>
+                            <li>Historial de lectura, favoritos y reseñas</li>
+                            <li>Anotaciones, marcadores y resaltados</li>
+                            <li>El índice de búsqueda (Meilisearch)</li>
+                        </ul>
+                        <div className="space-y-2">
+                            <Label htmlFor="reset-confirm" className="text-sm font-medium">
+                                Escribe <span className="font-mono font-bold text-destructive">CONFIRMAR</span> para continuar:
+                            </Label>
+                            <Input
+                                id="reset-confirm"
+                                value={resetConfirmText}
+                                onChange={(e) => setResetConfirmText(e.target.value)}
+                                placeholder="CONFIRMAR"
+                                className="font-mono"
+                                autoComplete="off"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => { setIsResetDialogOpen(false); setResetConfirmText('') }}>
+                            Cancelar
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            disabled={resetConfirmText !== 'CONFIRMAR' || resetting}
+                            onClick={handleReset}
+                        >
+                            {resetting ? 'Reiniciando...' : 'Sí, resetear todo'}
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </>

@@ -11,6 +11,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { clubsApi, Thread, Post } from '@/services/clubsApi'
 import { userToast } from '@/lib/toast-utils'
+import { useToast } from '@/hooks/use-toast'
 
 interface DiscussionBoardProps {
     clubId: number

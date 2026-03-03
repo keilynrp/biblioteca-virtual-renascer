@@ -20,6 +20,7 @@ import { DataTable } from '@/components/ui/data-table'
 import { Mail, Loader2, RefreshCw, Send } from 'lucide-react'
 import api from '@/lib/api'
 import { userToast } from '@/lib/toast-utils'
+import { useToast } from '@/hooks/use-toast'
 
 type SMTPConfig = {
     id: number

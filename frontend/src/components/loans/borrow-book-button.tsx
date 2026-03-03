@@ -5,6 +5,7 @@ import { BookOpen, Clock, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useLoans } from '@/hooks/use-loans'
 import { userToast } from '@/lib/toast-utils'
+import { useToast } from '@/hooks/use-toast'
 
 interface BorrowBookButtonProps {
     bookId: number

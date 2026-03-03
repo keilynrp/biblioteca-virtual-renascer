@@ -19,6 +19,7 @@ import { DataTable } from '@/components/ui/data-table'
 import { Plus, RefreshCw, Loader2, DollarSign, Pencil, Star } from 'lucide-react'
 import api from '@/lib/api'
 import { userToast } from '@/lib/toast-utils'
+import { useToast } from '@/hooks/use-toast'
 import { useCurrency } from '@/context/currency-context'
 
 type Currency = {

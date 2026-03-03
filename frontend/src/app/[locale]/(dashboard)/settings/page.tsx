@@ -19,6 +19,7 @@ import {
 import { LoanCard } from '@/components/loans/loan-card'
 import api from '@/lib/api'
 import { userToast } from '@/lib/toast-utils'
+import { useToast } from '@/hooks/use-toast'
 import { PasswordPolicySection } from '@/components/settings/password-policy-section'
 import { CurrenciesSection } from '@/components/settings/currencies-section'
 import { EmailSection } from '@/components/settings/email-section'

@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label';
 import { bookmarksApi } from '@/services/annotations-api';
 import type { Bookmark as BookmarkType } from '@/types/annotations';
 import { userToast } from '@/lib/toast-utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface BookmarkButtonProps {
   bookId: number;

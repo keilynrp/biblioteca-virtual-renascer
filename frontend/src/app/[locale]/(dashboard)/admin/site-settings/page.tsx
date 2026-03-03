@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
 import { Settings2, Upload, Loader2, Shield, Cookie, Share2, Check } from "lucide-react"
 import { userToast } from '@/lib/toast-utils'
+import { useToast } from '@/hooks/use-toast'
 
 type SectionKey = 'branding' | 'colors' | 'social' | 'identity' | 'google' | 'privacy' | 'cookies'
 

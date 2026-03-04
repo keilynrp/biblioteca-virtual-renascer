@@ -26,7 +26,7 @@ export function Footer() {
                                 className="object-contain h-[62px] max-w-[172px]"
                             />
                         </div>
-                        <p className="text-base text-gray-400 max-w-sm">
+                        <p className="text-base text-gray-300 max-w-sm">
                             Plataforma digital de conocimiento para instituciones educativas.
                             Acceso ilimitado a contenido académico de calidad.
                         </p>
@@ -34,7 +34,7 @@ export function Footer() {
                     {footerZones.length > 0 ? (
                         footerZones.map((zone) => (
                             <div key={zone.id}>
-                                <h4 className="text-white font-semibold mb-4">{zone.label}</h4>
+                                <h2 className="text-white font-semibold mb-4">{zone.label}</h2>
                                 <ul className="space-y-2 text-base">
                                     {zone.items.map((item) => (
                                         <li key={item.id ?? item.url}>
@@ -53,7 +53,7 @@ export function Footer() {
                     ) : (
                         <>
                             <div>
-                                <h4 className="text-white font-semibold mb-4">Plataforma</h4>
+                                <h2 className="text-white font-semibold mb-4">Plataforma</h2>
                                 <ul className="space-y-2 text-base">
                                     <li><Link href="/" className="hover:text-[#00576F]">Inicio</Link></li>
                                     <li><Link href="/about" className="hover:text-[#00576F]">Acerca de</Link></li>
@@ -63,7 +63,7 @@ export function Footer() {
                                 </ul>
                             </div>
                             <div>
-                                <h4 className="text-white font-semibold mb-4">Cuenta</h4>
+                                <h2 className="text-white font-semibold mb-4">Cuenta</h2>
                                 <ul className="space-y-2 text-base">
                                     <li><Link href="/login" className="hover:text-[#00576F]">Iniciar Sesión</Link></li>
                                     <li><Link href="/register" className="hover:text-[#00576F]">Registrarse</Link></li>
@@ -73,7 +73,7 @@ export function Footer() {
                         </>
                     )}
                 </div>
-                <div className="border-t border-gray-800 mt-8 pt-8 text-center text-base text-gray-500">
+                <div className="border-t border-gray-800 mt-8 pt-8 text-center text-base text-gray-400">
                     <p>&copy; {year || '...'} Biblioteca Virtual Renascer Saber. Todos los derechos reservados.</p>
                 </div>
             </div>

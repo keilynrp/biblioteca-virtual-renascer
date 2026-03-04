@@ -184,16 +184,16 @@ export function Navbar() {
                         </DropdownMenu>
                     ) : (
                         <>
-                            <Link href="/login">
-                                <Button variant="ghost" className="px-2 md:px-4">
-                                    <LogIn className="h-4 w-4 md:mr-2" />
-                                    <span className="hidden md:inline">Iniciar Sesión</span>
+                            <Link href="/login" aria-label="Iniciar Sesión">
+                                <Button variant="ghost" className="px-2 md:px-4" aria-label="Iniciar Sesión">
+                                    <LogIn className="h-4 w-4 md:mr-2" aria-hidden="true" />
+                                    <span className="sr-only md:not-sr-only md:inline">Iniciar Sesión</span>
                                 </Button>
                             </Link>
-                            <Link href="/register">
-                                <Button className="bg-[#00576F] hover:bg-[#004558] text-white px-3 md:px-4">
-                                    <UserPlus className="h-4 w-4 md:mr-2" />
-                                    <span className="hidden md:inline">Registrarse</span>
+                            <Link href="/register" aria-label="Registrarse">
+                                <Button className="bg-[#00576F] hover:bg-[#004558] text-white px-3 md:px-4" aria-label="Registrarse">
+                                    <UserPlus className="h-4 w-4 md:mr-2" aria-hidden="true" />
+                                    <span className="sr-only md:not-sr-only md:inline">Registrarse</span>
                                 </Button>
                             </Link>
                         </>

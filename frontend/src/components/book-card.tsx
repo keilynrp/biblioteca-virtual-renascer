@@ -69,9 +69,9 @@ export function BookCard({ book, index = 0 }: BookCardProps) {
 
                             {/* ── Quick View Pill ── */}
                             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0">
-                                <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md px-5 py-2.5 rounded-full shadow-2xl flex items-center gap-2.5 ring-1 ring-black/10 dark:ring-white/20">
-                                    <Eye className="h-4 w-4 text-primary" />
-                                    <span className="text-sm font-bold text-foreground tracking-wide">Vista Rápida</span>
+                                <div className="bg-black/60 backdrop-blur-md px-5 py-2.5 rounded-full shadow-2xl flex items-center gap-2.5 ring-1 ring-white/20">
+                                    <Eye className="h-4 w-4 text-white" />
+                                    <span className="text-sm font-bold text-white tracking-wide">Vista Rápida</span>
                                 </div>
                             </div>
                         </>

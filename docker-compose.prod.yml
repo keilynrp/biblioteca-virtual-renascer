@@ -251,6 +251,96 @@ services:
     networks:
       - dokploy-network
 
+  # =============================================================================
+  # Celery Worker — processes async tasks (book purchases, notifications, etc.)
+  # Scale with --scale celery-worker=N if needed.
+  # =============================================================================
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command:
+      - celery
+      - -A
+      - config
+      - worker
+      - --loglevel=info
+      - --concurrency=2
+      - --max-tasks-per-child=500
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - DJANGO_ENV=production
+    volumes:
+      - backend_media:/app/media
+      - backend_logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A config inspect ping -d celery@$$HOSTNAME || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - dokploy-network
+
+  # =============================================================================
+  # Celery Beat — schedules periodic tasks (expiration, notifications, seat sync)
+  # WARNING: NEVER run more than one instance — duplicate beats = duplicate tasks.
+  # Schedule defined in config/celery.py (beat_schedule).
+  # =============================================================================
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command:
+      - celery
+      - -A
+      - config
+      - beat
+      - --loglevel=info
+      - --schedule=/app/logs/celerybeat-schedule
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - DJANGO_ENV=production
+    volumes:
+      - backend_media:/app/media
+      - backend_logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    restart: unless-stopped
+    networks:
+      - dokploy-network
+
   minio-init:
     image: minio/mc:latest
     depends_on:

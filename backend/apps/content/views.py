@@ -1309,13 +1309,23 @@ class StartReadingView(APIView):
     def post(self, request, book_id):
         book = get_object_or_404(Book, id=book_id)
 
-        # Check if user has access (premium books require subscription)
-        if book.is_premium:
-            from apps.subscriptions.utils import user_has_active_reading_access
-            if not user_has_active_reading_access(request.user):
+        # Check if user has access (tier-aware, collection-aware)
+        from apps.subscriptions.utils import can_user_access_book
+        can_access, reason = can_user_access_book(request.user, book)
+        if not can_access:
+            return Response({
+                'error_code': 'SUBSCRIPTION_REQUIRED',
+                'error': 'Este contenido es exclusivo para suscriptores.',
+                'reason': reason,
+            }, status=403)
+
+        # Grace period: only allow resuming books already in progress, not new ones
+        if reason == 'grace_period_read_only':
+            has_session = Reading.objects.filter(user=request.user, book=book).exists()
+            if not has_session:
                 return Response({
-                    'error_code': 'SUBSCRIPTION_REQUIRED',
-                    'error': 'Este contenido es exclusivo para suscriptores.',
+                    'error_code': 'GRACE_PERIOD',
+                    'error': 'Tu suscripción venció. Solo puedes continuar leyendo libros que ya habías comenzado.',
                 }, status=403)
 
         # Get or create reading session
@@ -1426,23 +1436,25 @@ class ServeBookFileView(APIView):
 
         book = get_object_or_404(Book, id=book_id)
 
-        # Check if user has access
-        if book.is_premium:
-            # Verify user has active subscription
-            from apps.subscriptions.models import UserSubscription
-            from django.utils import timezone
+        # Check if user has access (tier-aware, collection-aware)
+        from apps.subscriptions.utils import can_user_access_book
+        can_access, reason = can_user_access_book(user, book)
+        if not can_access:
+            from django.http import JsonResponse
+            return JsonResponse({
+                'error_code': 'SUBSCRIPTION_REQUIRED',
+                'error': 'Este contenido es exclusivo para suscriptores.',
+                'reason': reason,
+            }, status=403)
 
-            has_active_subscription = UserSubscription.objects.filter(
-                user=user,
-                is_active=True,
-                end_date__gte=timezone.now()
-            ).exists()
-
-            if not has_active_subscription and not user.is_staff:
-                from django.http import JsonResponse
+        # Grace period: only serve PDFs of books with an existing reading session
+        if reason == 'grace_period_read_only':
+            from django.http import JsonResponse
+            has_session = Reading.objects.filter(user=user, book=book).exists()
+            if not has_session:
                 return JsonResponse({
-                    'error_code': 'SUBSCRIPTION_REQUIRED',
-                    'error': 'Este contenido es exclusivo para suscriptores.',
+                    'error_code': 'GRACE_PERIOD',
+                    'error': 'Tu suscripción venció. Solo puedes continuar leyendo libros que ya habías comenzado.',
                 }, status=403)
 
         # Check if file exists

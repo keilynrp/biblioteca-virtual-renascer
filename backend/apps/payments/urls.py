@@ -1,6 +1,9 @@
 
 from django.urls import path
-from .views import CheckoutView, ConfirmPaymentView, StripeConfigView, StripeWebhookView, BankDetailsView
+from .views import (
+    CheckoutView, ConfirmPaymentView, StripeConfigView,
+    StripeWebhookView, BankDetailsView, ValidateCouponView,
+)
 
 urlpatterns = [
     path('config/', StripeConfigView.as_view(), name='stripe_config'),
@@ -8,4 +11,6 @@ urlpatterns = [
     path('checkout/', CheckoutView.as_view(), name='checkout'),
     path('confirm/', ConfirmPaymentView.as_view(), name='confirm_payment'),
     path('webhook/', StripeWebhookView.as_view(), name='stripe_webhook'),
+    path('validate-coupon/', ValidateCouponView.as_view(), name='validate_coupon'),
 ]
+

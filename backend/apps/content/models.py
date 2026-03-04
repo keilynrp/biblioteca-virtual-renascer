@@ -96,6 +96,10 @@ class Book(models.Model):
     publisher = models.CharField(max_length=255, blank=True, default='')
     language = models.CharField(max_length=50, blank=True, default='')
     published_year = models.PositiveIntegerField(null=True, blank=True)
+    available_from = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Fecha de disponibilidad. Null = disponible inmediatamente."
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

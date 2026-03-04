@@ -12,3 +12,10 @@ class CheckoutSerializer(serializers.Serializer):
     plan_id = serializers.IntegerField(required=True)
     payment_method = serializers.ChoiceField(choices=Transaction.PAYMENT_METHOD_CHOICES, default='CREDIT_CARD')
     order_reference = serializers.CharField(required=False, allow_blank=True, max_length=100)
+    coupon_code = serializers.CharField(required=False, allow_blank=True, max_length=50)
+    billing_cycle = serializers.ChoiceField(
+        choices=[('monthly', 'Mensual'), ('annual', 'Anual')],
+        required=False,
+        default='monthly',
+    )
+

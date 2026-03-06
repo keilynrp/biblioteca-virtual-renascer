@@ -51,6 +51,7 @@ class EmailTemplate(models.Model):
         ('password_reset', 'Recuperación de contraseña'),
         ('notification', 'Notificación'),
         ('subscription', 'Suscripción'),
+        ('form_submission', 'Envío de formulario'),
     ]
     key = models.CharField(max_length=50, unique=True, choices=KEYS)
     subject = models.CharField(max_length=500)

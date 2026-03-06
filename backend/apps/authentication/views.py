@@ -53,6 +53,14 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = RegisterSerializer
 
+    def perform_create(self, serializer):
+        user = serializer.save()
+        try:
+            from apps.notifications.helpers import send_welcome_notification
+            send_welcome_notification(user)
+        except Exception as e:
+            logger.warning(f"Could not send welcome notification to {user.username}: {e}")
+
 
 @method_decorator(rate_limit_api_read, name='get')
 @method_decorator(rate_limit_api_write, name='patch')

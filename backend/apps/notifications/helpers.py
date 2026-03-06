@@ -6,6 +6,7 @@ from django.utils import timezone
 from datetime import timedelta
 from apps.subscriptions.models import UserSubscription
 from apps.notifications.models import Notification
+from .email_utils import send_notification_email
 import logging
 
 logger = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ def check_expiring_subscriptions():
 
         if not existing_notification:
             days_left = (subscription.end_date - now).days
-            Notification.objects.create(
+            notification = Notification.objects.create(
                 user=subscription.user,
                 type=Notification.NotificationType.SUBSCRIPTION_EXPIRING,
                 title=f'Tu suscripción {subscription.plan.name} está por vencer',
@@ -53,6 +54,10 @@ def check_expiring_subscriptions():
                     'days_remaining': days_left,
                 },
             )
+            try:
+                send_notification_email(notification)
+            except Exception as e:
+                logger.warning(f"Could not email subscription expiring notification {notification.id}: {e}")
             notifications_created += 1
 
     if notifications_created > 0:
@@ -87,7 +92,7 @@ def check_expiring_trials():
 
         if not already:
             days_left = (user.trial_end_date - now).days
-            Notification.objects.create(
+            notification = Notification.objects.create(
                 user=user,
                 type=Notification.NotificationType.TRIAL_EXPIRING,
                 title='Tu período de prueba está por terminar',
@@ -101,6 +106,10 @@ def check_expiring_trials():
                     'days_remaining': days_left,
                 },
             )
+            try:
+                send_notification_email(notification)
+            except Exception as e:
+                logger.warning(f"Could not email trial expiring notification {notification.id}: {e}")
             created += 1
 
     if created > 0:
@@ -110,10 +119,10 @@ def check_expiring_trials():
 
 def send_welcome_notification(user):
     """
-    Send welcome notification to new user.
-    Can be called from the registration view or signal.
+    Send welcome notification to new user (in-app + email).
+    Called from RegisterView.perform_create.
     """
-    Notification.objects.create(
+    notification = Notification.objects.create(
         user=user,
         type=Notification.NotificationType.WELCOME,
         title='¡Bienvenido a Biblioteca Virtual Renascer!',
@@ -123,6 +132,10 @@ def send_welcome_notification(user):
         ),
         link='/library',
     )
+    try:
+        send_notification_email(notification)
+    except Exception as e:
+        logger.warning(f"Could not email welcome notification for {user.username}: {e}")
     logger.info(f"Welcome notification sent to {user.username}")
 
 
@@ -130,7 +143,7 @@ def send_subscription_activated_notification(user, plan_name):
     """
     Send notification when a subscription is activated.
     """
-    Notification.objects.create(
+    notification = Notification.objects.create(
         user=user,
         type=Notification.NotificationType.SUBSCRIPTION_EXPIRING,  # re-use type
         title=f'¡Tu plan {plan_name} está activo!',
@@ -138,4 +151,8 @@ def send_subscription_activated_notification(user, plan_name):
         link='/library',
         metadata={'plan_name': plan_name, 'event': 'activated'},
     )
+    try:
+        send_notification_email(notification)
+    except Exception as e:
+        logger.warning(f"Could not email subscription activated notification for {user.username}: {e}")
     logger.info(f"Subscription activated notification sent to {user.username}")

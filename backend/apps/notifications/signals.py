@@ -5,6 +5,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from apps.content.models import Review
 from .models import Notification
+from .email_utils import send_notification_email
 import logging
 
 logger = logging.getLogger(__name__)
@@ -21,7 +22,7 @@ def notify_on_new_review(sender, instance, created, **kwargs):
         favorited_users = instance.book.favorited_by.exclude(
             user=instance.user
         ).select_related('user')
-        
+
         if favorited_users.exists():
             notifications = []
             for favorite in favorited_users:
@@ -41,14 +42,17 @@ def notify_on_new_review(sender, instance, created, **kwargs):
                         }
                     )
                 )
-            
-            # Bulk create notifications for efficiency
-            Notification.objects.bulk_create(notifications)
-            logger.info(f"Created {len(notifications)} notifications for new review on {instance.book.title}")
+
+            created_notifications = Notification.objects.bulk_create(notifications)
+            logger.info(f"Created {len(created_notifications)} notifications for new review on {instance.book.title}")
+
+            for notification in created_notifications:
+                try:
+                    send_notification_email(notification)
+                except Exception as e:
+                    logger.warning(f"Could not email new_review notification {notification.id}: {e}")
 
 
 # TODO: Add more signal handlers for other notification types:
-# - Subscription expiring (use Celery periodic task)
-# - Loan expiring (use Celery periodic task)
 # - Book available (when loan system is implemented)
 # - Admin announcements (manual creation via admin panel)

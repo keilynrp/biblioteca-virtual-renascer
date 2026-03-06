@@ -1,7 +1,7 @@
 "use client"
 
-import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
+import { Link, useRouter } from "@/i18n/routing"
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
@@ -17,10 +17,12 @@ import { useAuthStoreHydrated } from "@/store/authStore"
 import { useNavigation } from "@/context/navigation-context"
 import { useSiteSettings } from "@/context/site-settings-context"
 import { useState, useEffect, useCallback } from "react"
+import { LanguageSwitcher } from "@/components/language-switcher"
 
 const SCROLL_THRESHOLD = 100
 
 export function Navbar() {
+    const t = useTranslations('Navbar')
     const router = useRouter()
     const { user, logout, isAuthenticated, _hasHydrated } = useAuthStoreHydrated()
     const { getZone } = useNavigation()
@@ -62,7 +64,7 @@ export function Navbar() {
                         headerItems.map((item) => (
                             <Link
                                 key={item.id ?? item.url}
-                                href={item.url}
+                                href={item.url as any}
                                 target={item.open_in_new_tab ? "_blank" : undefined}
                                 className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors"
                             >
@@ -72,22 +74,24 @@ export function Navbar() {
                     ) : (
                         <>
                             <Link href="/about" className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors">
-                                Acerca de
+                                {t('about')}
                             </Link>
-                            <Link href="/es/blog" className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors">
-                                Noticias
+                            <Link href="/blog" className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors">
+                                {t('news')}
                             </Link>
                             <Link href="/pricing" className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors">
-                                Precios
+                                {t('pricing')}
                             </Link>
                             <Link href="/contact" className="text-base font-medium text-gray-600 hover:text-[#00576F] transition-colors">
-                                Contacto
+                                {t('contact')}
                             </Link>
                         </>
                     )}
                 </div>
 
                 <div className="flex items-center space-x-2 md:space-x-4">
+                    <LanguageSwitcher />
+
                     {/* Mobile Menu Toggle */}
                     <div className="md:hidden">
                         <DropdownMenu>
@@ -98,12 +102,12 @@ export function Navbar() {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56 mt-2">
-                                <DropdownMenuLabel>Menú</DropdownMenuLabel>
+                                <DropdownMenuLabel>{t('menu')}</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 {headerItems.length > 0 ? (
                                     headerItems.map((item) => (
                                         <DropdownMenuItem key={item.id ?? item.url} asChild>
-                                            <Link href={item.url} target={item.open_in_new_tab ? "_blank" : undefined} className="w-full cursor-pointer">
+                                            <Link href={item.url as any} target={item.open_in_new_tab ? "_blank" : undefined} className="w-full cursor-pointer">
                                                 {item.label}
                                             </Link>
                                         </DropdownMenuItem>
@@ -111,16 +115,16 @@ export function Navbar() {
                                 ) : (
                                     <>
                                         <DropdownMenuItem asChild>
-                                            <Link href="/about" className="w-full cursor-pointer">Acerca de</Link>
+                                            <Link href="/about" className="w-full cursor-pointer">{t('about')}</Link>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem asChild>
-                                            <Link href="/es/blog" className="w-full cursor-pointer">Noticias</Link>
+                                            <Link href="/blog" className="w-full cursor-pointer">{t('news')}</Link>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem asChild>
-                                            <Link href="/pricing" className="w-full cursor-pointer">Precios</Link>
+                                            <Link href="/pricing" className="w-full cursor-pointer">{t('pricing')}</Link>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem asChild>
-                                            <Link href="/contact" className="w-full cursor-pointer">Contacto</Link>
+                                            <Link href="/contact" className="w-full cursor-pointer">{t('contact')}</Link>
                                         </DropdownMenuItem>
                                     </>
                                 )}
@@ -142,7 +146,7 @@ export function Navbar() {
                                     </Avatar>
                                     <div className="hidden md:block text-left">
                                         <p className="text-sm font-medium">{user?.username}</p>
-                                        <p className="text-xs text-gray-500">Usuario</p>
+                                        <p className="text-xs text-gray-500">{t('userRole')}</p>
                                     </div>
                                     <ChevronDown className="h-4 w-4 text-gray-500" />
                                 </Button>
@@ -160,40 +164,40 @@ export function Navbar() {
                                 <DropdownMenuItem asChild>
                                     <Link href="/home" className="cursor-pointer">
                                         <BookOpen className="mr-2 h-4 w-4" />
-                                        <span>Dashboard</span>
+                                        <span>{t('dashboard')}</span>
                                     </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
                                     <Link href="/profile" className="cursor-pointer">
                                         <User className="mr-2 h-4 w-4" />
-                                        <span>Mi Perfil</span>
+                                        <span>{t('profile')}</span>
                                     </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
                                     <Link href="/settings" className="cursor-pointer">
                                         <Settings className="mr-2 h-4 w-4" />
-                                        <span>Configuración</span>
+                                        <span>{t('settings')}</span>
                                     </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
                                     <LogOut className="mr-2 h-4 w-4" />
-                                    <span>Cerrar Sesión</span>
+                                    <span>{t('logout')}</span>
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     ) : (
                         <>
-                            <Link href="/login" aria-label="Iniciar Sesión">
-                                <Button variant="ghost" className="px-2 md:px-4" aria-label="Iniciar Sesión">
+                            <Link href="/login" aria-label={t('login')}>
+                                <Button variant="ghost" className="px-2 md:px-4" aria-label={t('login')}>
                                     <LogIn className="h-4 w-4 md:mr-2" aria-hidden="true" />
-                                    <span className="sr-only md:not-sr-only md:inline">Iniciar Sesión</span>
+                                    <span className="sr-only md:not-sr-only md:inline">{t('login')}</span>
                                 </Button>
                             </Link>
-                            <Link href="/register" aria-label="Registrarse">
-                                <Button className="bg-[#00576F] hover:bg-[#004558] text-white px-3 md:px-4" aria-label="Registrarse">
+                            <Link href="/register" aria-label={t('register')}>
+                                <Button className="bg-[#00576F] hover:bg-[#004558] text-white px-3 md:px-4" aria-label={t('register')}>
                                     <UserPlus className="h-4 w-4 md:mr-2" aria-hidden="true" />
-                                    <span className="sr-only md:not-sr-only md:inline">Registrarse</span>
+                                    <span className="sr-only md:not-sr-only md:inline">{t('register')}</span>
                                 </Button>
                             </Link>
                         </>

@@ -1,10 +1,13 @@
 "use client"
-import Link from "next/link"
+
+import { useTranslations } from "next-intl"
+import { Link } from "@/i18n/routing"
 import { useNavigation } from "@/context/navigation-context"
 import { useSiteSettings } from "@/context/site-settings-context"
 import { useState, useEffect } from "react"
 
 export function Footer() {
+    const t = useTranslations('Footer')
     const { getZones } = useNavigation()
     const { logo_url, site_name } = useSiteSettings()
     const footerZones = getZones('footer')
@@ -27,8 +30,7 @@ export function Footer() {
                             />
                         </div>
                         <p className="text-base text-gray-300 max-w-sm">
-                            Plataforma digital de conocimiento para instituciones educativas.
-                            Acceso ilimitado a contenido académico de calidad.
+                            {t('tagline')}
                         </p>
                     </div>
                     {footerZones.length > 0 ? (
@@ -39,7 +41,7 @@ export function Footer() {
                                     {zone.items.map((item) => (
                                         <li key={item.id ?? item.url}>
                                             <Link
-                                                href={item.url}
+                                                href={item.url as any}
                                                 target={item.open_in_new_tab ? "_blank" : undefined}
                                                 className="hover:text-[#00576F]"
                                             >
@@ -53,28 +55,28 @@ export function Footer() {
                     ) : (
                         <>
                             <div>
-                                <h2 className="text-white font-semibold mb-4">Plataforma</h2>
+                                <h2 className="text-white font-semibold mb-4">{t('platform')}</h2>
                                 <ul className="space-y-2 text-base">
-                                    <li><Link href="/" className="hover:text-[#00576F]">Inicio</Link></li>
-                                    <li><Link href="/about" className="hover:text-[#00576F]">Acerca de</Link></li>
-                                    <li><Link href="/es/blog" className="hover:text-[#00576F]">Noticias</Link></li>
-                                    <li><Link href="/pricing" className="hover:text-[#00576F]">Precios</Link></li>
-                                    <li><Link href="/contact" className="hover:text-[#00576F]">Contacto</Link></li>
+                                    <li><Link href="/" className="hover:text-[#00576F]">{t('home')}</Link></li>
+                                    <li><Link href="/about" className="hover:text-[#00576F]">{t('about')}</Link></li>
+                                    <li><Link href="/blog" className="hover:text-[#00576F]">{t('news')}</Link></li>
+                                    <li><Link href="/pricing" className="hover:text-[#00576F]">{t('pricing')}</Link></li>
+                                    <li><Link href="/contact" className="hover:text-[#00576F]">{t('contact')}</Link></li>
                                 </ul>
                             </div>
                             <div>
-                                <h2 className="text-white font-semibold mb-4">Cuenta</h2>
+                                <h2 className="text-white font-semibold mb-4">{t('account')}</h2>
                                 <ul className="space-y-2 text-base">
-                                    <li><Link href="/login" className="hover:text-[#00576F]">Iniciar Sesión</Link></li>
-                                    <li><Link href="/register" className="hover:text-[#00576F]">Registrarse</Link></li>
-                                    <li><Link href="/library" className="hover:text-[#00576F]">Biblioteca</Link></li>
+                                    <li><Link href="/login" className="hover:text-[#00576F]">{t('login')}</Link></li>
+                                    <li><Link href="/register" className="hover:text-[#00576F]">{t('register')}</Link></li>
+                                    <li><Link href="/library" className="hover:text-[#00576F]">{t('library')}</Link></li>
                                 </ul>
                             </div>
                         </>
                     )}
                 </div>
                 <div className="border-t border-gray-800 mt-8 pt-8 text-center text-base text-gray-400">
-                    <p>&copy; {year || '...'} Biblioteca Virtual Renascer Saber. Todos los derechos reservados.</p>
+                    <p>&copy; {year || '...'} {site_name || 'Biblioteca Virtual Renascer do Saber'}. {t('rights')}</p>
                 </div>
             </div>
         </footer>

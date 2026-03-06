@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useTranslations } from "next-intl"
+import { useRouter } from "@/i18n/routing"
 import api from "@/lib/api"
 import { PlanCard } from "@/components/plan-card"
-import { useRouter } from "next/navigation"
 import { Sparkles, Shield, Zap } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -18,6 +19,7 @@ interface Plan {
 }
 
 export default function PricingPage() {
+    const t = useTranslations('Pricing')
     const [plans, setPlans] = useState<Plan[]>([])
     const [loading, setLoading] = useState(true)
     const [subscribing, setSubscribing] = useState<number | null>(null)
@@ -40,7 +42,7 @@ export default function PricingPage() {
     }, [])
 
     const handleSubscribe = (planId: number) => {
-        router.push(`/checkout?planId=${planId}`)
+        router.push(`/checkout?planId=${planId}` as any)
     }
 
     return (
@@ -49,13 +51,13 @@ export default function PricingPage() {
                 <div className="inline-flex items-center gap-2 bg-[#00576F]/10 text-[#00576F]
                                 px-4 py-2 rounded-full text-sm font-medium mb-4">
                     <Sparkles className="h-4 w-4" />
-                    Planes de Suscripción
+                    {t('badge')}
                 </div>
                 <h1 className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight mt-5">
-                    Elige el plan perfecto para ti
+                    {t('heading')}
                 </h1>
                 <p className="text-lg text-gray-600 leading-relaxed">
-                    Accede a miles de libros y recursos educativos. Cancela cuando quieras.
+                    {t('subheading')}
                 </p>
 
                 {/* Billing Toggle */}
@@ -78,7 +80,7 @@ export default function PricingPage() {
                                     : "text-gray-500 hover:text-gray-700"
                             )}
                         >
-                            Mensual
+                            {t('monthly')}
                         </button>
                         <button
                             onClick={() => setIsAnnual(true)}
@@ -89,12 +91,12 @@ export default function PricingPage() {
                                     : "text-gray-500 hover:text-gray-700"
                             )}
                         >
-                            Anual
+                            {t('annual')}
                         </button>
                     </div>
                     {isAnnual && (
                         <span className="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full">
-                            Ahorra 17%
+                            {t('saveBadge')}
                         </span>
                     )}
                 </div>
@@ -122,15 +124,15 @@ export default function PricingPage() {
             <div className="flex flex-wrap items-center justify-center gap-8 pt-8 border-t border-gray-100 mx-auto max-w-4xl px-4">
                 <div className="flex items-center gap-2 text-gray-500">
                     <Shield className="h-5 w-5 text-green-600" />
-                    <span className="text-sm">Pago seguro SSL</span>
+                    <span className="text-sm">{t('trustSsl')}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-500">
                     <Zap className="h-5 w-5 text-yellow-500" />
-                    <span className="text-sm">Activación instantánea</span>
+                    <span className="text-sm">{t('trustInstant')}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-500">
                     <Sparkles className="h-5 w-5 text-[#00576F]" />
-                    <span className="text-sm">Cancela cuando quieras</span>
+                    <span className="text-sm">{t('trustCancel')}</span>
                 </div>
             </div>
         </div>

@@ -1,20 +1,22 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
 import Image from "next/image"
+import { useTranslations } from "next-intl"
+import { Link } from "@/i18n/routing"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { BookOpen, Users, Clock, Shield, GraduationCap, Library, Search, Sparkles } from "lucide-react"
+import { BookOpen, Users, Clock, Shield, Library, Search, Sparkles } from "lucide-react"
 
 export default function LandingPage() {
+    const t = useTranslations('Landing')
     const [offsetY, setOffsetY] = useState(0)
 
     useEffect(() => {
         const handleScroll = () => {
             const scroll = window.scrollY
             if (scroll > 100) {
-                setOffsetY((scroll - 100) * 0.2) // Subtle parallax effect
+                setOffsetY((scroll - 100) * 0.2)
             } else {
                 setOffsetY(0)
             }
@@ -47,27 +49,26 @@ export default function LandingPage() {
                     <div className="max-w-3xl space-y-8 text-right">
                         <div className="inline-block ml-auto">
                             <span className="bg-cyan-500/20 text-cyan-100 border border-cyan-400/30 px-4 py-2 rounded-full text-sm font-medium backdrop-blur-md">
-                                ✨ Plataforma de Conocimiento Digital
+                                {t('heroBadge')}
                             </span>
                         </div>
                         <h1 className="text-4xl md:text-[3.85rem] font-bold text-white leading-tight">
-                            Aumenta tu
-                            <span className="text-cyan-400"> desempeño educacional</span>
+                            {t('heroHeading')}
+                            <span className="text-cyan-400">{t('heroHeadingAccent')}</span>
                         </h1>
                         <p className="text-xl md:text-[1.55rem] text-gray-200 leading-relaxed max-w-2xl ml-auto">
-                            Accede a miles de libros digitales, recursos académicos y contenido premium.
-                            Disponible 24/7 para tu institución educativa.
+                            {t('heroDescription')}
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 pt-4 justify-end">
                             <Link href="/register">
                                 <Button size="lg" className="bg-[#00576F] hover:bg-[#004558] text-white px-8 py-7 text-xl rounded-full shadow-xl shadow-cyan-900/20">
-                                    Comenzar Ahora
+                                    {t('heroCtaStart')}
                                     <Sparkles className="ml-2 h-6 w-6" />
                                 </Button>
                             </Link>
                             <Link href="/library">
                                 <Button size="lg" variant="outline" className="px-8 py-7 text-xl rounded-full border-2 border-white bg-white text-[#000000] hover:bg-[#00576F] hover:text-[#ffffff] hover:border-[#00576F] transition-all">
-                                    Explorar Biblioteca
+                                    {t('heroCtaExplore')}
                                     <Search className="ml-2 h-6 w-6" />
                                 </Button>
                             </Link>
@@ -75,21 +76,20 @@ export default function LandingPage() {
 
                         <div className="flex items-center gap-12 pt-8 justify-end">
                             <div className="text-white text-right">
-                                <p className="text-3xl md:text-4xl font-bold text-cyan-400">10,000+</p>
-                                <p className="text-sm text-gray-300">Libros Digitales</p>
+                                <p className="text-3xl md:text-4xl font-bold text-cyan-400">{t('stat1Value')}</p>
+                                <p className="text-sm text-gray-300">{t('stat1Label')}</p>
                             </div>
                             <div className="text-white text-right">
-                                <p className="text-3xl md:text-4xl font-bold text-cyan-400">500+</p>
-                                <p className="text-sm text-gray-300">Instituciones</p>
+                                <p className="text-3xl md:text-4xl font-bold text-cyan-400">{t('stat2Value')}</p>
+                                <p className="text-sm text-gray-300">{t('stat2Label')}</p>
                             </div>
                             <div className="text-white text-right">
-                                <p className="text-3xl md:text-4xl font-bold text-cyan-400">24/7</p>
-                                <p className="text-sm text-gray-300">Acceso Total</p>
+                                <p className="text-3xl md:text-4xl font-bold text-cyan-400">{t('stat3Value')}</p>
+                                <p className="text-sm text-gray-300">{t('stat3Label')}</p>
                             </div>
                         </div>
                     </div>
                 </div>
-
             </section>
 
             {/* Features Section */}
@@ -97,10 +97,10 @@ export default function LandingPage() {
                 <div className="container mx-auto max-w-6xl px-4">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                            Todo lo que necesitas en una plataforma
+                            {t('featuresHeading')}
                         </h2>
                         <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
-                            Diseñada para instituciones educativas que buscan excelencia académica
+                            {t('featuresSubheading')}
                         </p>
                     </div>
 
@@ -110,10 +110,8 @@ export default function LandingPage() {
                                 <div className="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center mb-4">
                                     <Library className="h-6 w-6 text-[#00576F]" />
                                 </div>
-                                <h3 className="text-xl font-semibold mb-3 text-gray-900">Biblioteca Personalizable</h3>
-                                <p className="text-gray-600">
-                                    Personaliza tu colección según las necesidades específicas de tu institution
-                                </p>
+                                <h3 className="text-xl font-semibold mb-3 text-gray-900">{t('f1Title')}</h3>
+                                <p className="text-gray-600">{t('f1Desc')}</p>
                             </CardContent>
                         </Card>
 
@@ -122,10 +120,8 @@ export default function LandingPage() {
                                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
                                     <BookOpen className="h-6 w-6 text-green-600" />
                                 </div>
-                                <h3 className="text-xl font-semibold mb-3 text-gray-900">Precios por Libro</h3>
-                                <p className="text-gray-600">
-                                    Modelo de pago flexible, solo por el contenido que realmente utilizas
-                                </p>
+                                <h3 className="text-xl font-semibold mb-3 text-gray-900">{t('f2Title')}</h3>
+                                <p className="text-gray-600">{t('f2Desc')}</p>
                             </CardContent>
                         </Card>
 
@@ -134,10 +130,8 @@ export default function LandingPage() {
                                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
                                     <Shield className="h-6 w-6 text-purple-600" />
                                 </div>
-                                <h3 className="text-xl font-semibold mb-3 text-gray-900">Acreditación Institucional</h3>
-                                <p className="text-gray-600">
-                                    Soporte completo para procesos de acreditación y certificación
-                                </p>
+                                <h3 className="text-xl font-semibold mb-3 text-gray-900">{t('f3Title')}</h3>
+                                <p className="text-gray-600">{t('f3Desc')}</p>
                             </CardContent>
                         </Card>
 
@@ -146,10 +140,8 @@ export default function LandingPage() {
                                 <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
                                     <Clock className="h-6 w-6 text-orange-600" />
                                 </div>
-                                <h3 className="text-xl font-semibold mb-3 text-gray-900">Acceso 24/7</h3>
-                                <p className="text-gray-600">
-                                    Disponibilidad completa desde cualquier dispositivo, en cualquier momento
-                                </p>
+                                <h3 className="text-xl font-semibold mb-3 text-gray-900">{t('f4Title')}</h3>
+                                <p className="text-gray-600">{t('f4Desc')}</p>
                             </CardContent>
                         </Card>
 
@@ -158,10 +150,8 @@ export default function LandingPage() {
                                 <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
                                     <Users className="h-6 w-6 text-red-600" />
                                 </div>
-                                <h3 className="text-xl font-semibold mb-3 text-gray-900">Multi-usuario</h3>
-                                <p className="text-gray-600">
-                                    Gestiona múltiples usuarios y permisos desde un solo panel
-                                </p>
+                                <h3 className="text-xl font-semibold mb-3 text-gray-900">{t('f5Title')}</h3>
+                                <p className="text-gray-600">{t('f5Desc')}</p>
                             </CardContent>
                         </Card>
 
@@ -170,10 +160,8 @@ export default function LandingPage() {
                                 <div className="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center mb-4">
                                     <Search className="h-6 w-6 text-cyan-600" />
                                 </div>
-                                <h3 className="text-xl font-semibold mb-3 text-gray-900">Búsqueda Avanzada</h3>
-                                <p className="text-gray-600">
-                                    Motor de búsqueda inteligente para encontrar el contenido que necesitas
-                                </p>
+                                <h3 className="text-xl font-semibold mb-3 text-gray-900">{t('f6Title')}</h3>
+                                <p className="text-gray-600">{t('f6Desc')}</p>
                             </CardContent>
                         </Card>
                     </div>
@@ -184,20 +172,20 @@ export default function LandingPage() {
             <section className="py-20 bg-gradient-to-br from-[#00576F] to-[#003d4d]">
                 <div className="container mx-auto max-w-4xl px-4 text-center">
                     <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
-                        ¿Listo para transformar tu biblioteca?
+                        {t('ctaHeading')}
                     </h2>
                     <p className="text-lg md:text-xl text-cyan-100 mb-8 max-w-2xl mx-auto">
-                        Únete a cientos de instituciones que ya están mejorando su desempeño educacional
+                        {t('ctaDescription')}
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <Link href="/register">
                             <Button size="lg" className="bg-white text-[#00576F] hover:bg-gray-100 px-8 py-6 text-lg rounded-full">
-                                Comenzar Gratis
+                                {t('ctaStart')}
                             </Button>
                         </Link>
                         <Link href="/pricing">
                             <Button size="lg" variant="outline" className="!bg-transparent border-2 border-white !text-white hover:!bg-white/10 hover:!text-white px-8 py-6 text-lg rounded-full">
-                                Ver Planes
+                                {t('ctaPlans')}
                             </Button>
                         </Link>
                     </div>

@@ -30,7 +30,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
-import { User } from "@/lib/api/users"
+import { User, UserType } from "@/lib/api/users"
 import { Institution } from "@/lib/api/institutions"
 import { useAuthStore } from "@/store/authStore"
 
@@ -40,7 +40,7 @@ const userSchema = z.object({
     password: z.string().optional(),
     first_name: z.string().optional(),
     last_name: z.string().optional(),
-    user_type: z.enum(["student", "teacher", "admin"]),
+    user_type: z.enum(["student", "employee", "teacher", "librarian", "moderator", "content_manager", "admin", "other"]),
     institution: z.number().nullable().optional(),
 }).refine((data) => {
     // Password is only required when creating a new user (no ID yet)
@@ -242,8 +242,13 @@ export function UserDialog({
                                             </FormControl>
                                             <SelectContent>
                                                 <SelectItem value="student">Estudiante</SelectItem>
+                                                <SelectItem value="employee">Funcionario</SelectItem>
                                                 <SelectItem value="teacher">Profesor</SelectItem>
+                                                <SelectItem value="librarian">Bibliotecario</SelectItem>
+                                                <SelectItem value="moderator">Moderador</SelectItem>
+                                                <SelectItem value="content_manager">Gestor de Contenido</SelectItem>
                                                 <SelectItem value="admin">Administrador</SelectItem>
+                                                <SelectItem value="other">Otro</SelectItem>
                                             </SelectContent>
                                         </Select>
                                         <FormMessage />

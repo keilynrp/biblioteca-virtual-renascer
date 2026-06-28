@@ -1,12 +1,14 @@
 import api from '../api';
 
+export type UserType = 'student' | 'employee' | 'teacher' | 'librarian' | 'moderator' | 'content_manager' | 'admin' | 'other';
+
 export interface User {
     id: number;
     username: string;
     email: string;
     first_name?: string;
     last_name?: string;
-    user_type: 'student' | 'teacher' | 'admin';
+    user_type: UserType;
     institution?: number;
     institution_detail?: {
         id: number;
@@ -14,6 +16,8 @@ export interface User {
         code: string;
     };
     avatar?: string;
+    is_staff?: boolean;
+    is_superuser?: boolean;
 }
 
 export interface UserCreate {
@@ -22,7 +26,7 @@ export interface UserCreate {
     password: string;
     first_name?: string;
     last_name?: string;
-    user_type: 'student' | 'teacher' | 'admin';
+    user_type: UserType;
     institution?: number;
 }
 
@@ -31,7 +35,7 @@ export interface UserUpdate {
     email?: string;
     first_name?: string;
     last_name?: string;
-    user_type?: 'student' | 'teacher' | 'admin';
+    user_type?: UserType;
     institution?: number;
 }
 

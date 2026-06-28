@@ -12,10 +12,11 @@ from django_ratelimit.decorators import ratelimit
 from rest_framework import viewsets, status, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, BasePermission
+from rest_framework.permissions import AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
 from apps.core.decorators import get_client_ip
+from apps.core.permissions import IsAdminType
 
 from .models import Form, FormSubmission
 from .serializers import (
@@ -27,19 +28,6 @@ from .notifications import send_form_notification
 from .captcha import verify_captcha
 
 logger = logging.getLogger(__name__)
-
-
-# ---------------------------------------------------------------------------
-# Permission
-# ---------------------------------------------------------------------------
-
-class IsAdminType(BasePermission):
-    def has_permission(self, request, view):
-        return bool(
-            request.user and request.user.is_authenticated and
-            (request.user.is_staff or
-             getattr(request.user, 'user_type', None) in ('admin', 'librarian'))
-        )
 
 
 # ---------------------------------------------------------------------------

@@ -1,20 +1,11 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, BasePermission
+from rest_framework.permissions import AllowAny
+
+from apps.core.permissions import IsAdminType
 
 from .models import Page
 from .serializers import PageSerializer, PageWriteSerializer
-
-
-class IsAdminType(BasePermission):
-    """Allows access only to admin users (staff or user_type='admin')."""
-    def has_permission(self, request, view):
-        return bool(
-            request.user and
-            request.user.is_authenticated and
-            (request.user.is_staff or
-             getattr(request.user, 'user_type', None) == 'admin')
-        )
 
 
 class PageViewSet(viewsets.ModelViewSet):

@@ -4,27 +4,25 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 
+from apps.core.permissions import is_admin_user
+
 from .models import SMTPConfig, EmailLog, EmailTemplate
 from .serializers import SMTPConfigSerializer, EmailLogSerializer, EmailTemplateSerializer
 from . import services
-
-
-def _is_admin(user):
-    return user.is_staff or user.is_superuser or getattr(user, 'user_type', '') == 'admin'
 
 
 class SMTPConfigView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if not _is_admin(request.user):
+        if not is_admin_user(request.user):
             return Response({'detail': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
         cfg = SMTPConfig.get_config()
         serializer = SMTPConfigSerializer(cfg)
         return Response(serializer.data)
 
     def put(self, request):
-        if not _is_admin(request.user):
+        if not is_admin_user(request.user):
             return Response({'detail': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
         cfg = SMTPConfig.get_config()
         serializer = SMTPConfigSerializer(cfg, data=request.data, partial=True)
@@ -38,7 +36,7 @@ class SMTPTestEmailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        if not _is_admin(request.user):
+        if not is_admin_user(request.user):
             return Response({'detail': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
         to = request.data.get('to', '').strip()
         if not to:
@@ -70,7 +68,7 @@ class EmailLogListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if not _is_admin(request.user):
+        if not is_admin_user(request.user):
             return Response({'detail': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
         logs = EmailLog.objects.all()[:200]
         serializer = EmailLogSerializer(logs, many=True)
@@ -81,7 +79,7 @@ class EmailTemplateListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if not _is_admin(request.user):
+        if not is_admin_user(request.user):
             return Response({'detail': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
         templates = EmailTemplate.objects.all()
         serializer = EmailTemplateSerializer(templates, many=True)
@@ -92,13 +90,13 @@ class EmailTemplateDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, key):
-        if not _is_admin(request.user):
+        if not is_admin_user(request.user):
             return Response({'detail': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
         template = get_object_or_404(EmailTemplate, key=key)
         return Response(EmailTemplateSerializer(template).data)
 
     def put(self, request, key):
-        if not _is_admin(request.user):
+        if not is_admin_user(request.user):
             return Response({'detail': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
         template = get_object_or_404(EmailTemplate, key=key)
         serializer = EmailTemplateSerializer(template, data=request.data, partial=True)

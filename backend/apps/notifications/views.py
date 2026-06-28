@@ -2,6 +2,9 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
+
+from apps.core.permissions import IsAdminType
+
 from .models import Notification
 from .serializers import NotificationSerializer, NotificationCreateSerializer, NotificationAdminSerializer, NotificationAdminCreateSerializer
 
@@ -34,7 +37,8 @@ class NotificationViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Ensure user is set to the authenticated user for self-created notifications."""
         # Only admins should create notifications via API, but we set user just in case
-        if not self.request.user.is_staff:
+        from apps.core.permissions import is_admin_user
+        if not is_admin_user(self.request.user):
             serializer.save(user=self.request.user)
         else:
             serializer.save()
@@ -81,14 +85,6 @@ class NotificationViewSet(viewsets.ModelViewSet):
         recent_notifications = self.get_queryset()[:10]
         serializer = self.get_serializer(recent_notifications, many=True)
         return Response(serializer.data)
-
-
-class IsAdminType(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return bool(
-            request.user and request.user.is_authenticated and
-            (request.user.is_staff or getattr(request.user, 'user_type', None) == 'admin')
-        )
 
 
 class AdminNotificationViewSet(viewsets.ViewSet):

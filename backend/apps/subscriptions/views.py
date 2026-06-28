@@ -1,5 +1,6 @@
 
 from rest_framework import generics, permissions, status, viewsets
+from apps.core.permissions import IsAdminType
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils import timezone
@@ -25,7 +26,7 @@ class PlanListView(generics.ListCreateAPIView):
 
     def get_permissions(self):
         if self.request.method in ['POST']:
-            return [permissions.IsAdminUser()]
+            return [IsAdminType()]
         return [permissions.AllowAny()]
 
 
@@ -36,7 +37,7 @@ class PlanDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_permissions(self):
         if self.request.method == 'GET':
             return [permissions.AllowAny()]
-        return [permissions.IsAdminUser()]
+        return [IsAdminType()]
 
     def destroy(self, request, *args, **kwargs):
         plan = self.get_object()
@@ -54,7 +55,7 @@ class SubscriptionView(APIView):
 
     def get_permissions(self):
         if self.request.method == 'POST':
-            return [permissions.IsAdminUser()]
+            return [IsAdminType()]
         return [permissions.IsAuthenticated()]
 
     def get(self, request):
@@ -124,7 +125,7 @@ class InstitutionSubscriptionViewSet(viewsets.ModelViewSet):
     """
     queryset = InstitutionSubscription.objects.all()
     serializer_class = InstitutionSubscriptionSerializer
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (IsAdminType,)
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -193,7 +194,7 @@ class CollectionListCreateView(generics.ListCreateAPIView):
 
     def get_permissions(self):
         if self.request.method == 'POST':
-            return [permissions.IsAdminUser()]
+            return [IsAdminType()]
         return [permissions.AllowAny()]
 
 
@@ -208,7 +209,7 @@ class CollectionDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_permissions(self):
         if self.request.method == 'GET':
             return [permissions.AllowAny()]
-        return [permissions.IsAdminUser()]
+        return [IsAdminType()]
 
 
 class CollectionBooksView(APIView):
@@ -220,7 +221,7 @@ class CollectionBooksView(APIView):
     def get_permissions(self):
         if self.request.method == 'GET':
             return [permissions.AllowAny()]
-        return [permissions.IsAdminUser()]
+        return [IsAdminType()]
 
     def get(self, request, slug):
         from apps.content.models import Book
@@ -259,7 +260,7 @@ class CollectionBooksView(APIView):
 
 
 class CollectionBookDeleteView(APIView):
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (IsAdminType,)
 
     def delete(self, request, slug, book_id):
         deleted, _ = CollectionBook.objects.filter(
@@ -280,7 +281,7 @@ class InstitutionCollectionPurchaseView(APIView):
     Body: { "collection_id": <int>, "expires_at": "..." (optional) }
     Admin-only: grants à la carte access.
     """
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (IsAdminType,)
 
     def post(self, request, institution_id):
         from apps.institutions.models import Institution

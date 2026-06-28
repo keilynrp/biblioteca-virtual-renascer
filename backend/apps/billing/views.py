@@ -4,6 +4,7 @@ from django.db.models import Sum, Count, Q, Avg, F
 from django.http import HttpResponse
 from django.utils import timezone
 from rest_framework import generics, permissions, status
+from apps.core.permissions import IsAdminType
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -219,7 +220,7 @@ class InvoiceDownloadView(APIView):
 
 
 class RefundView(APIView):
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAdminType]
 
     def post(self, request, pk):
         try:
@@ -283,7 +284,7 @@ class AdminInvoicePagination(PageNumberPagination):
 
 class AdminInvoiceListView(generics.ListAPIView):
     """List ALL invoices across all clients. Admin only."""
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAdminType]
     serializer_class = AdminInvoiceSerializer
     pagination_class = AdminInvoicePagination
 
@@ -322,7 +323,7 @@ class AdminInvoiceListView(generics.ListAPIView):
 
 class AdminInvoiceSummaryView(APIView):
     """Global invoice summary stats for admin dashboard."""
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAdminType]
 
     def get(self, request):
         qs = Invoice.objects.all()

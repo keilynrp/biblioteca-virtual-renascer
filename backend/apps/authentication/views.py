@@ -11,6 +11,7 @@ from django.utils.decorators import method_decorator
 from .serializers import (
     RegisterSerializer,
     UserSerializer,
+    AdminUserSerializer,
     ChangePasswordSerializer,
     PasswordPolicySerializer,
     ForcePasswordResetSerializer,
@@ -34,6 +35,7 @@ from apps.core.decorators import (
     rate_limit_api_write,
     rate_limit_api_read
 )
+from apps.core.permissions import IsAdminType
 
 User = get_user_model()
 
@@ -144,11 +146,15 @@ class UserViewSet(viewsets.ModelViewSet):
     Supports filtering by institution and searching by username/email.
     """
     queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (IsAdminType,)
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['institution']
     search_fields = ['username', 'email', 'first_name', 'last_name']
+
+    def get_serializer_class(self):
+        if self.action in ('create', 'update', 'partial_update'):
+            return AdminUserSerializer
+        return UserSerializer
 
 
 # =============================================================================
@@ -161,7 +167,8 @@ class OnboardingView(APIView):
 
     def post(self, request):
         # Admins skip onboarding — mark as completed without requiring data
-        if request.user.is_staff or request.user.is_superuser:
+        from apps.core.permissions import is_admin_user
+        if is_admin_user(request.user):
             if not request.user.onboarding_completed:
                 request.user.onboarding_completed = True
                 request.user.save(update_fields=['onboarding_completed'])
@@ -235,7 +242,8 @@ class PasswordPolicyView(APIView):
 
     def put(self, request):
         """Update password policy (admin only)"""
-        if not request.user.is_staff:
+        from apps.core.permissions import is_admin_user
+        if not is_admin_user(request.user):
             return Response(
                 {"error": "Solo los administradores pueden modificar la política de contraseñas."},
                 status=status.HTTP_403_FORBIDDEN
@@ -256,7 +264,7 @@ class ForcePasswordResetView(APIView):
     Force password reset for users.
     Only admins can use this endpoint.
     """
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (IsAdminType,)
 
     def post(self, request):
         """Force password reset for specified users or all non-admin users"""
@@ -296,7 +304,7 @@ class UsersPasswordStatusView(APIView):
     Get password status for all users.
     Only admins can access this endpoint.
     """
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (IsAdminType,)
 
     def get(self, request):
         """Get password status for all users"""

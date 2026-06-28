@@ -1,21 +1,12 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, BasePermission
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+
+from apps.core.permissions import IsAdminType
 
 from .models import NavZone, NavItem
 from .serializers import NavZoneSerializer, SaveItemsSerializer
-
-
-class IsAdminType(BasePermission):
-    """Allows access only to admin users (staff or user_type='admin')."""
-    def has_permission(self, request, view):
-        return bool(
-            request.user and
-            request.user.is_authenticated and
-            (request.user.is_staff or
-             getattr(request.user, 'user_type', None) == 'admin')
-        )
 
 
 class NavZoneViewSet(viewsets.ModelViewSet):

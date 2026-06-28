@@ -42,6 +42,7 @@ from apps.core.decorators import (
     rate_limit_search,
     rate_limit_upload
 )
+from apps.core.permissions import IsAdminType
 from apps.core.cache_utils import (
     make_cache_key,
     make_hash_key,
@@ -582,7 +583,7 @@ def search_facets(request):
 
 
 @api_view(['POST'])
-@permission_classes([permissions.IsAdminUser])
+@permission_classes([IsAdminType])
 def rebuild_search_index(request):
     """
     Re-indexa todos los libros en Meilisearch.
@@ -615,7 +616,7 @@ def rebuild_search_index(request):
         )
 
 @api_view(['POST'])
-@permission_classes([permissions.IsAdminUser])
+@permission_classes([IsAdminType])
 def import_books_from_openlibrary(request):
     """
     Importa libros desde OpenLibrary API.
@@ -824,7 +825,7 @@ def import_books_from_openlibrary(request):
 
 
 @api_view(['POST'])
-@permission_classes([permissions.IsAdminUser])
+@permission_classes([IsAdminType])
 def import_books_from_doab(request):
     """
     Importa libros Open Access desde DOAB (Directory of Open Access Books).
@@ -1068,7 +1069,7 @@ def import_books_from_doab(request):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAdminUser])
+@permission_classes([IsAdminType])
 def get_import_stats(request):
     """
     Obtiene estadísticas para la interfaz de importación.
@@ -1849,7 +1850,7 @@ class BookExportView(generics.GenericAPIView):
     
     GET /api/content/books/export/?export_format=csv|xlsx&ids=1,2,3
     """
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAdminType]
     queryset = Book.objects.all()
 
     def get(self, request, *args, **kwargs):
@@ -1902,7 +1903,7 @@ class BookImportView(generics.GenericAPIView):
     POST /api/content/books/import/
     Body: multipart/form-data with 'file' field
     """
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAdminType]
 
     def post(self, request, *args, **kwargs):
         file_obj = request.FILES.get('file')
@@ -1931,7 +1932,7 @@ class BookImportTemplateView(generics.GenericAPIView):
 
     GET /api/content/books/import-template/?format=csv|xlsx
     """
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAdminType]
 
     def get(self, request, *args, **kwargs):
         format_type = request.query_params.get('format', 'xlsx').lower()
@@ -1962,7 +1963,7 @@ class ResetCatalogView(APIView):
     POST /api/content/admin/reset-catalog/
     Body: {"confirmation": "CONFIRMAR"}
     """
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAdminType]
 
     def post(self, request, *args, **kwargs):
         if request.data.get('confirmation') != 'CONFIRMAR':

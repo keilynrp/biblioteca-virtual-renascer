@@ -2,6 +2,9 @@ import logging
 from rest_framework import viewsets, permissions, filters, status
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
+
+from apps.core.permissions import IsAdminTypeOrReadOnly
+
 from .models import Post, Category, Tag
 from .serializers import (
     PostListSerializer, PostDetailSerializer, PostCreateUpdateSerializer,
@@ -10,23 +13,12 @@ from .serializers import (
 
 logger = logging.getLogger(__name__)
 
-class IsAdminOrReadOnly(permissions.BasePermission):
-    """
-    Custom permission to only allow administrators to edit or delete content.
-    """
-    def has_permission(self, request, view):
-        # Allow search engines and non-auth users to read
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        # Only staff/admins for other methods
-        return request.user and request.user.is_staff
-
 class PostViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows posts to be viewed, created, or edited.
     """
     lookup_field = 'slug'
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdminTypeOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['category', 'tags', 'status']
     search_fields = ['title', 'description', 'content']
@@ -92,12 +84,12 @@ class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     lookup_field = 'slug'
     serializer_class = CategorySerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdminTypeOrReadOnly]
     pagination_class = None
 
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     lookup_field = 'slug'
     serializer_class = TagSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdminTypeOrReadOnly]
     pagination_class = None

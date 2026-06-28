@@ -65,6 +65,67 @@ class UserSerializer(serializers.ModelSerializer):
         policy = PasswordPolicy.get_policy()
         return obj.is_password_expired(policy)
 
+class AdminUserSerializer(serializers.ModelSerializer):
+    """Serializer for admin CRUD on users — username/email are writable here."""
+    email = serializers.EmailField(required=True)
+    username = serializers.CharField(required=True)
+    password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    institution_detail = InstitutionSerializer(source='institution', read_only=True)
+    institution = serializers.PrimaryKeyRelatedField(
+        queryset=Institution.objects.all(), required=False, allow_null=True
+    )
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email', 'password', 'first_name', 'last_name',
+                  'user_type', 'institution', 'institution_detail', 'avatar',
+                  'is_staff', 'is_superuser')
+        read_only_fields = ('is_staff', 'is_superuser')
+
+    def validate_username(self, value):
+        qs = User.objects.filter(username=value)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError("Ya existe un usuario con ese nombre de usuario.")
+        return value
+
+    def validate_email(self, value):
+        qs = User.objects.filter(email=value)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError("Ya existe un usuario con ese email.")
+        return value
+
+    def create(self, validated_data):
+        password = validated_data.pop('password', None)
+        if not password:
+            raise serializers.ValidationError({'password': 'La contraseña es requerida para nuevos usuarios.'})
+        user = User.objects.create_user(password=password, **validated_data)
+        self._sync_admin_flags(user)
+        return user
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        user = super().update(instance, validated_data)
+        if 'user_type' in validated_data:
+            self._sync_admin_flags(user)
+        if password:
+            user.set_password(password)
+            user.save()
+        return user
+
+    @staticmethod
+    def _sync_admin_flags(user):
+        """Keep is_staff and is_superuser in sync with user_type='admin'."""
+        is_admin = user.user_type == 'admin'
+        if user.is_staff != is_admin or user.is_superuser != is_admin:
+            user.is_staff = is_admin
+            user.is_superuser = is_admin
+            user.save(update_fields=['is_staff', 'is_superuser'])
+
+
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         required=True,

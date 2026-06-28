@@ -124,8 +124,13 @@ function UsersPageContent() {
     const getUserTypeLabel = (type: string) => {
         const labels: Record<string, string> = {
             student: "Estudiante",
+            employee: "Funcionario",
             teacher: "Profesor",
-            admin: "Administrador"
+            librarian: "Bibliotecario",
+            moderator: "Moderador",
+            content_manager: "Gestor de Contenido",
+            admin: "Administrador",
+            other: "Otro",
         }
         return labels[type] || type
     }
@@ -177,7 +182,7 @@ function UsersPageContent() {
             header: "Rol",
             accessorKey: "user_type" as keyof User,
             cell: (item: User) => {
-                const variant = item.user_type === 'admin' ? 'destructive' : item.user_type === 'teacher' ? 'default' : 'outline'
+                const variant = item.user_type === 'admin' ? 'destructive' : ['teacher', 'librarian', 'moderator', 'content_manager'].includes(item.user_type) ? 'default' : 'outline'
                 return <Badge variant={variant as any}>{getUserTypeLabel(item.user_type)}</Badge>
             }
         },

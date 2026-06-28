@@ -57,7 +57,7 @@ services:
     environment:
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
-      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+      - NEXT_PUBLIC_API_URL=/api
       - API_INTERNAL_URL=http://backend:8000/api
       - NEXT_TELEMETRY_DISABLED=1
       - NODE_OPTIONS=--max-old-space-size=4096

@@ -26,7 +26,8 @@ logger = logging.getLogger(__name__)
 class IsInstitutionAdmin(permissions.BasePermission):
     """Allow only institution admins (or Django staff)."""
     def has_permission(self, request, view):
-        if request.user.is_staff:
+        from apps.core.permissions import is_admin_user
+        if is_admin_user(request.user):
             return True
         institution_id = view.kwargs.get('institution_id') or view.kwargs.get('pk')
         if not institution_id:

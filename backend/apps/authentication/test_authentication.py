@@ -80,7 +80,7 @@ class TestUserLogin:
     def test_login_success(self, api_client, user):
         """Test successful login with correct credentials"""
         login_data = {
-            'email': user.email,
+            'username': user.username,
             'password': 'Strong!Password123'
         }
 
@@ -93,7 +93,7 @@ class TestUserLogin:
     def test_login_wrong_password(self, api_client, user):
         """Test login with incorrect password fails"""
         login_data = {
-            'email': user.email,
+            'username': user.username,
             'password': 'WrongPassword123!'
         }
 
@@ -104,7 +104,7 @@ class TestUserLogin:
     def test_login_nonexistent_user(self, api_client):
         """Test login with non-existent user fails"""
         login_data = {
-            'email': 'nonexistent@example.com',
+            'username': 'nonexistent_user',
             'password': 'SomePassword123!'
         }
 
@@ -259,7 +259,7 @@ class TestPasswordChange:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         user.refresh_from_db()
-        assert user.check_password('TestPass123!')  # Password unchanged
+        assert user.check_password('Strong!Password123')  # Password unchanged
 
     def test_change_password_weak_new_password(self, authenticated_client, user):
         """Test password change fails with weak new password"""

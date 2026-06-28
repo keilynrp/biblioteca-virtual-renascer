@@ -243,31 +243,40 @@ def invalidate_cache(pattern: str) -> int:
     """
     Invalidate cache keys matching a pattern.
 
-    Note: This requires Redis SCAN command support.
-    For production, consider using cache versioning instead.
+    Supports Redis (via SCAN) and LocMemCache (for test environments).
+    For production with Redis, uses SCAN for efficient pattern matching.
 
     Args:
         pattern: Pattern to match (e.g., 'books:*', 'user:123:*')
 
     Returns:
         Number of keys deleted
-
-    Example:
-        # Invalidate all book caches
-        invalidate_cache('books:*')
-
-        # Invalidate user-specific caches
-        invalidate_cache(f'user:{user_id}:*')
     """
     try:
+        from django.core.cache import caches
+        from django.core.cache.backends.locmem import LocMemCache
+
+        actual_cache = caches['default']
+
+        if isinstance(actual_cache, LocMemCache):
+            import fnmatch
+            # LocMemCache stores keys with make_key prefix (e.g. ':1:')
+            full_pattern = cache.make_key(pattern)
+            keys_to_delete = [k for k in list(cache._cache.keys()) if fnmatch.fnmatch(k, full_pattern)]
+            for k in keys_to_delete:
+                cache._cache.pop(k, None)
+                cache._expire_info.pop(k, None)
+            logger.info(f'Invalidated {len(keys_to_delete)} cache keys matching {pattern}')
+            return len(keys_to_delete)
+
         from django.core.cache.backends.redis import RedisCache
 
-        if not isinstance(cache, RedisCache):
-            logger.warning('Cache invalidation by pattern only works with Redis')
+        if not isinstance(actual_cache, RedisCache):
+            logger.warning('Cache invalidation by pattern only works with Redis or LocMemCache')
             return 0
 
         # Get Redis client
-        redis_client = cache._cache.get_client()
+        redis_client = actual_cache._cache.get_client()
 
         # Build full pattern with key prefix
         key_prefix = settings.CACHES['default'].get('KEY_PREFIX', '')

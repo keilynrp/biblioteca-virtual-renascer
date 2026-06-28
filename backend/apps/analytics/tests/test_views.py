@@ -13,7 +13,7 @@ class AnalyticsViewsTest(TestCase):
         self.client.force_authenticate(user=self.user)
 
     def test_track_action(self):
-        url = '/api/analytics/analytics/track_action/'
+        url = '/api/analytics/track_action/'
         data = {'action': 'view_book', 'details': {'book_id': 1}}
         response = self.client.post(url, data, format='json')
         
@@ -23,7 +23,7 @@ class AnalyticsViewsTest(TestCase):
 
     def test_user_stats(self):
         # Create some mock data if needed, or just check the structure
-        url = '/api/analytics/analytics/user_stats/'
+        url = '/api/analytics/user_stats/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -34,7 +34,7 @@ class AnalyticsViewsTest(TestCase):
         # Create some activity
         UserActivity.objects.create(user=self.user, action='login')
         
-        url = '/api/analytics/analytics/export_report/'
+        url = '/api/analytics/export_report/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)

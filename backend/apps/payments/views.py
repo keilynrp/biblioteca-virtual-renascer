@@ -345,17 +345,21 @@ class ConfirmPaymentView(APIView):
             except Exception:
                 pass
 
-        # Create Invoice
+        # Create Invoice — use savepoint so a failure doesn't corrupt the payment transaction
         try:
-            from apps.billing.services.invoice_service import create_invoice_for_transaction
-            create_invoice_for_transaction(transaction)
+            from django.db import transaction as db_transaction
+            with db_transaction.atomic():
+                from apps.billing.services.invoice_service import create_invoice_for_transaction
+                create_invoice_for_transaction(transaction)
         except Exception as e:
             logger.error(f"Invoice creation failed: {str(e)}")
 
-        # Send notification
+        # Send notification — use savepoint for the same reason
         try:
-            from apps.notifications.helpers import send_subscription_activated_notification
-            send_subscription_activated_notification(transaction.user, plan.name)
+            from django.db import transaction as db_transaction
+            with db_transaction.atomic():
+                from apps.notifications.helpers import send_subscription_activated_notification
+                send_subscription_activated_notification(transaction.user, plan.name)
         except Exception as e:
             logger.error(f"Notification failed: {str(e)}")
 

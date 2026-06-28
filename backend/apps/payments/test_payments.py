@@ -3,6 +3,7 @@ Tests for payment system
 """
 
 import pytest
+import stripe
 from decimal import Decimal
 from unittest.mock import patch, MagicMock
 from rest_framework import status
@@ -19,7 +20,6 @@ class TestPaymentIntentCreation:
         self, mock_stripe_create, authenticated_client, user, basic_plan
     ):
         """Test successful payment intent creation"""
-        # Mock Stripe response
         mock_stripe_create.return_value = MagicMock(
             id='pi_test_123',
             client_secret='secret_test_123',
@@ -28,20 +28,19 @@ class TestPaymentIntentCreation:
 
         payload = {
             'plan_id': basic_plan.id,
-            'payment_method_type': 'card'
+            'payment_method': 'CREDIT_CARD',
         }
 
         response = authenticated_client.post(
-            '/api/payments/create-payment-intent/',
+            '/api/payments/checkout/',
             payload,
             format='json'
         )
 
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_201_CREATED
         assert 'client_secret' in response.data
-        assert 'payment_intent_id' in response.data
+        assert 'transaction_id' in response.data
 
-        # Verify transaction was created
         assert Transaction.objects.filter(
             user=user,
             plan=basic_plan,
@@ -56,7 +55,7 @@ class TestPaymentIntentCreation:
         }
 
         response = api_client.post(
-            '/api/payments/create-payment-intent/',
+            '/api/payments/checkout/',
             payload,
             format='json'
         )
@@ -71,7 +70,7 @@ class TestPaymentIntentCreation:
         }
 
         response = authenticated_client.post(
-            '/api/payments/create-payment-intent/',
+            '/api/payments/checkout/',
             payload,
             format='json'
         )
@@ -83,16 +82,15 @@ class TestPaymentIntentCreation:
         self, mock_stripe_create, authenticated_client, basic_plan
     ):
         """Test handling of Stripe errors"""
-        # Mock Stripe error
-        mock_stripe_create.side_effect = Exception('Stripe API Error')
+        mock_stripe_create.side_effect = stripe.error.StripeError('Stripe API Error')
 
         payload = {
             'plan_id': basic_plan.id,
-            'payment_method_type': 'card'
+            'payment_method': 'CREDIT_CARD',
         }
 
         response = authenticated_client.post(
-            '/api/payments/create-payment-intent/',
+            '/api/payments/checkout/',
             payload,
             format='json'
         )
@@ -104,11 +102,11 @@ class TestPaymentIntentCreation:
 class TestPaymentConfirmation:
     """Tests for confirming payments"""
 
+    @patch('stripe.PaymentIntent.retrieve')
     def test_confirm_payment_success(
-        self, authenticated_client, user, basic_plan, create_transaction
+        self, mock_stripe_retrieve, authenticated_client, user, basic_plan, create_transaction
     ):
         """Test successful payment confirmation"""
-        # Create a pending transaction
         transaction = create_transaction(
             user=user,
             plan=basic_plan,
@@ -116,23 +114,26 @@ class TestPaymentConfirmation:
             status='PENDING'
         )
 
+        mock_intent = MagicMock(status='succeeded')
+        mock_intent.get.return_value = None  # intent.get('metadata') → None
+        mock_stripe_retrieve.return_value = mock_intent
+
         payload = {
-            'payment_intent_id': 'pi_test_123'
+            'transaction_id': str(transaction.id),
+            'payment_method': 'CREDIT_CARD',
         }
 
         response = authenticated_client.post(
-            '/api/payments/confirm-payment/',
+            '/api/payments/confirm/',
             payload,
             format='json'
         )
 
         assert response.status_code == status.HTTP_200_OK
 
-        # Verify transaction status updated
         transaction.refresh_from_db()
         assert transaction.status == 'COMPLETED'
 
-        # Verify subscription created
         assert UserSubscription.objects.filter(
             user=user,
             plan=basic_plan,
@@ -140,13 +141,14 @@ class TestPaymentConfirmation:
         ).exists()
 
     def test_confirm_payment_invalid_intent_id(self, authenticated_client):
-        """Test payment confirmation with invalid intent ID"""
+        """Test payment confirmation with non-existent transaction ID returns 404"""
         payload = {
-            'payment_intent_id': 'invalid_id'
+            'transaction_id': '00000000-0000-0000-0000-000000000000',
+            'payment_method': 'CREDIT_CARD',
         }
 
         response = authenticated_client.post(
-            '/api/payments/confirm-payment/',
+            '/api/payments/confirm/',
             payload,
             format='json'
         )
@@ -169,7 +171,7 @@ class TestPaymentConfirmation:
         }
 
         response = authenticated_client.post(
-            '/api/payments/confirm-payment/',
+            '/api/payments/confirm/',
             payload,
             format='json'
         )
@@ -194,22 +196,25 @@ class TestStripeWebhook:
             status='PENDING'
         )
 
-        # Mock Stripe event
-        mock_event = MagicMock()
-        mock_event.type = 'payment_intent.succeeded'
-        mock_event.data.object.id = 'pi_test_123'
-        mock_construct_event.return_value = mock_event
+        mock_construct_event.return_value = {
+            'type': 'payment_intent.succeeded',
+            'data': {
+                'object': {
+                    'id': 'pi_test_123',
+                    'metadata': {},
+                }
+            }
+        }
 
         response = api_client.post(
             '/api/payments/webhook/',
-            data={},
-            format='json',
+            data='{}',
+            content_type='application/json',
             HTTP_STRIPE_SIGNATURE='test_signature'
         )
 
         assert response.status_code == status.HTTP_200_OK
 
-        # Verify transaction updated
         transaction.refresh_from_db()
         assert transaction.status == 'COMPLETED'
 
@@ -225,22 +230,25 @@ class TestStripeWebhook:
             status='PENDING'
         )
 
-        # Mock Stripe event
-        mock_event = MagicMock()
-        mock_event.type = 'payment_intent.payment_failed'
-        mock_event.data.object.id = 'pi_test_123'
-        mock_construct_event.return_value = mock_event
+        mock_construct_event.return_value = {
+            'type': 'payment_intent.payment_failed',
+            'data': {
+                'object': {
+                    'id': 'pi_test_123',
+                    'metadata': {},
+                }
+            }
+        }
 
         response = api_client.post(
             '/api/payments/webhook/',
-            data={},
-            format='json',
+            data='{}',
+            content_type='application/json',
             HTTP_STRIPE_SIGNATURE='test_signature'
         )
 
         assert response.status_code == status.HTTP_200_OK
 
-        # Verify transaction marked as failed
         transaction.refresh_from_db()
         assert transaction.status == 'FAILED'
 
@@ -368,20 +376,18 @@ class TestSubscriptionRenewal:
             status='PENDING'
         )
 
-        # Simulate confirmation (this calls the logic in views.ConfirmPaymentView)
         payload = {
             'transaction_id': str(transaction.id),
-            'payment_intent_id': 'pi_renewal_123'
+            'payment_method': 'CREDIT_CARD',
         }
 
-        # We need to mock stripe.PaymentIntent.retrieve because ConfirmPaymentView calls it
         with patch('stripe.PaymentIntent.retrieve') as mock_retrieve:
-            mock_intent = MagicMock()
-            mock_intent.status = 'succeeded'
+            mock_intent = MagicMock(status='succeeded')
+            mock_intent.get.return_value = None  # intent.get('metadata') → None
             mock_retrieve.return_value = mock_intent
 
             response = authenticated_client.post(
-                '/api/payments/confirm-payment/',
+                '/api/payments/confirm/',
                 payload,
                 format='json'
             )

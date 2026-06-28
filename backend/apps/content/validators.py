@@ -18,10 +18,10 @@ class FileValidator:
     """Base file validator with common validation logic"""
 
     error_messages = {
-        'max_size': "El archivo es demasiado grande. TamaÃ±o mÃ¡ximo: %(max_size)s. TamaÃ±o actual: %(size)s.",
-        'min_size': "El archivo es demasiado pequeÃ±o. TamaÃ±o mÃ­nimo: %(min_size)s. TamaÃ±o actual: %(size)s.",
+        'max_size': "El archivo es demasiado grande. Tamaño máximo: %(max_size)s. Tamaño actual: %(size)s.",
+        'min_size': "El archivo es demasiado pequeño. Tamaño mínimo: %(min_size)s. Tamaño actual: %(size)s.",
         'content_type': "Tipo de archivo no permitido. Tipos permitidos: %(allowed_types)s.",
-        'extension': "ExtensiÃ³n de archivo no permitida. Extensiones permitidas: %(allowed_extensions)s.",
+        'extension': "Extensión de archivo no permitida. Extensiones permitidas: %(allowed_extensions)s.",
     }
 
     def __init__(self, max_size=None, min_size=None, allowed_types=None, allowed_extensions=None):
@@ -107,8 +107,8 @@ class PDFValidator(FileValidator):
 
     error_messages = {
         **FileValidator.error_messages,
-        'invalid_pdf': "El archivo no es un PDF vÃ¡lido o estÃ¡ corrupto.",
-        'encrypted': "El PDF estÃ¡ encriptado. Por favor, sube una versiÃ³n sin protecciÃ³n.",
+        'invalid_pdf': "El archivo no es un PDF válido o está corrupto.",
+        'encrypted': "El PDF está encriptado. Por favor, sube una versión sin protección.",
     }
 
     def __init__(self, max_size=None, min_size=None):
@@ -121,11 +121,11 @@ class PDFValidator(FileValidator):
 
     def __call__(self, file):
         """Validate PDF file with additional PDF-specific checks"""
-        # Run base validation first
-        super().__call__(file)
-
-        # Additional PDF-specific validation
+        # Check PDF structure first so we raise the right error for non-PDF content
+        # before the MIME-type check (which requires libmagic and runs later)
         self._validate_pdf_structure(file)
+        # Then run base validation (size, extension, MIME type)
+        super().__call__(file)
 
     def _validate_pdf_structure(self, file):
         """Validate that the file is a valid PDF by checking its structure"""
@@ -202,12 +202,18 @@ def sanitize_filename(filename):
     # Get filename without path
     filename = os.path.basename(filename)
 
-    # Split name and extension
-    name, ext = os.path.splitext(filename)
+    # Split name and extension on the last dot so "...pdf" → ("..","pdf")
+    if '.' in filename:
+        name, raw_ext = filename.rsplit('.', 1)
+        ext = '.' + raw_ext
+    else:
+        name = filename
+        ext = ''
 
-    # Remove special characters and keep only alphanumeric, dash, underscore
+    # Replace runs of non-alphanumeric characters with a single underscore
     import re
-    name = re.sub(r'[^a-zA-Z0-9\-_]', '_', name)
+    name = re.sub(r'[^a-zA-Z0-9]+', '_', name)
+    name = name.strip('_')
 
     # Limit length (max 100 chars for name)
     name = name[:100]
@@ -215,11 +221,8 @@ def sanitize_filename(filename):
     # Ensure extension is lowercase
     ext = ext.lower()
 
-    # Reconstruct filename
-    sanitized = f"{name}{ext}"
-
-    # Prevent empty filenames
+    # Prevent empty filenames (e.g. input was all special chars)
     if not name:
-        sanitized = f"file_{os.urandom(8).hex()}{ext}"
+        return f"file_{os.urandom(8).hex()}{ext}"
 
-    return sanitized
+    return f"{name}{ext}"

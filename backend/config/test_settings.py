@@ -1,19 +1,18 @@
 from .settings import *
 
-USE_SQLITE = True
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
+# Use LocMemCache instead of DummyCache for cache-dependent tests
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': 'unique-snowflake',
     }
 }
+
+# Rate limiting cache backend
+RATELIMIT_USE_CACHE = 'default'
+
+# Disable rate limiting in tests so sequential requests don't get blocked
+RATELIMIT_ENABLE = False
 
 # Celery using memory for tests
 CELERY_BROKER_URL = 'memory://'

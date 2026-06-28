@@ -20,7 +20,7 @@ class TestPostCreation:
 
         initial_count = discussion_thread.posts_count
 
-        url = reverse('post-list')
+        url = reverse('community-post-list')
         data = {
             'thread': discussion_thread.id,
             'content': 'This is my reply to the discussion'
@@ -49,7 +49,7 @@ class TestPostCreation:
         refresh = RefreshToken.for_user(non_member)
         api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
 
-        url = reverse('post-list')
+        url = reverse('community-post-list')
         data = {
             'thread': discussion_thread.id,
             'content': 'This should fail'
@@ -62,7 +62,7 @@ class TestPostCreation:
 
     def test_create_post_requires_authentication(self, api_client, discussion_thread):
         """Test that creating a post requires authentication"""
-        url = reverse('post-list')
+        url = reverse('community-post-list')
         data = {
             'thread': discussion_thread.id,
             'content': 'Test content'
@@ -77,7 +77,7 @@ class TestPostCreation:
         refresh = RefreshToken.for_user(club_member)
         api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
 
-        url = reverse('post-list')
+        url = reverse('community-post-list')
         data = {
             'thread': discussion_thread.id,
             'content': ''  # Empty content
@@ -93,7 +93,7 @@ class TestPostRetrieval:
 
     def test_list_posts(self, api_client, post):
         """Test listing all posts"""
-        url = reverse('post-list')
+        url = reverse('community-post-list')
         response = api_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -101,7 +101,7 @@ class TestPostRetrieval:
 
     def test_filter_posts_by_thread(self, api_client, discussion_thread, post):
         """Test filtering posts by thread"""
-        url = reverse('post-list')
+        url = reverse('community-post-list')
         response = api_client.get(url, {'thread': discussion_thread.id})
 
         assert response.status_code == status.HTTP_200_OK
@@ -111,7 +111,7 @@ class TestPostRetrieval:
 
     def test_retrieve_post_detail(self, api_client, post):
         """Test retrieving a single post"""
-        url = reverse('post-detail', kwargs={'pk': post.id})
+        url = reverse('community-post-detail', kwargs={'pk': post.id})
         response = api_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -131,7 +131,7 @@ class TestPostUpdate:
         refresh = RefreshToken.for_user(club_member)
         api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
 
-        url = reverse('post-detail', kwargs={'pk': post.id})
+        url = reverse('community-post-detail', kwargs={'pk': post.id})
         data = {'content': 'Updated post content'}
 
         response = api_client.patch(url, data, format='json')
@@ -150,7 +150,7 @@ class TestPostUpdate:
         refresh = RefreshToken.for_user(other_user)
         api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
 
-        url = reverse('post-detail', kwargs={'pk': post.id})
+        url = reverse('community-post-detail', kwargs={'pk': post.id})
         data = {'content': 'Hacked content'}
 
         response = api_client.patch(url, data, format='json')
@@ -162,7 +162,7 @@ class TestPostUpdate:
         refresh = RefreshToken.for_user(club_member)
         api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
 
-        url = reverse('post-detail', kwargs={'pk': post.id})
+        url = reverse('community-post-detail', kwargs={'pk': post.id})
         response = api_client.delete(url)
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -176,7 +176,7 @@ class TestPostUpdate:
         refresh = RefreshToken.for_user(other_user)
         api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
 
-        url = reverse('post-detail', kwargs={'pk': post.id})
+        url = reverse('community-post-detail', kwargs={'pk': post.id})
         response = api_client.delete(url)
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -196,7 +196,7 @@ class TestPostLikes:
 
         initial_likes = post.likes.count()
 
-        url = reverse('post-like', kwargs={'pk': post.id})
+        url = reverse('community-post-like', kwargs={'pk': post.id})
         response = api_client.post(url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -218,7 +218,7 @@ class TestPostLikes:
 
         initial_likes = post.likes.count()
 
-        url = reverse('post-like', kwargs={'pk': post.id})
+        url = reverse('community-post-like', kwargs={'pk': post.id})
         response = api_client.post(url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -237,7 +237,7 @@ class TestPostLikes:
         refresh = RefreshToken.for_user(liker)
         api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
 
-        url = reverse('post-like', kwargs={'pk': post.id})
+        url = reverse('community-post-like', kwargs={'pk': post.id})
 
         # First like
         response1 = api_client.post(url)
@@ -253,7 +253,7 @@ class TestPostLikes:
 
     def test_like_requires_authentication(self, api_client, post):
         """Test that liking requires authentication"""
-        url = reverse('post-like', kwargs={'pk': post.id})
+        url = reverse('community-post-like', kwargs={'pk': post.id})
         response = api_client.post(url)
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -271,7 +271,7 @@ class TestPostLikes:
             refresh = RefreshToken.for_user(user)
             api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
 
-            url = reverse('post-like', kwargs={'pk': post.id})
+            url = reverse('community-post-like', kwargs={'pk': post.id})
             response = api_client.post(url)
             assert response.status_code == status.HTTP_200_OK
 
@@ -285,7 +285,7 @@ class TestPostLikes:
         user2 = create_user(email='user2@example.com')
         post.likes.add(user1, user2)
 
-        url = reverse('post-detail', kwargs={'pk': post.id})
+        url = reverse('community-post-detail', kwargs={'pk': post.id})
         response = api_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -300,7 +300,7 @@ class TestPostLikes:
         refresh = RefreshToken.for_user(liker)
         api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
 
-        url = reverse('post-detail', kwargs={'pk': post.id})
+        url = reverse('community-post-detail', kwargs={'pk': post.id})
         response = api_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -314,7 +314,7 @@ class TestPostLikes:
         refresh = RefreshToken.for_user(non_liker)
         api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
 
-        url = reverse('post-detail', kwargs={'pk': post.id})
+        url = reverse('community-post-detail', kwargs={'pk': post.id})
         response = api_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -340,7 +340,7 @@ class TestPostOrdering:
                 content=content
             )
 
-        url = reverse('post-list')
+        url = reverse('community-post-list')
         response = api_client.get(url, {'thread': discussion_thread.id})
 
         assert response.status_code == status.HTTP_200_OK

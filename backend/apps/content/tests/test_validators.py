@@ -22,12 +22,13 @@ class TestPDFValidator:
 
     def test_valid_pdf_passes(self):
         """Test that a valid PDF passes validation"""
-        # Create a minimal valid PDF
+        # Create a valid PDF >= 1KB (validator minimum)
         pdf_content = b'%PDF-1.4\n%\xe2\xe3\xcf\xd3\n'  # PDF header
         pdf_content += b'1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n'
         pdf_content += b'2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n'
         pdf_content += b'3 0 obj\n<< /Type /Page /Parent 2 0 R >>\nendobj\n'
         pdf_content += b'xref\n0 4\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n'
+        pdf_content += b' ' * (1024 - len(pdf_content) + 1)  # pad to exceed 1KB minimum
 
         pdf_file = SimpleUploadedFile(
             "test.pdf",

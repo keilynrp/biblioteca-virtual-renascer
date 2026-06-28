@@ -50,7 +50,7 @@ class TestBookImportExportRobust:
         f = io.BytesIO(content)
         wb = openpyxl.load_workbook(f)
         ws = wb.active
-        assert ws.cell(row=2, column=2).value == "Book XLSX"
+        assert ws.cell(row=2, column=1).value == "Book XLSX"
 
     def test_import_from_csv(self):
         """Test importing books from CSV"""

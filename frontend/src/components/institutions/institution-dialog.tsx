@@ -28,6 +28,7 @@ import { Institution } from "@/lib/api/institutions"
 
 const institutionSchema = z.object({
     name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
+    abbreviation: z.string().max(20, "Máximo 20 caracteres").optional().or(z.literal("")),
     website: z.string().url("Debe ser una URL válida").optional().or(z.literal("")),
     address: z.string().optional(),
 })
@@ -54,6 +55,7 @@ export function InstitutionDialog({
         resolver: zodResolver(institutionSchema),
         defaultValues: {
             name: "",
+            abbreviation: "",
             website: "",
             address: "",
         },
@@ -63,12 +65,14 @@ export function InstitutionDialog({
         if (institution) {
             form.reset({
                 name: institution.name,
+                abbreviation: institution.abbreviation || "",
                 website: institution.website || "",
                 address: institution.address || "",
             })
         } else {
             form.reset({
                 name: "",
+                abbreviation: "",
                 website: "",
                 address: "",
             })
@@ -121,6 +125,20 @@ export function InstitutionDialog({
                                     <FormLabel>Nombre *</FormLabel>
                                     <FormControl>
                                         <Input placeholder="Universidad Central" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="abbreviation"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Sigla / Abreviatura</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="ULA, UNAN, UEM..." {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

@@ -114,7 +114,7 @@ function InstitutionsPageContent() {
                     {item.abbreviation && (
                         <Badge variant="secondary" className="font-semibold">{item.abbreviation}</Badge>
                     )}
-                    <span className="text-xs font-mono text-muted-foreground">{item.code}</span>
+                    <Badge variant="outline" className="font-mono text-xs">{item.code}</Badge>
                 </div>
             )
         },

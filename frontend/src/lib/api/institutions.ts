@@ -12,6 +12,7 @@ export interface Institution {
 
 export interface InstitutionCreate {
     name: string;
+    abbreviation?: string;
     logo?: File | string;
     website?: string;
     address?: string;

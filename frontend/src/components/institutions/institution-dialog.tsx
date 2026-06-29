@@ -22,12 +22,12 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Loader2 } from "lucide-react"
 import { Institution } from "@/lib/api/institutions"
 
 const institutionSchema = z.object({
     name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
-    code: z.string().min(2, "El código debe tener al menos 2 caracteres"),
     website: z.string().url("Debe ser una URL válida").optional().or(z.literal("")),
     address: z.string().optional(),
 })
@@ -54,7 +54,6 @@ export function InstitutionDialog({
         resolver: zodResolver(institutionSchema),
         defaultValues: {
             name: "",
-            code: "",
             website: "",
             address: "",
         },
@@ -64,14 +63,12 @@ export function InstitutionDialog({
         if (institution) {
             form.reset({
                 name: institution.name,
-                code: institution.code,
                 website: institution.website || "",
                 address: institution.address || "",
             })
         } else {
             form.reset({
                 name: "",
-                code: "",
                 website: "",
                 address: "",
             })
@@ -107,6 +104,15 @@ export function InstitutionDialog({
 
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                        {isEditing && institution.code && (
+                            <div className="flex items-center gap-2 text-sm">
+                                <span className="text-muted-foreground">Código:</span>
+                                <Badge variant="outline" className="font-mono">
+                                    {institution.code}
+                                </Badge>
+                            </div>
+                        )}
+
                         <FormField
                             control={form.control}
                             name="name"
@@ -115,20 +121,6 @@ export function InstitutionDialog({
                                     <FormLabel>Nombre *</FormLabel>
                                     <FormControl>
                                         <Input placeholder="Universidad Central" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        <FormField
-                            control={form.control}
-                            name="code"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Código *</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="U-CEN" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

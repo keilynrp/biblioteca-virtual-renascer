@@ -16,6 +16,7 @@ class InstitutionSerializer(serializers.ModelSerializer):
             'country', 'institution_type',
             'logo', 'website', 'address', 'member_count', 'created_at',
         )
+        read_only_fields = ('code', 'created_at')
 
     def get_member_count(self, obj):
         return obj.memberships.filter(status='active').count()

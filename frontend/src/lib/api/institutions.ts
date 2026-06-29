@@ -12,7 +12,6 @@ export interface Institution {
 
 export interface InstitutionCreate {
     name: string;
-    code: string;
     logo?: File | string;
     website?: string;
     address?: string;

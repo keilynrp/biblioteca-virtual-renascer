@@ -23,6 +23,7 @@ import { useToast } from '@/hooks/use-toast'
 import { PasswordPolicySection } from '@/components/settings/password-policy-section'
 import { CurrenciesSection } from '@/components/settings/currencies-section'
 import { EmailSection } from '@/components/settings/email-section'
+import { ProfileSection } from '@/components/settings/profile-section'
 
 export default function SettingsPage() {
     const { activeLoans, isLoading, returnBook, renewLoan } = useLoans()
@@ -100,6 +101,13 @@ export default function SettingsPage() {
                 title="Configuración"
                 description="Gestiona tu cuenta y preferencias"
             />
+
+            {/* Profile section */}
+            <div className="mb-8">
+                <ProfileSection />
+            </div>
+
+            <Separator className="my-8" />
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
                 {/* Loan Limits Card */}

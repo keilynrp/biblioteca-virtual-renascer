@@ -21,6 +21,8 @@ import {
     Building2,
     Calendar,
     ArrowRight,
+    X,
+    Plus,
 } from "lucide-react"
 import { userToast } from '@/lib/toast-utils'
 import { cn } from "@/lib/utils"
@@ -71,14 +73,15 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
     )
 }
 
-// ── Role icon mapping ───────────────────────────────────────────────
+// ── User type metadata ──────────────────────────────────────────────
 
-const ROLE_ICONS: Record<string, string> = {
-    student: "🎓",
-    teacher: "👨‍🏫",
-    librarian: "📚",
-    employee: "💼",
-    other: "👤",
+const USER_TYPE_META: Record<string, { icon: string; description: string }> = {
+    student:   { icon: "🎓", description: "Para estudios académicos, tareas o formación" },
+    professor: { icon: "👨‍🏫", description: "Para preparar clases o materiales educativos" },
+    teacher:   { icon: "👨‍🏫", description: "Para preparar clases o materiales educativos" },
+    librarian: { icon: "📚", description: "Para gestionar y recomendar recursos bibliográficos" },
+    employee:  { icon: "💼", description: "Para mantenerse actualizado en el ámbito laboral" },
+    other:     { icon: "👤", description: "Mi perfil no encaja exactamente en las categorías anteriores" },
 }
 
 // ── Main Component ──────────────────────────────────────────────────
@@ -100,6 +103,8 @@ export default function OnboardingPage() {
     const [institutionId, setInstitutionId] = useState<number | null>(null)
     const [institutionSearch, setInstitutionSearch] = useState("")
     const [selectedCategories, setSelectedCategories] = useState<number[]>([])
+    const [customInterests, setCustomInterests] = useState<string[]>([])
+    const [interestInput, setInterestInput] = useState("")
 
     const TOTAL_STEPS = 4
 
@@ -138,6 +143,21 @@ export default function OnboardingPage() {
         )
     }
 
+    function addCustomInterest() {
+        const trimmed = interestInput.trim()
+        if (trimmed && !customInterests.includes(trimmed) && customInterests.length < 20) {
+            setCustomInterests(prev => [...prev, trimmed])
+        }
+        setInterestInput("")
+    }
+
+    function handleInterestKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+        if (e.key === "Enter" || e.key === ",") {
+            e.preventDefault()
+            addCustomInterest()
+        }
+    }
+
     async function handleSkip() {
         setSaving(true)
         try {
@@ -162,6 +182,7 @@ export default function OnboardingPage() {
                 age_range: ageRange,
                 institution_id: institutionId,
                 preferred_categories: selectedCategories,
+                custom_interests: customInterests,
             })
             updateUser(res.data)
             userToast.success("Perfil completado correctamente")
@@ -270,35 +291,41 @@ export default function OnboardingPage() {
                                         <div className="space-y-4">
                                             <Label className="text-sm font-bold flex items-center gap-2 ml-1">
                                                 <GraduationCap className="h-5 w-5 text-primary" />
-                                                ¿Cuál es tu rol principal?
+                                                ¿Cómo describes tu perfil de lector?
                                             </Label>
-                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                                                {options.user_types.map(type => (
-                                                    <motion.button
-                                                        key={type.value}
-                                                        whileHover={{ scale: 1.03, y: -2 }}
-                                                        whileTap={{ scale: 0.98 }}
-                                                        onClick={() => setUserType(type.value)}
-                                                        className={cn(
-                                                            "flex flex-col items-center gap-3 p-6 rounded-2xl border-2 transition-all cursor-pointer relative",
-                                                            userType === type.value
-                                                                ? "border-primary bg-primary/5 shadow-lg shadow-primary/10 ring-2 ring-primary/20"
-                                                                : "border-slate-200 hover:border-primary/30 hover:bg-muted/30"
-                                                        )}
-                                                    >
-                                                        {userType === type.value && (
-                                                            <div className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-primary flex items-center justify-center shadow-lg">
-                                                                <Check className="h-3.5 w-3.5 text-white" />
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                {options.user_types.map(type => {
+                                                    const meta = USER_TYPE_META[type.value] ?? { icon: "👤", description: "" }
+                                                    const selected = userType === type.value
+                                                    return (
+                                                        <motion.button
+                                                            key={type.value}
+                                                            whileHover={{ scale: 1.01 }}
+                                                            whileTap={{ scale: 0.99 }}
+                                                            onClick={() => setUserType(type.value)}
+                                                            className={cn(
+                                                                "flex items-start gap-4 p-5 rounded-2xl border-2 text-left transition-all cursor-pointer",
+                                                                selected
+                                                                    ? "border-primary bg-primary/5 shadow-md shadow-primary/10 ring-2 ring-primary/20"
+                                                                    : "border-slate-200 hover:border-primary/30 hover:bg-muted/30"
+                                                            )}
+                                                        >
+                                                            <div className={cn(
+                                                                "mt-0.5 h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all",
+                                                                selected ? "border-primary bg-primary" : "border-slate-300"
+                                                            )}>
+                                                                {selected && <Check className="h-3 w-3 text-white" />}
                                                             </div>
-                                                        )}
-                                                        <span className="text-4xl">
-                                                            {ROLE_ICONS[type.value] || "👤"}
-                                                        </span>
-                                                        <span className="text-sm font-black uppercase tracking-wider text-slate-700">
-                                                            {type.label}
-                                                        </span>
-                                                    </motion.button>
-                                                ))}
+                                                            <div>
+                                                                <p className="font-black text-sm flex items-center gap-2 text-slate-800">
+                                                                    <span>{meta.icon}</span>
+                                                                    {type.label}
+                                                                </p>
+                                                                <p className="text-xs text-slate-500 mt-0.5">{meta.description}</p>
+                                                            </div>
+                                                        </motion.button>
+                                                    )
+                                                })}
                                             </div>
                                         </div>
                                     </div>
@@ -391,51 +418,103 @@ export default function OnboardingPage() {
                                     </div>
                                 )}
 
-                                {/* ── Step 3: Book categories ────────────────────── */}
+                                {/* ── Step 3: Book categories + custom interests ─── */}
                                 {step === 3 && (
                                     <div className="space-y-6">
-                                        <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center justify-between">
                                             <Label className="text-sm font-bold flex items-center gap-2">
                                                 <BookOpen className="h-5 w-5 text-primary" />
                                                 ¿Cuáles son tus pasiones?
                                             </Label>
                                             <div className="px-3 py-1 bg-primary text-white text-[10px] uppercase font-black tracking-widest rounded-full shadow-sm">
-                                                {selectedCategories.length} Seleccionado{selectedCategories.length !== 1 ? "s" : ""}
+                                                {selectedCategories.length + customInterests.length} Seleccionado{(selectedCategories.length + customInterests.length) !== 1 ? "s" : ""}
                                             </div>
                                         </div>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto pr-3 scrollbar-thin scrollbar-thumb-primary/20">
-                                            {options.categories.map(cat => (
-                                                <motion.button
-                                                    key={cat.id}
-                                                    whileHover={{ scale: 1.02, y: -2 }}
-                                                    whileTap={{ scale: 0.98 }}
-                                                    onClick={() => toggleCategory(cat.id)}
-                                                    className={cn(
-                                                        "relative p-5 rounded-2xl border-2 text-left transition-all cursor-pointer overflow-hidden flex flex-col gap-1.5",
-                                                        selectedCategories.includes(cat.id)
-                                                            ? "border-primary bg-primary text-primary-foreground shadow-xl shadow-primary/10"
-                                                            : "border-slate-200 hover:border-primary/30 hover:bg-muted/50"
-                                                    )}
-                                                >
-                                                    {selectedCategories.includes(cat.id) && (
-                                                        <motion.div
-                                                            layoutId="cat-check"
-                                                            className="absolute top-2 right-2 h-6 w-6 rounded-full bg-white flex items-center justify-center shadow-lg"
+
+                                        {/* Predefined categories */}
+                                        <div>
+                                            <p className="text-xs text-slate-400 font-semibold uppercase tracking-widest mb-3">
+                                                Temas del catálogo
+                                            </p>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-primary/20">
+                                                {options.categories.map(cat => (
+                                                    <motion.button
+                                                        key={cat.id}
+                                                        whileHover={{ scale: 1.02, y: -1 }}
+                                                        whileTap={{ scale: 0.98 }}
+                                                        onClick={() => toggleCategory(cat.id)}
+                                                        className={cn(
+                                                            "relative p-4 rounded-2xl border-2 text-left transition-all cursor-pointer overflow-hidden flex flex-col gap-1",
+                                                            selectedCategories.includes(cat.id)
+                                                                ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/10"
+                                                                : "border-slate-200 hover:border-primary/30 hover:bg-muted/50"
+                                                        )}
+                                                    >
+                                                        {selectedCategories.includes(cat.id) && (
+                                                            <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-white flex items-center justify-center shadow">
+                                                                <Check className="h-3 w-3 text-primary" />
+                                                            </div>
+                                                        )}
+                                                        <p className="text-sm font-black tracking-tight pr-6">{cat.name}</p>
+                                                        {cat.description && (
+                                                            <p className={cn(
+                                                                "text-xs line-clamp-1",
+                                                                selectedCategories.includes(cat.id) ? "text-primary-foreground/70" : "text-muted-foreground"
+                                                            )}>
+                                                                {cat.description}
+                                                            </p>
+                                                        )}
+                                                    </motion.button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Custom free-text interests */}
+                                        <div className="space-y-3 pt-2 border-t-2 border-dashed border-slate-200">
+                                            <p className="text-xs text-slate-400 font-semibold uppercase tracking-widest">
+                                                Otros intereses (escribe los tuyos)
+                                            </p>
+                                            {customInterests.length > 0 && (
+                                                <div className="flex flex-wrap gap-2">
+                                                    {customInterests.map(interest => (
+                                                        <motion.span
+                                                            key={interest}
+                                                            initial={{ scale: 0.8, opacity: 0 }}
+                                                            animate={{ scale: 1, opacity: 1 }}
+                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/30 text-primary text-sm font-semibold"
                                                         >
-                                                            <Check className="h-4 w-4 text-primary" />
-                                                        </motion.div>
-                                                    )}
-                                                    <p className="text-md font-black tracking-tight leading-tight pr-6">{cat.name}</p>
-                                                    {cat.description && (
-                                                        <p className={cn(
-                                                            "text-xs line-clamp-2 transition-colors",
-                                                            selectedCategories.includes(cat.id) ? "text-primary-foreground/80" : "text-muted-foreground"
-                                                        )}>
-                                                            {cat.description}
-                                                        </p>
-                                                    )}
-                                                </motion.button>
-                                            ))}
+                                                            {interest}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setCustomInterests(prev => prev.filter(i => i !== interest))}
+                                                                className="hover:text-destructive transition-colors"
+                                                            >
+                                                                <X className="h-3.5 w-3.5" />
+                                                            </button>
+                                                        </motion.span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            <div className="flex gap-2">
+                                                <input
+                                                    value={interestInput}
+                                                    onChange={e => setInterestInput(e.target.value)}
+                                                    onKeyDown={handleInterestKeyDown}
+                                                    placeholder='Ej: "Novela gráfica", "Historia medieval"... Enter para agregar'
+                                                    className="flex-1 h-12 rounded-2xl border-2 border-slate-200 focus:border-primary outline-none px-5 text-sm transition-all bg-white placeholder:text-slate-400"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={addCustomInterest}
+                                                    disabled={!interestInput.trim() || customInterests.length >= 20}
+                                                    className="h-12 w-12 rounded-2xl border-2 border-slate-200 hover:border-primary flex items-center justify-center transition-all disabled:opacity-40 bg-white"
+                                                >
+                                                    <Plus className="h-5 w-5 text-primary" />
+                                                </button>
+                                            </div>
+                                            <p className="text-xs text-slate-400">
+                                                Presiona <kbd className="px-1.5 py-0.5 rounded bg-slate-100 font-mono text-slate-600">Enter</kbd> o la coma para agregar. Máx. 20 intereses propios.
+                                            </p>
                                         </div>
                                     </div>
                                 )}

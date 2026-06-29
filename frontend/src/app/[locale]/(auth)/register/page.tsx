@@ -65,7 +65,7 @@ export default function RegisterPage() {
                 email: values.email,
                 password: values.password,
                 confirm_password: values.confirmPassword,
-                first_name: values.username,
+                first_name: "",
                 last_name: "",
                 user_type: "student",
             })

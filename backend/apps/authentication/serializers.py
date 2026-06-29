@@ -156,6 +156,7 @@ class OnboardingSerializer(serializers.Serializer):
         '13-17', '18-24', '25-34', '35-44', '45-54', '55-64', '65+'
     ]
     MAX_PREFERRED_CATEGORIES = 10
+    MAX_CUSTOM_INTERESTS = 20
 
     first_name = serializers.CharField(required=False, allow_blank=True)
     last_name = serializers.CharField(required=False, allow_blank=True)
@@ -164,6 +165,11 @@ class OnboardingSerializer(serializers.Serializer):
     institution_id = serializers.IntegerField(required=False, allow_null=True)
     preferred_categories = serializers.ListField(
         child=serializers.IntegerField(), required=False, default=list
+    )
+    custom_interests = serializers.ListField(
+        child=serializers.CharField(max_length=100, allow_blank=False),
+        required=False,
+        default=list,
     )
 
     def validate_age_range(self, value):
@@ -192,6 +198,14 @@ class OnboardingSerializer(serializers.Serializer):
                 )
         return value
 
+    def validate_custom_interests(self, value):
+        cleaned = [v.strip() for v in value if v.strip()]
+        if len(cleaned) > self.MAX_CUSTOM_INTERESTS:
+            raise serializers.ValidationError(
+                f"Máximo {self.MAX_CUSTOM_INTERESTS} intereses personalizados."
+            )
+        return cleaned
+
     def update(self, user, validated_data):
         if 'first_name' in validated_data:
             user.first_name = validated_data['first_name']
@@ -211,6 +225,8 @@ class OnboardingSerializer(serializers.Serializer):
         prefs = user.preferences or {}
         if 'preferred_categories' in validated_data:
             prefs['preferred_categories'] = validated_data['preferred_categories']
+        if 'custom_interests' in validated_data:
+            prefs['custom_interests'] = validated_data['custom_interests']
         user.preferences = prefs
         user.onboarding_completed = True
         user.save()

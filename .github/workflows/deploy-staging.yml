@@ -1,16 +1,21 @@
 # =============================================================================
 # Deploy to Staging Workflow
 # =============================================================================
-# Automatically deploys to staging environment on merge to main
-# Runs database migrations and health checks
+# PENDING: Staging infrastructure not yet configured.
+# This workflow is disabled (manual-only) until a staging server is set up.
+#
+# To enable automatic deploys, add the push trigger back and configure
+# these GitHub Environment variables (Settings → Environments → staging):
+#   vars.STAGING_URL       — e.g. https://staging.renascerdosaber.com
+#
+# And these secrets:
+#   STAGING_HOST, STAGING_USER, STAGING_SSH_KEY,
+#   STAGING_PORT, STAGING_DEPLOY_PATH, STAGING_API_URL, SLACK_WEBHOOK
 # =============================================================================
 
 name: Deploy to Staging
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       skip_tests:

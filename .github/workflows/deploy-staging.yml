@@ -101,7 +101,7 @@ jobs:
     needs: build
     environment:
       name: staging
-      url: ${{ secrets.STAGING_URL }}
+      url: ${{ vars.STAGING_URL }}
 
     steps:
       - name: Checkout code

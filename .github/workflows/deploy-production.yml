@@ -179,7 +179,7 @@ jobs:
     needs: build
     environment:
       name: production
-      url: ${{ secrets.PROD_URL }}
+      url: ${{ vars.PROD_URL }}
 
     steps:
       - name: Deploy to production server

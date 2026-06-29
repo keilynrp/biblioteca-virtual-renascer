@@ -107,9 +107,16 @@ function InstitutionsPageContent() {
             cell: (item: Institution) => <span className="font-semibold">{item.name}</span>
         },
         {
-            header: "Código",
+            header: "Identificador",
             accessorKey: "code" as keyof Institution,
-            cell: (item: Institution) => <Badge variant="outline" className="font-mono">{item.code}</Badge>
+            cell: (item: Institution) => (
+                <div className="flex items-center gap-2">
+                    {item.abbreviation && (
+                        <Badge variant="secondary" className="font-semibold">{item.abbreviation}</Badge>
+                    )}
+                    <span className="text-xs font-mono text-muted-foreground">{item.code}</span>
+                </div>
+            )
         },
         {
             header: "Sitio Web",

@@ -11,7 +11,7 @@ User = get_user_model()
 class InstitutionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Institution
-        fields = ('id', 'name', 'code', 'logo')
+        fields = ('id', 'name', 'code', 'abbreviation', 'logo')
 
 class UserSerializer(serializers.ModelSerializer):
     institution_detail = InstitutionSerializer(source='institution', read_only=True)

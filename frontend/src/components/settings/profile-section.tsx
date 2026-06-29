@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils'
 
 interface OnboardingOptions {
     categories: { id: number; name: string; slug: string; description: string }[]
-    institutions: { id: number; name: string; code: string }[]
+    institutions: { id: number; name: string; code: string; abbreviation?: string }[]
     user_types: { value: string; label: string }[]
     age_ranges: { value: string; label: string }[]
 }
@@ -75,7 +75,7 @@ export function ProfileSection() {
 
     const filteredInstitutions = options?.institutions.filter(inst =>
         inst.name.toLowerCase().includes(institutionSearch.toLowerCase()) ||
-        inst.code.toLowerCase().includes(institutionSearch.toLowerCase())
+        (inst.abbreviation || inst.code).toLowerCase().includes(institutionSearch.toLowerCase())
     ) ?? []
 
     function toggleCategory(id: number) {
@@ -283,7 +283,7 @@ export function ProfileSection() {
                                 <div>
                                     <span className="font-medium">{inst.name}</span>
                                     <span className="text-xs font-mono ml-2 px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                                        {inst.code}
+                                        {inst.abbreviation || inst.code}
                                     </span>
                                 </div>
                                 {institutionId === inst.id && <Check className="h-4 w-4 text-primary" />}

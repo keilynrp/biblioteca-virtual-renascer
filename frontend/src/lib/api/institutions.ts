@@ -4,6 +4,7 @@ export interface Institution {
     id: number;
     name: string;
     code: string;
+    abbreviation?: string;
     logo?: string;
     website?: string;
     address?: string;

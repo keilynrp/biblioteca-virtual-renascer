@@ -198,7 +198,7 @@ class OnboardingOptionsView(APIView):
             Category.objects.values('id', 'name', 'slug', 'description').order_by('name')
         )
         institutions = list(
-            Institution.objects.values('id', 'name', 'code').order_by('name')
+            Institution.objects.values('id', 'name', 'code', 'abbreviation').order_by('name')
         )
         user_types = [
             {'value': choice[0], 'label': str(choice[1])}

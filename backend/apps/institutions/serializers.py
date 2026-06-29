@@ -11,7 +11,11 @@ class InstitutionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Institution
-        fields = ('id', 'name', 'code', 'logo', 'website', 'address', 'member_count', 'created_at')
+        fields = (
+            'id', 'name', 'code', 'abbreviation', 'ror_id',
+            'country', 'institution_type',
+            'logo', 'website', 'address', 'member_count', 'created_at',
+        )
 
     def get_member_count(self, obj):
         return obj.memberships.filter(status='active').count()

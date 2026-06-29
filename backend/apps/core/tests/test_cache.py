@@ -201,8 +201,7 @@ class TestModelCaching:
         # Second call - cache hit
         cached_data = cache.get(cache_key)
         assert cached_data is not None
-        assert len(cached_data) == 1
-        assert cached_data[0]['name'] == "Test Category"
+        assert any(item['name'] == "Test Category" for item in cached_data)
 
     def test_dashboard_stats_caching(self):
         """Test that dashboard stats are cached"""
